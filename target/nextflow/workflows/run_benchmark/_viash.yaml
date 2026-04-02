@@ -1,7 +1,7 @@
-viash_version: 0.9.4
+viash_version: 0.9.7
 # Step 1: Change the name of the task.
 # example: task_name_of_this_task
-name: task_template
+name: task_spatial_segmentation
 organization: openproblems-bio
 version: build_main
 license: MIT

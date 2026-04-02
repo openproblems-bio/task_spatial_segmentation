@@ -314,11 +314,11 @@ build_info:
   engine: "docker"
   output: "target/executable/control_methods/true_labels"
   executable: "target/executable/control_methods/true_labels/true_labels"
-  viash_version: "0.9.4"
-  git_commit: "38e67e8cf387dd8079972e631865394a1703c98b"
+  viash_version: "0.9.7"
+  git_commit: "c85e1d95e309c0c7bda9932a4732349e815f9f67"
   git_remote: "https://github.com/openproblems-bio/task_spatial_segmentation"
 package_config:
-  name: "task_template"
+  name: "task_spatial_segmentation"
   version: "build_main"
   label: "Template"
   summary: "A one sentence summary of purpose and methodology. Used for creating an\
@@ -346,7 +346,7 @@ package_config:
     name: "openproblems"
     repo: "openproblems-bio/openproblems"
     tag: "build/main"
-  viash_version: "0.9.4"
+  viash_version: "0.9.7"
   source: "src"
   target: "target"
   config_mods:
