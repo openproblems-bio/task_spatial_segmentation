@@ -106,7 +106,7 @@ Arguments:
 A single-cell reference dataset, preprocessed for this benchmark.
 
 Example file:
-`resources_test/task_ist_preprocessing/mouse_brain_combined/scrnaseq_reference.h5ad`
+`resources_test/task_spatial_segmentation/mouse_brain_combined/common_scrnaseq.h5ad`
 
 Description:
 
@@ -187,7 +187,7 @@ Data structure:
 A spatial transcriptomics dataset, preprocessed for this benchmark.
 
 Example file:
-`resources_test/task_ist_preprocessing/mouse_brain_combined/raw_ist.zarr`
+`resources_test/task_spatial_segmentation/mouse_brain_combined/common_ist.zarr`
 
 Description:
 
