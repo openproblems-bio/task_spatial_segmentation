@@ -7,14 +7,10 @@ info:
     description: |
       A method to predict the task effects.
 arguments:
-  - name: --input_train
-    __merge__: file_train.yaml
+  - name: --input
+    __merge__: file_spatial_dataset.yaml
     required: true
     direction: input
-  - name: "--input_test"
-    __merge__: file_test.yaml
-    direction: input
-    required: true
   - name: --output
     __merge__: file_prediction.yaml
     required: true
@@ -24,5 +20,5 @@ test_resources:
     path: /common/component_tests/run_and_check_output.py
   - type: python_script
     path: /common/component_tests/check_config.py
-  - path: /resources_test/task_template/cxg_mouse_pancreas_atlas
-    dest: resources_test/task_template/cxg_mouse_pancreas_atlas
+  - path: /resources_test/task_spatial_segmentation/mouse_brain_combined
+    dest: resources_test/task_spatial_segmentation/mouse_brain_combined

@@ -18,7 +18,7 @@ links:
 
 # Step 4: Update the label, summary and description.
 # A unique, human-readable, short label. Used for creating summary tables and visualisations.
-label: Template
+label: Spatial Segmentation
 summary: A one sentence summary of purpose and methodology. Used for creating an overview tables.
 description: |
   Provide a clear and concise description of your task, detailing the specific problem it aims

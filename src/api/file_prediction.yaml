@@ -1,6 +1,6 @@
 #TODO: Change to the required and/or optional fields of the anndata
 type: file
-example: "resources_test/task_template/cxg_mouse_pancreas_atlas/prediction.h5ad"
+example: "resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.h5ad"
 label: "Predicted data"
 summary: A predicted dataset as output by a method.
 info:

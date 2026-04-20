@@ -1,5 +1,5 @@
 type: file
-example: "resources_test/task_template/cxg_mouse_pancreas_atlas/score.h5ad"
+example: "resources_test/task_spatial_segmentation/mouse_brain_combined/score.h5ad"
 label: Score
 summary: "File indicating the score of a metric."
 info:
