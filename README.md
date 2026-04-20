@@ -264,22 +264,11 @@ Format:
 
 <div class="small">
 
-    AnnData object
-     obs: 'label_pred'
-     uns: 'dataset_id', 'normalization_id', 'method_id'
-
 </div>
 
 Data structure:
 
 <div class="small">
-
-| Slot                      | Type     | Description                          |
-|:--------------------------|:---------|:-------------------------------------|
-| `obs["label_pred"]`       | `string` | Predicted labels for the test cells. |
-| `uns["dataset_id"]`       | `string` | A unique identifier for the dataset. |
-| `uns["normalization_id"]` | `string` | Which normalization was used.        |
-| `uns["method_id"]`        | `string` | A unique identifier for the method.  |
 
 </div>
 

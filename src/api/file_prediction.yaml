@@ -5,22 +5,23 @@ label: "Predicted data"
 summary: A predicted dataset as output by a method.
 info:
   format:
-    type: h5ad
-    obs:
-      - type: string
-        name: label_pred
-        description: Predicted labels for the test cells.
+    type: spatialdata_zarr
+    labels:
+      - type: object
+        name: "segmentation"
+        description: Segmentation of the data
         required: true
-    uns:
-      - type: string
-        name: dataset_id
-        description: "A unique identifier for the dataset"
+    tables:
+      - type: anndata
+        name: table
+        description: AnnData table
         required: true
-      - type: string
-        name: normalization_id
-        description: "Which normalization was used"
-        required: true
-      - type: string
-        name: method_id
-        description: "A unique identifier for the method"
-        required: true
+        obs:
+          - type: string
+            name: cell_id
+            description: Cell ID
+            required: true
+          - type: string
+            name: region
+            description: Region
+            required: true
