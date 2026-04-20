@@ -1,3 +1,4 @@
+import dask.array as da
 import numpy as np
 import os
 import shutil
@@ -38,10 +39,10 @@ for dtype in (np.uint8, np.uint16, np.uint32, np.uint64):
 
 print('Segmentation done, preparing output', flush=True)
 sd_output = sd.SpatialData()
-data_array = xr.DataArray(masks, name='segmentation', dims=('y', 'x'))
+# Wrap masks as a single-chunk dask array with flat chunk shape for zarr v3 compat
+dask_masks = da.from_array(masks, chunks=masks.shape)
+data_array = xr.DataArray(dask_masks, name='segmentation', dims=('y', 'x'))
 parsed = Labels2DModel.parse(data_array, transformations=transformation)
-# Rechunk to flat integer tuples (zarr v3 rejects nested dask chunk tuples)
-parsed = parsed.chunk({'y': masks.shape[0], 'x': masks.shape[1]})
 sd_output.labels['segmentation'] = parsed
 
 print('Saving output', flush=True)
