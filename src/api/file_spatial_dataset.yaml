@@ -1,5 +1,7 @@
 type: file
-example: "resources_test/task_ist_preprocessing/mouse_brain_combined/raw_ist.zarr"
+example: "resources_test/task_spatial_segmentation/mouse_brain_combined/common_ist.zarr"
+# TODO: revert to the original example once file exists
+# example: "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr"
 label: "Raw iST Dataset"
 summary: A spatial transcriptomics dataset, preprocessed for this benchmark.
 description: |
