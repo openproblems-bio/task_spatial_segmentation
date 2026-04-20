@@ -28,8 +28,10 @@ argument_groups:
         direction: output
         required: true
 test_resources:
-  - path: /resources_test/common/cxg_mouse_pancreas_atlas
-    dest: resources_test/common/cxg_mouse_pancreas_atlas
+  - path: /resources_test/common/2023_10x_mouse_brain_xenium_rep1
+    dest: resources_test/common/2023_10x_mouse_brain_xenium_rep1
+  - path: /resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2
+    dest: resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2
   - type: python_script
     path: /common/component_tests/run_and_check_output.py
       
