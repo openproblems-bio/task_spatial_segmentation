@@ -1,0 +1,97 @@
+name: cellpose
+label: "Cellpose"
+# TODO: update the summary, description and links
+summary: "Output of the segmantation methot cellpose"
+description: "Output of the segmantation methot cellpose"
+links: # these should point to the documentation of the method
+  documentation: "https://github.com/openproblems-bio/task_ist_preprocessing"
+  repository: "https://github.com/openproblems-bio/task_ist_preprocessing"
+references:
+  doi: "10.1038/s41592-020-01018-x"
+
+
+__merge__: /src/api/comp_method.yaml 
+
+arguments:
+  - name: --batch_size
+    type: integer
+    default: 8
+  - name: --model_type
+    type: string
+    default: "cyto"
+  - name: --resample
+    type: boolean
+    default: True
+  - name: --channel_axis
+    type: string
+    default: "None"
+  - name: --z_axis
+    type: string
+    default: "None"
+  - name: --normalize
+    type: boolean
+    default: True
+  - name: --invert
+    type: boolean
+    default: False
+  - name: --rescale
+    type: string
+    default: "None"
+  - name: --diameter
+    type: double
+    default: 30.0 #default should be None with cellpose v4
+  - name: --do_3D
+    type: boolean
+    default: False
+  - name: --anisotropy
+    type: string
+    default: "None"
+#  - name: --net_avg
+#    type: boolean
+#    default: False
+  - name: --augment
+    type: boolean
+    default: False
+  #- name: --tile
+  #  type: boolean
+  #  default: True
+  - name: --tile_overlap
+    type: double
+    default: 0.1
+  #- name: --interp #Seems to be removed in v4
+  #  type: boolean
+  #  default: True
+  - name: --flow_threshold
+    type: double
+    default: 0.4
+  - name: --cellprob_threshold
+    type: double
+    default: 0.0
+  - name: --min_size
+    type: integer
+    default: 15
+  - name: --stitch_threshold
+    type: double
+    default: 0.0
+
+resources:
+  - type: python_script
+    path: script.py
+
+engines:
+  - type: docker
+    #image: openproblems/base_pytorch_nvidia:1 # TODO: ideally get gpu image to work
+    image: openproblems/base_python:1
+    setup:
+      - type: python
+        pypi: cellpose<4.0.0
+    __merge__: 
+      - /src/base/setup_txsim_partial.yaml
+      - /src/base/setup_spatialdata_partial.yaml
+  - type: native
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [ midtime, midcpu, veryhighmem, gpu ]
