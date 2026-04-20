@@ -8,7 +8,7 @@ workflow auto {
 // construct list of methods and control methods
 methods = [
   true_labels,
-  logistic_regression
+  cellpose
 ]
 
 // construct list of metrics
