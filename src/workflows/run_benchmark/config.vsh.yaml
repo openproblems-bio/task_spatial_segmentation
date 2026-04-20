@@ -4,20 +4,13 @@ namespace: workflows
 argument_groups:
   - name: Inputs
     arguments:
-      - name: "--input_train"
-        __merge__: /src/api/file_train.yaml
-        type: file
-        direction: input
+      - name: "--input_spatial_dataset"
+        __merge__: /src/api/file_spatial_dataset.yaml
+        direction: output
         required: true
-      - name: "--input_test"
-        __merge__: /src/api/file_test.yaml
-        type: file
-        direction: input
-        required: true
-      - name: "--input_solution"
-        __merge__: /src/api/file_solution.yaml
-        type: file
-        direction: input
+      - name: "--input_scrnaseq_reference"
+        __merge__: /src/api/file_scrnaseq_reference.yaml
+        direction: output
         required: true
   - name: Outputs
     arguments:
@@ -65,7 +58,7 @@ dependencies:
   - name: utils/extract_uns_metadata
     repository: openproblems
   - name: control_methods/true_labels
-  - name: methods/logistic_regression
+  - name: methods/cellpose
   - name: metrics/accuracy
 
 runners:

@@ -1,0 +1,67 @@
+name: cellpose
+label: "Cellpose"
+# TODO: update the summary, description and links
+summary: "Output of the segmantation methot cellpose"
+description: "Output of the segmantation methot cellpose"
+links: # these should point to the documentation of the method
+  documentation: "https://github.com/openproblems-bio/task_ist_preprocessing"
+  repository: "https://github.com/openproblems-bio/task_ist_preprocessing"
+references:
+  doi: "10.1038/s41592-020-01018-x"
+
+
+__merge__: /src/api/comp_method.yaml 
+
+arguments:
+  - name: --diameter
+    type: double
+    description: "Cell diameter in pixels. If not set, cellpose runs a size model to estimate it (slower)."
+    info:
+      test_default: 30
+
+  - name: --flow_threshold
+    type: double
+    description: "Flow error threshold. Set to 0 to skip flow quality check for faster execution."
+    info:
+      test_default: 0
+
+  - name: --niter
+    type: integer
+    description: "Number of iterations for dynamics. Lower values are faster but less accurate."
+    info:
+      test_default: 10
+
+  - name: --min_size
+    type: integer
+    description: "Minimum number of pixels per mask. Set to -1 to skip small mask removal."
+    info:
+      test_default: -1
+
+  - name: --resample
+    type: boolean
+    description: "Whether to run dynamics at original image size. Disabling is faster."
+    info:
+      test_default: false
+
+resources:
+  - type: python_script
+    path: script.py
+
+engines:
+  - type: docker
+    #image: openproblems/base_pytorch_nvidia:1 # TODO: ideally get gpu image to work
+    image: openproblems/base_python:1
+    setup:
+      - type: python
+        pypi: cellpose
+      - type: python
+        script: from cellpose.models import CellposeModel; model = CellposeModel()
+    __merge__: 
+      - /src/base/setup_spatialdata_partial.yaml
+  - type: native
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [ midtime, midcpu, veryhighmem, gpu ]

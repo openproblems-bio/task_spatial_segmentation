@@ -16,12 +16,12 @@ fi
 # we can just copy them for now
 
 aws s3 sync --profile op \
-  s3://openproblems-data/resources_test/task_ist_preprocessing/mouse_brain_combined/raw_ist.zarr \
-  resources_test/task_spatial_segmentation/mouse_brain_combined/raw_ist.zarr
+  s3://openproblems-data/resources_test/common/2023_10x_mouse_brain_xenium_rep1/dataset.zarr \
+  resources_test/task_spatial_segmentation/mouse_brain_combined/common_ist.zarr
 
 aws s3 cp --profile op \
-  s3://openproblems-data/resources_test/task_ist_preprocessing/mouse_brain_combined/scrnaseq_reference.h5ad \
-  resources_test/task_spatial_segmentation/mouse_brain_combined/scrnaseq_reference.h5ad
+  s3://openproblems-data/resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/dataset.h5ad \
+  resources_test/task_spatial_segmentation/mouse_brain_combined/common_scrnaseq.h5ad
 
 # ...additional preprocessing if needed ...
 

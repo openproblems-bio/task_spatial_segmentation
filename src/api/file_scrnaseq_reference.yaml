@@ -1,0 +1,9 @@
+type: file
+example: "resources_test/task_spatial_segmentation/mouse_brain_combined/common_scrnaseq.h5ad"
+# TODO: revert to the original example once file exists
+# example: "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.h5ad"
+label: "scRNA-seq Reference"
+summary: A single-cell reference dataset, preprocessed for this benchmark.
+description: |
+  This dataset contains preprocessed counts and metadata for single-cell RNA-seq data.
+__merge__: file_common_scrnaseq.yaml

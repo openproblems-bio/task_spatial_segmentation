@@ -6,14 +6,10 @@ import openproblems as op
 
 ## VIASH START
 par = {
-    'input': 'resources_test/common/cxg_mouse_pancreas_atlas/dataset.h5ad',
-    'method': 'batch',
-    'seed': None,
-    'obs_batch': 'batch',
-    'obs_label': 'cell_type',
-    'output_train': 'train.h5ad',
-    'output_test': 'test.h5ad',
-    'output_solution': 'solution.h5ad'
+    'input_sp': 'resources_test/task_spatial_segmentation/mouse_brain_combined/common_ist.zarr',
+    'input_sc': 'resources_test/task_spatial_segmentation/mouse_brain_combined/common_scrnaseq.h5ad',
+    'output_spatial_dataset': 'output_spatial_dataset.zarr',
+    'output_scrnaseq_reference': 'output_scrnaseq_reference.h5ad',
 }
 meta = {
     'resources_dir': 'target/executable/data_processors/process_dataset',

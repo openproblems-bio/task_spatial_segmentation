@@ -14,7 +14,7 @@ links:
   docker_registry: ghcr.io
 # Step 4: Update the label, summary and description.
 # A unique, human-readable, short label. Used for creating summary tables and visualisations.
-label: Template
+label: Spatial Segmentation
 summary: A one sentence summary of purpose and methodology. Used for creating an overview tables.
 description: "Provide a clear and concise description of your task, detailing the specific problem it aims\nto solve. Outline the input data types, the expected output, and any assumptions or constraints.\nBe sure to explain any terminology or concepts that are essential for understanding the task.\n\nExplain the motivation behind your proposed task. Describe the biological or computational \nproblem you aim to address and why it's important. Discuss the current state of research in\nthis area and any gaps or challenges that your task could help address. This section \nshould convince readers of the significance and relevance of your task.\n"
 # A list of references to relevant literature. Each reference should be a DOI or a bibtex entry
@@ -34,6 +34,12 @@ references:
 info:
   image: The name of the image file to use for the component on the website.
   test_resources:
+    - type: s3
+      path: s3://openproblems-data/resources_test/common/2023_10x_mouse_brain_xenium_rep1/
+      dest: resources_test/common/2023_10x_mouse_brain_xenium_rep1/
+    - type: s3
+      path: s3://openproblems-data/resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/
+      dest: resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/
     - type: s3
       path: s3://openproblems-data/resources_test/task_spatial_segmentation/
       dest: resources_test/task_spatial_segmentation

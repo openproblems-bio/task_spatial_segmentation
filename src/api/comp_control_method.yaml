@@ -12,16 +12,12 @@ info:
       the task, and also as a quality control for the metrics defined
       in the task.
 arguments:
-  - name: --input_train
-    __merge__: file_train.yaml
+  - name: --input
+    __merge__: file_spatial_dataset.yaml
     required: true
     direction: input
-  - name: --input_test
-    __merge__: file_test.yaml
-    required: true
-    direction: input
-  - name: "--input_solution"
-    __merge__: file_solution.yaml
+  - name: "--input_scrnaseq_reference"
+    __merge__: file_scrnaseq_reference.yaml
     direction: input
     required: true
   - name: --output
@@ -33,5 +29,5 @@ test_resources:
     path: /common/component_tests/run_and_check_output.py
   - type: python_script
     path: /common/component_tests/check_config.py
-  - path: /resources_test/task_template/cxg_mouse_pancreas_atlas
-    dest: resources_test/task_template/cxg_mouse_pancreas_atlas
+  - path: /resources_test/task_spatial_segmentation/mouse_brain_combined
+    dest: resources_test/task_spatial_segmentation/mouse_brain_combined
