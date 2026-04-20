@@ -65,7 +65,7 @@ flowchart TB
 An unprocessed spatial imaging dataset stored as a zarr file.
 
 Example file:
-`resources_test/task_spatial_segmentation/mouse_brain_combined/common_ist.zarr`
+`resources_test/common/2023_10x_mouse_brain_xenium_rep1/dataset.zarr`
 
 Description:
 
@@ -307,7 +307,7 @@ Data structure:
 An unprocessed dataset as output by a dataset loader.
 
 Example file:
-`resources_test/task_spatial_segmentation/mouse_brain_combined/common_scrnaseq.h5ad`
+`resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/dataset.h5ad`
 
 Description:
 

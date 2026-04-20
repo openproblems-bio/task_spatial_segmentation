@@ -1,5 +1,5 @@
 type: file
-example: "resources_test/task_spatial_segmentation/mouse_brain_combined/common_scrnaseq.h5ad"
+example: "resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/dataset.h5ad"
 label: "Common SC Dataset"
 summary: An unprocessed dataset as output by a dataset loader.
 description: |
