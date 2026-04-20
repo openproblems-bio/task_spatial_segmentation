@@ -3385,7 +3385,7 @@ meta = [
     "engine" : "docker",
     "output" : "target/nextflow/methods/logistic_regression",
     "viash_version" : "0.9.7",
-    "git_commit" : "c85e1d95e309c0c7bda9932a4732349e815f9f67",
+    "git_commit" : "e1971b7a7a7b2a84c2b04353b95ecedb2a20e9e3",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -3399,13 +3399,8 @@ meta = [
       "test_resources" : [
         {
           "type" : "s3",
-          "path" : "s3://openproblems-data/resources_test/common/",
-          "dest" : "resources_test/common"
-        },
-        {
-          "type" : "s3",
-          "path" : "s3://openproblems-data/resources_test/task_template/",
-          "dest" : "resources_test/task_template"
+          "path" : "s3://openproblems-data/resources_test/task_spatial_segmentation/",
+          "dest" : "resources_test/task_spatial_segmentation"
         }
       ]
     },
