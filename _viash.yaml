@@ -47,14 +47,16 @@ references:
   
 info:
   image: The name of the image file to use for the component on the website.
-  # Step 5: Replace the task_template to the name of the task.
   test_resources:
     - type: s3
-      path: s3://openproblems-data/resources_test/common/
-      dest: resources_test/common
+      path: s3://openproblems-data/resources_test/common/2023_10x_mouse_brain_xenium_rep1/
+      dest: resources_test/common/2023_10x_mouse_brain_xenium_rep1/
     - type: s3
-      path: s3://openproblems-data/resources_test/task_template/
-      dest: resources_test/task_template
+      path: s3://openproblems-data/resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/
+      dest: resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/
+    - type: s3
+      path: s3://openproblems-data/resources_test/task_ist_preprocessing/
+      dest: resources_test/task_ist_preprocessing
 
 # Step 6: Update the authors of the task.
 authors: 
