@@ -449,9 +449,9 @@ RUN pip install --upgrade pip && \
   pip install --upgrade --no-cache-dir "scikit-learn"
 
 LABEL org.opencontainers.image.description="Companion container for running component metrics accuracy"
-LABEL org.opencontainers.image.created="2026-04-20T11:42:03Z"
-LABEL org.opencontainers.image.source="https://github.com/openproblems-bio/task_template"
-LABEL org.opencontainers.image.revision="6ab1f3445c3a2d417d1db4f2c5f80b28933e6ca4"
+LABEL org.opencontainers.image.created="2026-04-28T12:55:14Z"
+LABEL org.opencontainers.image.source="https://github.com/openproblems-bio/task_spatial_segmentation"
+LABEL org.opencontainers.image.revision="70f053e368b4e63ee043f3e560ce47fbc254b3cd"
 LABEL org.opencontainers.image.version="build_main"
 
 VIASHDOCKER
@@ -580,7 +580,7 @@ function ViashHelp {
   echo "    --input_scrnaseq_reference"
   echo "        type: file, required parameter, file must exist"
   echo "        example:"
-  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/common_scrnaseq.h5ad"
+  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/scrnaseq_reference.h5ad"
   echo "        This dataset contains preprocessed counts and metadata for single-cell"
   echo "        RNA-seq data."
   echo ""

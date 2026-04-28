@@ -1,31 +1,37 @@
 __merge__: ../../api/comp_data_processor.yaml
+
 name: process_dataset
-arguments:
-  - name: "--method"
-    type: "string"
-    description: "The process method to assign train/test."
-    choices: ["batch", "random"]
-    default: "batch"
-  - name: "--obs_label"
-    type: "string"
-    description: "Which .obs slot to use as label."
-    default: "cell_type"
-  - name: "--obs_batch"
-    type: "string"
-    description: "Which .obs slot to use as batch covariate."
-    default: "batch"
-  - name: "--seed"
-    type: "integer"
-    description: "A seed for the subsampling."
-    example: 123
+
+argument_groups:
+  - name: "Processing parameters"
+    arguments:
+      - name: "--seed"
+        type: "integer"
+        description: "A seed for the subsampling."
+        example: 123
+      - name: "--span"
+        type: double
+        description: The fraction of the data (cells) used when estimating the variance in the loess model fit if flavor='seurat_v3'.
+        default: 0.3
+      - name: "--n_top_genes"
+        type: integer
+        description: Number of highly-variable genes to keep. Mandatory if flavor='seurat_v3'.
+        default: 3000
+
 resources:
   - type: python_script
     path: script.py
-  - path: /common/helper_functions/subset_h5ad_by_format.py
 
 engines:
   - type: docker
+    #image: openproblems/base_pytorch_nvidia:1 # TODO: ideally get gpu image to work
     image: openproblems/base_python:1
+    setup:
+      - type: python
+        packages: [scikit-learn, scikit-misc]
+    __merge__: 
+      - /src/base/setup_spatialdata_partial.yaml
+  - type: native
 
 runners:
   - type: executable

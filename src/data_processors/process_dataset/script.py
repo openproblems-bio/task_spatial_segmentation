@@ -1,27 +1,58 @@
-import sys
 import random
-import numpy as np
 import anndata as ad
-import openproblems as op
+import spatialdata as sd
+import scanpy as sc
 
 ## VIASH START
 par = {
-    'input_sp': 'resources_test/task_spatial_segmentation/mouse_brain_combined/common_ist.zarr',
-    'input_sc': 'resources_test/task_spatial_segmentation/mouse_brain_combined/common_scrnaseq.h5ad',
-    'output_spatial_dataset': 'output_spatial_dataset.zarr',
-    'output_scrnaseq_reference': 'output_scrnaseq_reference.h5ad',
-}
-meta = {
-    'resources_dir': 'target/executable/data_processors/process_dataset',
-    'config': 'target/executable/data_processors/process_dataset/.config.vsh.yaml'
+    'input_sp': 'resources_test/common/2023_10x_mouse_brain_xenium_rep1/dataset.zarr',
+    'input_sc': 'resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/dataset.h5ad',
+    'output_spatial_dataset': 'resources_test/task_spatial_segmentation/mouse_brain_combined/output_spatial_dataset.zarr',
+    'output_scrnaseq_reference': 'resources_test/task_spatial_segmentation/mouse_brain_combined/output_scrnaseq_reference.h5ad',
+    'span': 0.3,
+    'seed': 123,
+    'n_top_genes': 3000,
+    'dataset_id': 'mouse_brain_combined',
+    'dataset_name': 'Mouse brain combined dataset',
+    'dataset_url': '',
+    'dataset_summary': '',
+    'dataset_description': '',
+    'dataset_reference': [],
+    'dataset_organism': 'Mus musculus',
 }
 ## VIASH END
 
-# import helper functions
-sys.path.append(meta['resources_dir'])
-from subset_h5ad_by_format import subset_h5ad_by_format
+def sc_processing(adata):
+    if "counts" not in adata.layers and adata.X != None:
+        print(">> Save raw counts in .layer", flush=True)
+        adata.layers["counts"] = adata.X.copy()
+        
+    if "normalized" not in adata.layers:
+        print(">> Perform standard normalization", flush=True)
+        adata.layers["normalized"] = adata.layers["counts"].copy()
+        sc.pp.normalize_total(adata, layer="normalized", inplace=True)
 
-config = op.project.read_viash_config(meta["config"])
+    if "normalized_log" not in adata.layers:
+        print(">> Perform log1p normalization", flush=True)
+        adata.layers["normalized_log"] = adata.layers["normalized"].copy()
+        sc.pp.normalize_total(adata, layer="normalized_log", inplace=True)
+
+    if "normalized_log_scaled" not in adata.layers:
+        print(">> Perform 0 mean and standard variance normalization", flush=True)
+        adata.layers["normalized_log_scaled"] = adata.layers["normalized_log"].copy()
+        sc.pp.normalize_total(adata, layer="normalized_log_scaled", inplace=True)
+
+    if "hvg" not in adata.var:
+        print(">> Compute highly variable genes", flush=True)
+        sc.pp.highly_variable_genes(
+            adata,
+            flavor="seurat_v3",
+            layer="counts",
+            span=par['span'],
+            n_top_genes=par['n_top_genes']
+        )
+        adata.var.rename(columns={"highly_variable": "hvg"}, inplace=True)
+
 
 # set seed if need be
 if par["seed"]:
@@ -29,54 +60,46 @@ if par["seed"]:
     random.seed(par["seed"])
 
 print(">> Load data", flush=True)
-adata = ad.read_h5ad(par["input"])
-print("input:", adata)
+sc_data = ad.read_h5ad(par["input_sc"])
+print(f"single cell data: {sc_data}")
 
-print(f">> Process data using {par['method']} method")
-if par["method"] == "batch":
-    batch_info = adata.obs[par["obs_batch"]]
-    batch_categories = batch_info.dtype.categories
-    test_batches = random.sample(list(batch_categories), 1)
-    is_test = [ x in test_batches for x in batch_info ]
-elif par["method"] == "random":
-    train_ix = np.random.choice(adata.n_obs, round(adata.n_obs * 0.8), replace=False)
-    is_test = [ not x in train_ix for x in range(0, adata.n_obs) ]
+print(">> Processing sc_data", flush=True)
+sc_processing(sc_data)
 
-# subset the different adatas
-print(">> Figuring which data needs to be copied to which output file", flush=True)
-# use par arguments to look for label and batch value in different slots
-slot_mapping = {
-    "obs": {
-        "label": par["obs_label"],
-        "batch": par["obs_batch"],
-    }
-}
-
-print(">> Creating train data", flush=True)
-output_train = subset_h5ad_by_format(
-    adata[[not x for x in is_test]],
-    config,
-    "output_train",
-    slot_mapping
-)
-
-print(">> Creating test data", flush=True)
-output_test = subset_h5ad_by_format(
-    adata[is_test],
-    config,
-    "output_test",
-    slot_mapping
-)
-
-print(">> Creating solution data", flush=True)
-output_solution = subset_h5ad_by_format(
-    adata[is_test],
-    config,
-    "output_solution",
-    slot_mapping
-)
+print(">> Override dataset metadata in .uns", flush=True)
+sc_data.uns["orig_dataset_id"] = sc_data.uns.get("dataset_id", None)
+for key in ["dataset_id", "dataset_name", "dataset_url", "dataset_summary", "dataset_description", "dataset_reference", "dataset_organism"]:
+    sc_data.uns[key] = par[key]
 
 print(">> Writing data", flush=True)
-output_train.write_h5ad(par["output_train"])
-output_test.write_h5ad(par["output_test"])
-output_solution.write_h5ad(par["output_solution"])
+sc_data.write_h5ad(par["output_scrnaseq_reference"], compression="gzip")
+
+# read input_sp
+print(">> Read spatial data", flush=True)
+sp_data = sd.read_zarr(par["input_sp"])
+print(f"spatial data: {sp_data}")
+
+print(">> Processing spatial data", flush=True)
+sp_data_table = sp_data.tables['table']
+print(f"single cell part of spatial data: {sp_data_table}")
+sc_processing(sp_data_table)
+
+if "cell_area" not in sp_data_table.obs:
+    print(">> Perform scanpy qc for cell area", flush=True)
+    sc.pp.calculate_qc_metrics(sp_data_table, layer="counts", inplace=True)
+
+for x in ["transcript_counts", "n_genes_by_counts"]:
+    if f"ca_normalized_{x}" not in sp_data_table.obs and x in sp_data_table.obs:
+        print(f">> Perform cell area normalization for {x}", flush=True)
+        sp_data_table.obs[f'ca_normalized_{x}'] = sp_data_table.obs[f"{x}"] / sp_data_table.obs["cell_area"]
+
+print(">> Override dataset metadata in .uns", flush=True)
+sp_data_table.uns["orig_dataset_id"] = sp_data_table.uns.get("dataset_id", None)
+for key in ["dataset_id", "dataset_name", "dataset_url", "dataset_summary", "dataset_description", "dataset_reference", "dataset_organism"]:
+    sp_data_table.uns[key] = par[key]
+
+print(f"spatial data: {sp_data}")
+print(f"spatial data tables['table']: {sp_data.tables['table']}")
+
+print(">> Writing spatial data", flush=True)
+sp_data.write(par["output_spatial_dataset"], overwrite=True)

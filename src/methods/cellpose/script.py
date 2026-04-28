@@ -1,6 +1,7 @@
-import dask.array as da
+import anndata as ad
 import numpy as np
 import os
+import pandas as pd
 import shutil
 import spatialdata as sd
 import xarray as xr
@@ -9,13 +10,27 @@ from spatialdata.models import Labels2DModel
 
 ## VIASH START
 par = {
-  'input': 'resources_test/task_spatial_segmentation/mouse_brain_combined/common_ist.zarr',
-  'output': 'resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.h5ad'
+  'input': 'resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr',
+  'output': 'prediction.zarr'
 }
 meta = {
   'name': 'cellpose'
 }
 ## VIASH END
+
+# TODO: move to helper file
+def convert_to_lower_dtype(arr):
+    max_val = arr.max()
+    if max_val <= np.iinfo(np.uint8).max:
+        new_dtype = np.uint8
+    elif max_val <= np.iinfo(np.uint16).max:
+        new_dtype = np.uint16
+    elif max_val <= np.iinfo(np.uint32).max:
+        new_dtype = np.uint32
+    else:
+        new_dtype = np.uint64
+
+    return arr.astype(new_dtype)
 
 print('Reading input', flush=True)
 sdata = sd.read_zarr(par["input"])
@@ -30,20 +45,26 @@ print(f"Running Cellpose segmentation with parameters: {eval_params}")
 masks, _, _ = model.eval(image[0], progress=True, **eval_params)
 
 print('Cellpose segmentation finished, post-processing results', flush=True)
-# Convert to smallest sufficient unsigned int dtype
-max_val = masks.max()
-for dtype in (np.uint8, np.uint16, np.uint32, np.uint64):
-    if max_val <= np.iinfo(dtype).max:
-        masks = masks.astype(dtype)
-        break
+masks = convert_to_lower_dtype(masks)
 
 print('Segmentation done, preparing output', flush=True)
 sd_output = sd.SpatialData()
-# Wrap masks as a single-chunk dask array with flat chunk shape for zarr v3 compat
-dask_masks = da.from_array(masks, chunks=masks.shape)
-data_array = xr.DataArray(dask_masks, name='segmentation', dims=('y', 'x'))
+data_array = xr.DataArray(masks, name='segmentation', dims=('y', 'x'))
 parsed = Labels2DModel.parse(data_array, transformations=transformation)
 sd_output.labels['segmentation'] = parsed
+
+cell_ids = np.unique(masks)[1:]  # exclude background (0)
+table = ad.AnnData(
+  obs=pd.DataFrame(
+    {'cell_id': cell_ids.astype(str), 'region': 'segmentation'},
+    index=cell_ids.astype(str),
+  ),
+  uns={
+    'dataset_id': sdata.tables['table'].uns['dataset_id'],
+    'method_id': meta['name']
+  }
+)
+sd_output.tables['table'] = table
 
 print('Saving output', flush=True)
 if os.path.exists(par["output"]):

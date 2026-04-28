@@ -23,7 +23,7 @@ publish_dir="s3://openproblems-data/resources/task_template/results/${RUN_ID}"
 # write the parameters to file
 cat > /tmp/params.yaml << HERE
 input_states: s3://openproblems-data/resources/task_template/datasets/**/state.yaml
-rename_keys: 'input_train:output_train;input_test:output_test;input_solution:output_solution'
+rename_keys: 'input_spatial_dataset:output_spatial_dataset,input_scrnaseq_reference:output_scrnaseq_reference'
 output_state: "state.yaml"
 publish_dir: "$publish_dir"
 HERE

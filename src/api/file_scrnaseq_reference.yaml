@@ -1,9 +1,110 @@
 type: file
-example: "resources_test/task_spatial_segmentation/mouse_brain_combined/common_scrnaseq.h5ad"
+example: "resources_test/task_spatial_segmentation/mouse_brain_combined/scrnaseq_reference.h5ad"
 # TODO: revert to the original example once file exists
 # example: "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.h5ad"
 label: "scRNA-seq Reference"
 summary: A single-cell reference dataset, preprocessed for this benchmark.
 description: |
   This dataset contains preprocessed counts and metadata for single-cell RNA-seq data.
-__merge__: file_common_scrnaseq.yaml
+info:
+  format:
+    type: h5ad
+    layers:
+      - type: integer
+        name: counts
+        description: Raw counts
+        required: true
+
+      - type: double
+        name: normalized
+        description: Normalized expression values
+        required: true
+
+      - type: double
+        name: normalized_log
+        description: Log1p normalized expression values
+        required: true
+
+      - type: double
+        name: normalized_log_scaled
+        description: Log1p normalized expression values scaled to unit variance and zero mean
+        required: true
+        
+    obs:
+      - type: string
+        name: cell_type
+        description: Classification of the cell type based on its characteristics and function within the tissue or organism.
+        required: true
+
+    var:
+      - type: string
+        name: feature_id
+        description: Unique identifier for the feature, usually a ENSEMBL gene id.
+        # TODO: make this required once openproblems_v1 dataloader supports it
+        required: false
+      
+      - type: string
+        name: feature_name
+        description: A human-readable name for the feature, usually a gene symbol.
+        # TODO: make this required once the dataloader supports it
+        required: true
+
+      - type: boolean
+        name: hvg
+        description: Whether or not the feature is considered to be a 'highly variable gene'
+        required: true
+
+    obsp:
+      - type: double
+        name: knn_distances
+        description: K nearest neighbors distance matrix.
+        required: true
+
+      - type: double
+        name: knn_connectivities
+        description: K nearest neighbors connectivities matrix.
+        required: true
+
+    obsm:
+      - type: double
+        name: X_pca
+        description: The resulting PCA embedding.
+        required: true
+
+    varm:
+      - type: double
+        name: pca_loadings
+        description: The PCA loadings matrix.
+        required: true
+
+    uns:
+      - type: string
+        name: dataset_id
+        description: A unique identifier for the dataset. This is different from the `obs.dataset_id` field, which is the identifier for the dataset from which the cell data is derived.
+        required: true
+      - name: dataset_name
+        type: string
+        description: A human-readable name for the dataset.
+        required: true
+      - type: string
+        name: dataset_url
+        description: Link to the original source of the dataset.
+        required: false
+      - name: dataset_reference
+        type: string
+        description: Bibtex reference of the paper in which the dataset was published.
+        required: false
+        multiple: true
+      - name: dataset_summary
+        type: string
+        description: Short description of the dataset.
+        required: true
+      - name: dataset_description
+        type: string
+        description: Long description of the dataset.
+        required: true
+      - name: dataset_organism
+        type: string
+        description: The organism of the sample in the dataset.
+        required: false
+        multiple: true

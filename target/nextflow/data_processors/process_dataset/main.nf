@@ -3045,63 +3045,6 @@ meta = [
   "version" : "build_main",
   "argument_groups" : [
     {
-      "name" : "Arguments",
-      "arguments" : [
-        {
-          "type" : "string",
-          "name" : "--method",
-          "description" : "The process method to assign train/test.",
-          "default" : [
-            "batch"
-          ],
-          "required" : false,
-          "choices" : [
-            "batch",
-            "random"
-          ],
-          "direction" : "input",
-          "multiple" : false,
-          "multiple_sep" : ";"
-        },
-        {
-          "type" : "string",
-          "name" : "--obs_label",
-          "description" : "Which .obs slot to use as label.",
-          "default" : [
-            "cell_type"
-          ],
-          "required" : false,
-          "direction" : "input",
-          "multiple" : false,
-          "multiple_sep" : ";"
-        },
-        {
-          "type" : "string",
-          "name" : "--obs_batch",
-          "description" : "Which .obs slot to use as batch covariate.",
-          "default" : [
-            "batch"
-          ],
-          "required" : false,
-          "direction" : "input",
-          "multiple" : false,
-          "multiple_sep" : ";"
-        },
-        {
-          "type" : "integer",
-          "name" : "--seed",
-          "description" : "A seed for the subsampling.",
-          "example" : [
-            123
-          ],
-          "required" : false,
-          "direction" : "input",
-          "multiple" : false,
-          "multiple_sep" : ";"
-        }
-      ]
-    },
-    {
       "name" : "Inputs",
       "arguments" : [
         {
@@ -3680,21 +3623,9 @@ meta = [
               "images" : [
                 {
                   "type" : "object",
-                  "name" : "image",
+                  "name" : "morphology_mip",
                   "description" : "The raw image data",
                   "required" : true
-                },
-                {
-                  "type" : "object",
-                  "name" : "image_3D",
-                  "description" : "The raw 3D image data",
-                  "required" : false
-                },
-                {
-                  "type" : "object",
-                  "name" : "he_image",
-                  "description" : "H&E image data",
-                  "required" : false
                 }
               ],
               "labels" : [
@@ -3814,7 +3745,7 @@ meta = [
               "tables" : [
                 {
                   "type" : "anndata",
-                  "name" : "metadata",
+                  "name" : "table",
                   "description" : "Metadata of spatial dataset",
                   "required" : true,
                   "uns" : [
@@ -3911,7 +3842,7 @@ meta = [
             }
           },
           "example" : [
-            "resources_test/task_spatial_segmentation/mouse_brain_combined/common_ist.zarr"
+            "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr"
           ],
           "must_exist" : true,
           "create_parent" : true,
@@ -3937,9 +3868,21 @@ meta = [
                   "required" : true
                 },
                 {
-                  "type" : "integer",
+                  "type" : "double",
                   "name" : "normalized",
                   "description" : "Normalized expression values",
+                  "required" : true
+                },
+                {
+                  "type" : "double",
+                  "name" : "normalized_log",
+                  "description" : "Log1p normalized expression values",
+                  "required" : true
+                },
+                {
+                  "type" : "double",
+                  "name" : "normalized_log_scaled",
+                  "description" : "Log1p normalized expression values scaled to unit variance and zero mean",
                   "required" : true
                 }
               ],
@@ -3949,162 +3892,6 @@ meta = [
                   "name" : "cell_type",
                   "description" : "Classification of the cell type based on its characteristics and function within the tissue or organism.",
                   "required" : true
-                },
-                {
-                  "type" : "string",
-                  "name" : "cell_type_level2",
-                  "description" : "Classification of the cell type based on its characteristics and function within the tissue or organism.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "cell_type_level3",
-                  "description" : "Classification of the cell type based on its characteristics and function within the tissue or organism.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "cell_type_level4",
-                  "description" : "Classification of the cell type based on its characteristics and function within the tissue or organism.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "dataset_id",
-                  "description" : "Identifier for the dataset from which the cell data is derived, useful for tracking and referencing purposes.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "assay",
-                  "description" : "Type of assay used to generate the cell data, indicating the methodology or technique employed.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "assay_ontology_term_id",
-                  "description" : "Experimental Factor Ontology (`EFO:`) term identifier for the assay, providing a standardized reference to the assay type.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "cell_type_ontology_term_id",
-                  "description" : "Cell Ontology (`CL:`) term identifier for the cell type, offering a standardized reference to the specific cell classification.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "development_stage",
-                  "description" : "Stage of development of the organism or tissue from which the cell is derived, indicating its maturity or developmental phase.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "development_stage_ontology_term_id",
-                  "description" : "Ontology term identifier for the developmental stage, providing a standardized reference to the organism's developmental phase.\n\nIf the organism is human (`organism_ontology_term_id == 'NCBITaxon:9606'`), then the Human Developmental Stages (`HsapDv:`) ontology is used.  \nIf the organism is mouse (`organism_ontology_term_id == 'NCBITaxon:10090'`), then the Mouse Developmental Stages (`MmusDv:`) ontology is used.\nOtherwise, the Uberon (`UBERON:`) ontology is used.\n",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "disease",
-                  "description" : "Information on any disease or pathological condition associated with the cell or donor.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "disease_ontology_term_id",
-                  "description" : "Ontology term identifier for the disease, enabling standardized disease classification and referencing.\n\nMust be a term from the Mondo Disease Ontology (`MONDO:`) ontology term, or `PATO:0000461` from the Phenotype And Trait Ontology (`PATO:`).\n",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "donor_id",
-                  "description" : "Identifier for the donor from whom the cell sample is obtained.",
-                  "required" : false
-                },
-                {
-                  "type" : "boolean",
-                  "name" : "is_primary_data",
-                  "description" : "Indicates whether the data is primary (directly obtained from experiments) or has been computationally derived from other primary data.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "organism",
-                  "description" : "Organism from which the cell sample is obtained.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "organism_ontology_term_id",
-                  "description" : "Ontology term identifier for the organism, providing a standardized reference for the organism.\n\nMust be a term from the NCBI Taxonomy Ontology (`NCBITaxon:`) which is a child of `NCBITaxon:33208`.\n",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "self_reported_ethnicity",
-                  "description" : "Ethnicity of the donor as self-reported, relevant for studies considering genetic diversity and population-specific traits.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "self_reported_ethnicity_ontology_term_id",
-                  "description" : "Ontology term identifier for the self-reported ethnicity, providing a standardized reference for ethnic classifications.\n\nIf the organism is human (`organism_ontology_term_id == 'NCBITaxon:9606'`), then the Human Ancestry Ontology (`HANCESTRO:`) is used.\n",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "sex",
-                  "description" : "Biological sex of the donor or source organism, crucial for studies involving sex-specific traits or conditions.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "sex_ontology_term_id",
-                  "description" : "Ontology term identifier for the biological sex, ensuring standardized classification of sex. Only `PATO:0000383`, `PATO:0000384` and `PATO:0001340` are allowed.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "suspension_type",
-                  "description" : "Type of suspension or medium in which the cells were stored or processed, important for understanding cell handling and conditions.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "tissue",
-                  "description" : "Specific tissue from which the cells were derived, key for context and specificity in cell studies.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "tissue_ontology_term_id",
-                  "description" : "Ontology term identifier for the tissue, providing a standardized reference for the tissue type.\n\nFor organoid or tissue samples, the Uber-anatomy ontology (`UBERON:`) is used. The term ids must be a child term of `UBERON:0001062` (anatomical entity).\nFor cell cultures, the Cell Ontology (`CL:`) is used. The term ids cannot be `CL:0000255`, `CL:0000257` or `CL:0000548`.\n",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "tissue_general",
-                  "description" : "General category or classification of the tissue, useful for broader grouping and comparison of cell data.",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "tissue_general_ontology_term_id",
-                  "description" : "Ontology term identifier for the general tissue category, aiding in standardizing and grouping tissue types.\n\nFor organoid or tissue samples, the Uber-anatomy ontology (`UBERON:`) is used. The term ids must be a child term of `UBERON:0001062` (anatomical entity).\nFor cell cultures, the Cell Ontology (`CL:`) is used. The term ids cannot be `CL:0000255`, `CL:0000257` or `CL:0000548`.\n",
-                  "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "batch",
-                  "description" : "A batch identifier. This label is very context-dependent and may be a combination of the tissue, assay, donor, etc.",
-                  "required" : false
-                },
-                {
-                  "type" : "integer",
-                  "name" : "soma_joinid",
-                  "description" : "If the dataset was retrieved from CELLxGENE census, this is a unique identifier for the cell.",
-                  "required" : false
                 }
               ],
               "var" : [
@@ -4121,21 +3908,9 @@ meta = [
                   "required" : true
                 },
                 {
-                  "type" : "integer",
-                  "name" : "soma_joinid",
-                  "description" : "If the dataset was retrieved from CELLxGENE census, this is a unique identifier for the feature.",
-                  "required" : false
-                },
-                {
                   "type" : "boolean",
                   "name" : "hvg",
                   "description" : "Whether or not the feature is considered to be a 'highly variable gene'",
-                  "required" : true
-                },
-                {
-                  "type" : "double",
-                  "name" : "hvg_score",
-                  "description" : "A score for the feature indicating how highly variable it is.",
                   "required" : true
                 }
               ],
@@ -4218,12 +3993,146 @@ meta = [
             }
           },
           "example" : [
-            "resources_test/task_spatial_segmentation/mouse_brain_combined/common_scrnaseq.h5ad"
+            "resources_test/task_spatial_segmentation/mouse_brain_combined/scrnaseq_reference.h5ad"
           ],
           "must_exist" : true,
           "create_parent" : true,
           "required" : true,
           "direction" : "output",
+          "multiple" : false,
+          "multiple_sep" : ";"
+        }
+      ]
+    },
+    {
+      "name" : "Combined Dataset Metadata",
+      "description" : "Metadata for the combined dataset that will be stored.",
+      "arguments" : [
+        {
+          "type" : "string",
+          "name" : "--dataset_id",
+          "description" : "A unique identifier for the dataset",
+          "info" : {
+            "test_default" : "mouse_brain_combined"
+          },
+          "required" : true,
+          "direction" : "input",
+          "multiple" : false,
+          "multiple_sep" : ";"
+        },
+        {
+          "type" : "string",
+          "name" : "--dataset_name",
+          "description" : "Nicely formatted name.",
+          "info" : {
+            "test_default" : "Mouse brain combined dataset"
+          },
+          "required" : true,
+          "direction" : "input",
+          "multiple" : false,
+          "multiple_sep" : ";"
+        },
+        {
+          "type" : "string",
+          "name" : "--dataset_url",
+          "description" : "Link to the original source of the dataset.",
+          "info" : {
+            "test_default" : "https://example.com/mouse_brain_combined"
+          },
+          "required" : true,
+          "direction" : "input",
+          "multiple" : false,
+          "multiple_sep" : ";"
+        },
+        {
+          "type" : "string",
+          "name" : "--dataset_reference",
+          "description" : "Bibtex reference of the paper in which the dataset was published.",
+          "info" : {
+            "test_default" : [
+              "https://example.com/mouse_brain_combined_paper",
+              "10.1234/example.doi"
+            ]
+          },
+          "required" : true,
+          "direction" : "input",
+          "multiple" : true,
+          "multiple_sep" : ";"
+        },
+        {
+          "type" : "string",
+          "name" : "--dataset_summary",
+          "description" : "Short description of the dataset.",
+          "info" : {
+            "test_default" : "Combined dataset for mouse brain spatial transcriptomics"
+          },
+          "required" : true,
+          "direction" : "input",
+          "multiple" : false,
+          "multiple_sep" : ";"
+        },
+        {
+          "type" : "string",
+          "name" : "--dataset_description",
+          "description" : "Long description of the dataset.",
+          "info" : {
+            "test_default" : "This is a combined dataset for mouse brain spatial transcriptomics."
+          },
+          "required" : true,
+          "direction" : "input",
+          "multiple" : false,
+          "multiple_sep" : ";"
+        },
+        {
+          "type" : "string",
+          "name" : "--dataset_organism",
+          "description" : "The organism of the sample in the dataset.",
+          "info" : {
+            "test_default" : "Mus musculus"
+          },
+          "required" : true,
+          "direction" : "input",
+          "multiple" : false,
+          "multiple_sep" : ";"
+        }
+      ]
+    },
+    {
+      "name" : "Processing parameters",
+      "arguments" : [
+        {
+          "type" : "integer",
+          "name" : "--seed",
+          "description" : "A seed for the subsampling.",
+          "example" : [
+            123
+          ],
+          "required" : false,
+          "direction" : "input",
+          "multiple" : false,
+          "multiple_sep" : ";"
+        },
+        {
+          "type" : "double",
+          "name" : "--span",
+          "description" : "The fraction of the data (cells) used when estimating the variance in the loess model fit if flavor='seurat_v3'.",
+          "default" : [
+            0.3
+          ],
+          "required" : false,
+          "direction" : "input",
+          "multiple" : false,
+          "multiple_sep" : ";"
+        },
+        {
+          "type" : "integer",
+          "name" : "--n_top_genes",
+          "description" : "Number of highly-variable genes to keep. Mandatory if flavor='seurat_v3'.",
+          "default" : [
+            3000
+          ],
+          "required" : false,
+          "direction" : "input",
           "multiple" : false,
           "multiple_sep" : ";"
         }
@@ -4235,10 +4144,6 @@ meta = [
       "type" : "python_script",
       "path" : "script.py",
       "is_executable" : true
-    },
-    {
-      "type" : "file",
-      "path" : "/common/helper_functions/subset_h5ad_by_format.py"
     }
   ],
   "test_resources" : [
@@ -4281,7 +4186,7 @@ meta = [
   ],
   "license" : "MIT",
   "links" : {
-    "repository" : "https://github.com/openproblems-bio/task_template",
+    "repository" : "https://github.com/openproblems-bio/task_spatial_segmentation",
     "docker_registry" : "ghcr.io"
   },
   "runners" : [
@@ -4330,16 +4235,41 @@ meta = [
       "type" : "docker",
       "id" : "docker",
       "image" : "openproblems/base_python:1",
-      "namespace_separator" : "/"
+      "namespace_separator" : "/",
+      "setup" : [
+        {
+          "type" : "python",
+          "user" : false,
+          "pypi" : [
+            "spatialdata>=0.7.3a1",
+            "anndata>=0.12.0",
+            "zarr>=3.0.0"
+          ],
+          "upgrade" : true
+        },
+        {
+          "type" : "python",
+          "user" : false,
+          "packages" : [
+            "scikit-learn",
+            "scikit-misc"
+          ],
+          "upgrade" : true
+        }
+      ]
+    },
+    {
+      "type" : "native",
+      "id" : "native"
     }
   ],
   "build_info" : {
     "config" : "/home/runner/work/task_spatial_segmentation/task_spatial_segmentation/src/data_processors/process_dataset/config.vsh.yaml",
     "runner" : "nextflow",
-    "engine" : "docker",
+    "engine" : "docker|native",
     "output" : "target/nextflow/data_processors/process_dataset",
     "viash_version" : "0.9.7",
-    "git_commit" : "6ab1f3445c3a2d417d1db4f2c5f80b28933e6ca4",
+    "git_commit" : "70f053e368b4e63ee043f3e560ce47fbc254b3cd",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -4411,9 +4341,9 @@ meta = [
       ]
     },
     "links" : {
-      "repository" : "https://github.com/openproblems-bio/task_template",
+      "repository" : "https://github.com/openproblems-bio/task_spatial_segmentation",
       "docker_registry" : "ghcr.io",
-      "issue_tracker" : "https://github.com/openproblems-bio/task_template/issues"
+      "issue_tracker" : "https://github.com/openproblems-bio/task_spatial_segmentation/issues"
     }
   }
 }'''))
@@ -4428,23 +4358,28 @@ def innerWorkflowFactory(args) {
   def rawScript = '''set -e
 tempscript=".viash_script.py"
 cat > "$tempscript" << VIASHMAIN
-import sys
 import random
-import numpy as np
 import anndata as ad
-import openproblems as op
+import spatialdata as sd
+import scanpy as sc
 
 ## VIASH START
 # The following code has been auto-generated by Viash.
 par = {
-  'method': $( if [ ! -z ${VIASH_PAR_METHOD+x} ]; then echo "r'${VIASH_PAR_METHOD//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
-  'obs_label': $( if [ ! -z ${VIASH_PAR_OBS_LABEL+x} ]; then echo "r'${VIASH_PAR_OBS_LABEL//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
-  'obs_batch': $( if [ ! -z ${VIASH_PAR_OBS_BATCH+x} ]; then echo "r'${VIASH_PAR_OBS_BATCH//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
-  'seed': $( if [ ! -z ${VIASH_PAR_SEED+x} ]; then echo "int(r'${VIASH_PAR_SEED//\\'/\\'\\"\\'\\"r\\'}')"; else echo None; fi ),
   'input_sp': $( if [ ! -z ${VIASH_PAR_INPUT_SP+x} ]; then echo "r'${VIASH_PAR_INPUT_SP//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
   'input_sc': $( if [ ! -z ${VIASH_PAR_INPUT_SC+x} ]; then echo "r'${VIASH_PAR_INPUT_SC//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
   'output_spatial_dataset': $( if [ ! -z ${VIASH_PAR_OUTPUT_SPATIAL_DATASET+x} ]; then echo "r'${VIASH_PAR_OUTPUT_SPATIAL_DATASET//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
-  'output_scrnaseq_reference': $( if [ ! -z ${VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE+x} ]; then echo "r'${VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi )
+  'output_scrnaseq_reference': $( if [ ! -z ${VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE+x} ]; then echo "r'${VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
+  'dataset_id': $( if [ ! -z ${VIASH_PAR_DATASET_ID+x} ]; then echo "r'${VIASH_PAR_DATASET_ID//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
+  'dataset_name': $( if [ ! -z ${VIASH_PAR_DATASET_NAME+x} ]; then echo "r'${VIASH_PAR_DATASET_NAME//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
+  'dataset_url': $( if [ ! -z ${VIASH_PAR_DATASET_URL+x} ]; then echo "r'${VIASH_PAR_DATASET_URL//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
+  'dataset_reference': $( if [ ! -z ${VIASH_PAR_DATASET_REFERENCE+x} ]; then echo "r'${VIASH_PAR_DATASET_REFERENCE//\\'/\\'\\"\\'\\"r\\'}'.split(';')"; else echo None; fi ),
+  'dataset_summary': $( if [ ! -z ${VIASH_PAR_DATASET_SUMMARY+x} ]; then echo "r'${VIASH_PAR_DATASET_SUMMARY//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
+  'dataset_description': $( if [ ! -z ${VIASH_PAR_DATASET_DESCRIPTION+x} ]; then echo "r'${VIASH_PAR_DATASET_DESCRIPTION//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
+  'dataset_organism': $( if [ ! -z ${VIASH_PAR_DATASET_ORGANISM+x} ]; then echo "r'${VIASH_PAR_DATASET_ORGANISM//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
+  'seed': $( if [ ! -z ${VIASH_PAR_SEED+x} ]; then echo "int(r'${VIASH_PAR_SEED//\\'/\\'\\"\\'\\"r\\'}')"; else echo None; fi ),
+  'span': $( if [ ! -z ${VIASH_PAR_SPAN+x} ]; then echo "float(r'${VIASH_PAR_SPAN//\\'/\\'\\"\\'\\"r\\'}')"; else echo None; fi ),
+  'n_top_genes': $( if [ ! -z ${VIASH_PAR_N_TOP_GENES+x} ]; then echo "int(r'${VIASH_PAR_N_TOP_GENES//\\'/\\'\\"\\'\\"r\\'}')"; else echo None; fi )
 }
 meta = {
   'name': $( if [ ! -z ${VIASH_META_NAME+x} ]; then echo "r'${VIASH_META_NAME//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
@@ -4472,11 +4407,37 @@ dep = {
 
 ## VIASH END
 
-# import helper functions
-sys.path.append(meta['resources_dir'])
-from subset_h5ad_by_format import subset_h5ad_by_format
+def sc_processing(adata):
+    if "counts" not in adata.layers and adata.X != None:
+        print(">> Save raw counts in .layer", flush=True)
+        adata.layers["counts"] = adata.X.copy()
+        
+    if "normalized" not in adata.layers:
+        print(">> Perform standard normalization", flush=True)
+        adata.layers["normalized"] = adata.layers["counts"].copy()
+        sc.pp.normalize_total(adata, layer="normalized", inplace=True)
 
-config = op.project.read_viash_config(meta["config"])
+    if "normalized_log" not in adata.layers:
+        print(">> Perform log1p normalization", flush=True)
+        adata.layers["normalized_log"] = adata.layers["normalized"].copy()
+        sc.pp.normalize_total(adata, layer="normalized_log", inplace=True)
+
+    if "normalized_log_scaled" not in adata.layers:
+        print(">> Perform 0 mean and standard variance normalization", flush=True)
+        adata.layers["normalized_log_scaled"] = adata.layers["normalized_log"].copy()
+        sc.pp.normalize_total(adata, layer="normalized_log_scaled", inplace=True)
+
+    if "hvg" not in adata.var:
+        print(">> Compute highly variable genes", flush=True)
+        sc.pp.highly_variable_genes(
+            adata,
+            flavor="seurat_v3",
+            layer="counts",
+            span=par['span'],
+            n_top_genes=par['n_top_genes']
+        )
+        adata.var.rename(columns={"highly_variable": "hvg"}, inplace=True)
+
 
 # set seed if need be
 if par["seed"]:
@@ -4484,57 +4445,49 @@ if par["seed"]:
     random.seed(par["seed"])
 
 print(">> Load data", flush=True)
-adata = ad.read_h5ad(par["input"])
-print("input:", adata)
+sc_data = ad.read_h5ad(par["input_sc"])
+print(f"single cell data: {sc_data}")
 
-print(f">> Process data using {par['method']} method")
-if par["method"] == "batch":
-    batch_info = adata.obs[par["obs_batch"]]
-    batch_categories = batch_info.dtype.categories
-    test_batches = random.sample(list(batch_categories), 1)
-    is_test = [ x in test_batches for x in batch_info ]
-elif par["method"] == "random":
-    train_ix = np.random.choice(adata.n_obs, round(adata.n_obs * 0.8), replace=False)
-    is_test = [ not x in train_ix for x in range(0, adata.n_obs) ]
+print(">> Processing sc_data", flush=True)
+sc_processing(sc_data)
 
-# subset the different adatas
-print(">> Figuring which data needs to be copied to which output file", flush=True)
-# use par arguments to look for label and batch value in different slots
-slot_mapping = {
-    "obs": {
-        "label": par["obs_label"],
-        "batch": par["obs_batch"],
-    }
-}
-
-print(">> Creating train data", flush=True)
-output_train = subset_h5ad_by_format(
-    adata[[not x for x in is_test]],
-    config,
-    "output_train",
-    slot_mapping
-)
-
-print(">> Creating test data", flush=True)
-output_test = subset_h5ad_by_format(
-    adata[is_test],
-    config,
-    "output_test",
-    slot_mapping
-)
-
-print(">> Creating solution data", flush=True)
-output_solution = subset_h5ad_by_format(
-    adata[is_test],
-    config,
-    "output_solution",
-    slot_mapping
-)
+print(">> Override dataset metadata in .uns", flush=True)
+sc_data.uns["orig_dataset_id"] = sc_data.uns.get("dataset_id", None)
+for key in ["dataset_id", "dataset_name", "dataset_url", "dataset_summary", "dataset_description", "dataset_reference", "dataset_organism"]:
+    sc_data.uns[key] = par[key]
 
 print(">> Writing data", flush=True)
-output_train.write_h5ad(par["output_train"])
-output_test.write_h5ad(par["output_test"])
-output_solution.write_h5ad(par["output_solution"])
+sc_data.write_h5ad(par["output_scrnaseq_reference"], compression="gzip")
+
+# read input_sp
+print(">> Read spatial data", flush=True)
+sp_data = sd.read_zarr(par["input_sp"])
+print(f"spatial data: {sp_data}")
+
+print(">> Processing spatial data", flush=True)
+sp_data_table = sp_data.tables['table']
+print(f"single cell part of spatial data: {sp_data_table}")
+sc_processing(sp_data_table)
+
+if "cell_area" not in sp_data_table.obs:
+    print(">> Perform scanpy qc for cell area", flush=True)
+    sc.pp.calculate_qc_metrics(sp_data_table, layer="counts", inplace=True)
+
+for x in ["transcript_counts", "n_genes_by_counts"]:
+    if f"ca_normalized_{x}" not in sp_data_table.obs and x in sp_data_table.obs:
+        print(f">> Perform cell area normalization for {x}", flush=True)
+        sp_data_table.obs[f'ca_normalized_{x}'] = sp_data_table.obs[f"{x}"] / sp_data_table.obs["cell_area"]
+
+print(">> Override dataset metadata in .uns", flush=True)
+sp_data_table.uns["orig_dataset_id"] = sp_data_table.uns.get("dataset_id", None)
+for key in ["dataset_id", "dataset_name", "dataset_url", "dataset_summary", "dataset_description", "dataset_reference", "dataset_organism"]:
+    sp_data_table.uns[key] = par[key]
+
+print(f"spatial data: {sp_data}")
+print(f"spatial data tables['table']: {sp_data.tables['table']}")
+
+print(">> Writing spatial data", flush=True)
+sp_data.write(par["output_spatial_dataset"], overwrite=True)
 VIASHMAIN
 python -B "$tempscript"
 '''

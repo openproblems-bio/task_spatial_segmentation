@@ -9,8 +9,8 @@ license: MIT
 keywords: [single-cell, openproblems, benchmark]
 # Step 3: Update the `task_template` to the name of the task from step 1.
 links:
-  issue_tracker: https://github.com/openproblems-bio/task_template/issues
-  repository: https://github.com/openproblems-bio/task_template
+  issue_tracker: https://github.com/openproblems-bio/task_spatial_segmentation/issues
+  repository: https://github.com/openproblems-bio/task_spatial_segmentation
   docker_registry: ghcr.io
 # Step 4: Update the label, summary and description.
 # A unique, human-readable, short label. Used for creating summary tables and visualisations.

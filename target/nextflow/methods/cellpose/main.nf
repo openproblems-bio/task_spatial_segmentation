@@ -3059,21 +3059,9 @@ meta = [
               "images" : [
                 {
                   "type" : "object",
-                  "name" : "image",
+                  "name" : "morphology_mip",
                   "description" : "The raw image data",
                   "required" : true
-                },
-                {
-                  "type" : "object",
-                  "name" : "image_3D",
-                  "description" : "The raw 3D image data",
-                  "required" : false
-                },
-                {
-                  "type" : "object",
-                  "name" : "he_image",
-                  "description" : "H&E image data",
-                  "required" : false
                 }
               ],
               "labels" : [
@@ -3193,7 +3181,7 @@ meta = [
               "tables" : [
                 {
                   "type" : "anndata",
-                  "name" : "metadata",
+                  "name" : "table",
                   "description" : "Metadata of spatial dataset",
                   "required" : true,
                   "uns" : [
@@ -3290,7 +3278,7 @@ meta = [
             }
           },
           "example" : [
-            "resources_test/task_spatial_segmentation/mouse_brain_combined/common_ist.zarr"
+            "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr"
           ],
           "must_exist" : true,
           "create_parent" : true,
@@ -3332,6 +3320,20 @@ meta = [
                       "type" : "string",
                       "name" : "region",
                       "description" : "Region",
+                      "required" : true
+                    }
+                  ],
+                  "uns" : [
+                    {
+                      "type" : "string",
+                      "name" : "dataset_id",
+                      "description" : "A unique identifier for the dataset",
+                      "required" : true
+                    },
+                    {
+                      "type" : "string",
+                      "name" : "method_id",
+                      "description" : "A unique identifier for the method",
                       "required" : true
                     }
                   ]
@@ -3420,8 +3422,8 @@ meta = [
     }
   ],
   "label" : "Cellpose",
-  "summary" : "Output of the segmantation methot cellpose",
-  "description" : "Output of the segmantation methot cellpose",
+  "summary" : "Cellpose-SAM: cell and nucleus segmentation with superhuman generalization.",
+  "description" : "cellpose is an anatomical segmentation algorithm written in Python 3.",
   "test_resources" : [
     {
       "type" : "python_script",
@@ -3467,9 +3469,9 @@ meta = [
     ]
   },
   "links" : {
-    "repository" : "https://github.com/openproblems-bio/task_ist_preprocessing",
+    "repository" : "https://github.com/mouseland/cellpose",
     "docker_registry" : "ghcr.io",
-    "documentation" : "https://github.com/openproblems-bio/task_ist_preprocessing"
+    "documentation" : "https://cellpose.readthedocs.io/en/latest/"
   },
   "runners" : [
     {
@@ -3524,7 +3526,7 @@ meta = [
           "type" : "python",
           "user" : false,
           "pypi" : [
-            "spatialdata",
+            "spatialdata>=0.7.3a1",
             "anndata>=0.12.0",
             "zarr>=3.0.0"
           ],
@@ -3559,7 +3561,7 @@ meta = [
     "engine" : "docker|native",
     "output" : "target/nextflow/methods/cellpose",
     "viash_version" : "0.9.7",
-    "git_commit" : "6ab1f3445c3a2d417d1db4f2c5f80b28933e6ca4",
+    "git_commit" : "70f053e368b4e63ee043f3e560ce47fbc254b3cd",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -3631,9 +3633,9 @@ meta = [
       ]
     },
     "links" : {
-      "repository" : "https://github.com/openproblems-bio/task_template",
+      "repository" : "https://github.com/openproblems-bio/task_spatial_segmentation",
       "docker_registry" : "ghcr.io",
-      "issue_tracker" : "https://github.com/openproblems-bio/task_template/issues"
+      "issue_tracker" : "https://github.com/openproblems-bio/task_spatial_segmentation/issues"
     }
   }
 }'''))
@@ -3648,9 +3650,10 @@ def innerWorkflowFactory(args) {
   def rawScript = '''set -e
 tempscript=".viash_script.py"
 cat > "$tempscript" << VIASHMAIN
-import dask.array as da
+import anndata as ad
 import numpy as np
 import os
+import pandas as pd
 import shutil
 import spatialdata as sd
 import xarray as xr
@@ -3694,6 +3697,20 @@ dep = {
 
 ## VIASH END
 
+# TODO: move to helper file
+def convert_to_lower_dtype(arr):
+    max_val = arr.max()
+    if max_val <= np.iinfo(np.uint8).max:
+        new_dtype = np.uint8
+    elif max_val <= np.iinfo(np.uint16).max:
+        new_dtype = np.uint16
+    elif max_val <= np.iinfo(np.uint32).max:
+        new_dtype = np.uint32
+    else:
+        new_dtype = np.uint64
+
+    return arr.astype(new_dtype)
+
 print('Reading input', flush=True)
 sdata = sd.read_zarr(par["input"])
 image = sdata['morphology_mip']['scale0'].image.compute().to_numpy()
@@ -3707,20 +3724,26 @@ print(f"Running Cellpose segmentation with parameters: {eval_params}")
 masks, _, _ = model.eval(image[0], progress=True, **eval_params)
 
 print('Cellpose segmentation finished, post-processing results', flush=True)
-# Convert to smallest sufficient unsigned int dtype
-max_val = masks.max()
-for dtype in (np.uint8, np.uint16, np.uint32, np.uint64):
-    if max_val <= np.iinfo(dtype).max:
-        masks = masks.astype(dtype)
-        break
+masks = convert_to_lower_dtype(masks)
 
 print('Segmentation done, preparing output', flush=True)
 sd_output = sd.SpatialData()
-# Wrap masks as a single-chunk dask array with flat chunk shape for zarr v3 compat
-dask_masks = da.from_array(masks, chunks=masks.shape)
-data_array = xr.DataArray(dask_masks, name='segmentation', dims=('y', 'x'))
+data_array = xr.DataArray(masks, name='segmentation', dims=('y', 'x'))
 parsed = Labels2DModel.parse(data_array, transformations=transformation)
 sd_output.labels['segmentation'] = parsed
+
+cell_ids = np.unique(masks)[1:]  # exclude background (0)
+table = ad.AnnData(
+  obs=pd.DataFrame(
+    {'cell_id': cell_ids.astype(str), 'region': 'segmentation'},
+    index=cell_ids.astype(str),
+  ),
+  uns={
+    'dataset_id': sdata.tables['table'].uns['dataset_id'],
+    'method_id': meta['name']
+  }
+)
+sd_output.tables['table'] = table
 
 print('Saving output', flush=True)
 if os.path.exists(par["output"]):

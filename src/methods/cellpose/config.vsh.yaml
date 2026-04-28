@@ -1,11 +1,11 @@
 name: cellpose
 label: "Cellpose"
 # TODO: update the summary, description and links
-summary: "Output of the segmantation methot cellpose"
-description: "Output of the segmantation methot cellpose"
+summary: "Cellpose-SAM: cell and nucleus segmentation with superhuman generalization."
+description: "cellpose is an anatomical segmentation algorithm written in Python 3."
 links: # these should point to the documentation of the method
-  documentation: "https://github.com/openproblems-bio/task_ist_preprocessing"
-  repository: "https://github.com/openproblems-bio/task_ist_preprocessing"
+  documentation: "https://cellpose.readthedocs.io/en/latest/"
+  repository: "https://github.com/mouseland/cellpose"
 references:
   doi: "10.1038/s41592-020-01018-x"
 

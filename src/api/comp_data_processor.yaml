@@ -27,6 +27,52 @@ argument_groups:
         __merge__: file_scrnaseq_reference.yaml
         direction: output
         required: true
+  - name: Combined Dataset Metadata
+    description: Metadata for the combined dataset that will be stored.
+    arguments:
+      - type: string
+        name: --dataset_id
+        description: "A unique identifier for the dataset"
+        required: true
+        info:
+          test_default: "mouse_brain_combined"
+      - name: --dataset_name
+        type: string
+        description: Nicely formatted name.
+        required: true
+        info:
+          test_default: "Mouse brain combined dataset"
+      - type: string
+        name: --dataset_url
+        description: Link to the original source of the dataset.
+        required: true
+        info:
+          test_default: "https://example.com/mouse_brain_combined"
+      - name: --dataset_reference
+        type: string
+        description: Bibtex reference of the paper in which the dataset was published.
+        required: true
+        multiple: true
+        info:
+          test_default: ["https://example.com/mouse_brain_combined_paper", "10.1234/example.doi"]
+      - name: --dataset_summary
+        type: string
+        description: Short description of the dataset.
+        required: true
+        info:
+          test_default: "Combined dataset for mouse brain spatial transcriptomics"
+      - name: --dataset_description
+        type: string
+        description: Long description of the dataset.
+        required: true
+        info:
+          test_default: "This is a combined dataset for mouse brain spatial transcriptomics."
+      - name: --dataset_organism
+        type: string
+        description: The organism of the sample in the dataset.
+        required: true
+        info:
+          test_default: "Mus musculus"
 test_resources:
   - path: /resources_test/common/2023_10x_mouse_brain_xenium_rep1
     dest: resources_test/common/2023_10x_mouse_brain_xenium_rep1

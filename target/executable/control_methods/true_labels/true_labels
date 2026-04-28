@@ -446,9 +446,9 @@ function ViashDockerfile {
 FROM openproblems/base_python:1
 ENTRYPOINT []
 LABEL org.opencontainers.image.description="Companion container for running component control_methods true_labels"
-LABEL org.opencontainers.image.created="2026-04-20T11:42:03Z"
-LABEL org.opencontainers.image.source="https://github.com/openproblems-bio/task_template"
-LABEL org.opencontainers.image.revision="6ab1f3445c3a2d417d1db4f2c5f80b28933e6ca4"
+LABEL org.opencontainers.image.created="2026-04-28T12:55:15Z"
+LABEL org.opencontainers.image.source="https://github.com/openproblems-bio/task_spatial_segmentation"
+LABEL org.opencontainers.image.revision="70f053e368b4e63ee043f3e560ce47fbc254b3cd"
 LABEL org.opencontainers.image.version="build_main"
 
 VIASHDOCKER
@@ -575,14 +575,14 @@ function ViashHelp {
   echo "    --input"
   echo "        type: file, required parameter, file must exist"
   echo "        example:"
-  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/common_ist.zarr"
+  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr"
   echo "        This dataset contains preprocessed images, labels, points, shapes, and"
   echo "        tables for spatial transcriptomics data."
   echo ""
   echo "    --input_scrnaseq_reference"
   echo "        type: file, required parameter, file must exist"
   echo "        example:"
-  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/common_scrnaseq.h5ad"
+  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/scrnaseq_reference.h5ad"
   echo "        This dataset contains preprocessed counts and metadata for single-cell"
   echo "        RNA-seq data."
   echo ""
