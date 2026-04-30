@@ -28,9 +28,9 @@ should convince readers of the significance and relevance of your task.
 
 ## Authors & contributors
 
-| Name | Roles | Github | Twitter | Email | Linkedin | Orcid |
+| Name | Roles | Twitter | Email | Orcid | Github | Linkedin |
 |:---|:---|:---|:---|:---|:---|:---|
-| John Doe | author, maintainer | johndoe | johndoe | john@doe.me | johndoe | 0000-0000-0000-0000 |
+| John Doe | author, maintainer | johndoe | john@doe.me | 0000-0000-0000-0000 | johndoe | johndoe |
 
 ## API
 
@@ -243,10 +243,6 @@ Data structure:
 
 | Slot | Type | Description |
 |:---|:---|:---|
-| `obs["cell_id"]` | `string` | A unique identifier for the cell. |
-| `var["gene_ids"]` | `string` | Unique identifier for the gene. |
-| `var["feature_types"]` | `string` | Type of the feature. |
-| `obsm["spatial"]` | `double` | Spatial coordinates of the cell. |
 | `uns["dataset_id"]` | `string` | A unique identifier for the dataset. |
 | `uns["dataset_name"]` | `string` | A human-readable name for the dataset. |
 | `uns["dataset_url"]` | `string` | Link to the original source of the dataset. |
