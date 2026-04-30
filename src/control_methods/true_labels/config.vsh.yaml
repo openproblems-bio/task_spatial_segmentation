@@ -15,6 +15,7 @@ resources:
 engines:
   - type: docker
     image: openproblems/base_python:1
+    __merge__: ../../base/setup_spatialdata_partial.yaml
 
 runners:
   - type: executable
