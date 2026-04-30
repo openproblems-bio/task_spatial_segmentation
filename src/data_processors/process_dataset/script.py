@@ -6,9 +6,9 @@ import scanpy as sc
 par = {
     'input_sp': 'resources_test/common/2023_10x_mouse_brain_xenium_rep1/dataset.zarr',
     'input_sc': 'resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/dataset.h5ad',
-    'output_spatial_dataset': 'resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr',
-    'output_spatial_solution': 'resources_test/task_spatial_segmentation/mouse_brain_combined/solution.zarr',
-    'output_scrnaseq_reference': 'resources_test/task_spatial_segmentation/mouse_brain_combined/scrnaseq_reference.h5ad',
+    'output_spatial_unlabelled': 'spatial_unlabelled.zarr',
+    'output_spatial_solution': 'spatial_solution.zarr',
+    'output_scrnaseq_reference': 'scrnaseq_reference.h5ad',
     'span': 0.3,
     'seed': 123,
     'n_top_genes': 3000,
