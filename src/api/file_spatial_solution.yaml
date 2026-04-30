@@ -1,0 +1,69 @@
+type: file
+example: "resources_test/task_spatial_segmentation/mouse_brain_combined/solution.zarr"
+label: "Spatial Segmentation Solution"
+summary: Ground truth segmentation labels for evaluating spatial segmentation methods.
+description: |
+  This dataset contains the ground truth cell and nucleus segmentation labels,
+  cell boundaries, and a reference table matching each cell to its label region.
+info:
+  format:
+    type: spatialdata_zarr
+    labels:
+      - type: object
+        name: "cell_labels"
+        description: Ground truth cell segmentation labels
+        required: true
+      - type: object
+        name: "nucleus_labels"
+        description: Ground truth nucleus segmentation labels
+        required: false
+    shapes:
+      - type: dataframe
+        name: "cell_boundaries"
+        description: Ground truth cell boundary shapes
+        required: false
+        columns:
+          - type: object
+            name: "geometry"
+            required: true
+            description: Geometry of the cell boundary
+      - type: dataframe
+        name: "nucleus_boundaries"
+        description: Ground truth nucleus boundary shapes
+        required: false
+        columns:
+          - type: object
+            name: "geometry"
+            required: true
+            description: Geometry of the nucleus boundary
+    tables:
+      - type: anndata
+        name: "table"
+        description: Reference cell metadata table
+        required: true
+        obs:
+          - type: integer
+            name: cell_id
+            description: Unique cell identifier, matching instance IDs in the label images
+            required: true
+          - type: string
+            name: region
+            description: Name of the label image this cell belongs to (e.g. 'cell_labels')
+            required: true
+          - type: double
+            name: cell_area
+            description: Area of the cell in pixels
+            required: false
+          - type: integer
+            name: transcript_counts
+            description: Total number of transcripts assigned to this cell
+            required: false
+        uns:
+          - type: string
+            name: dataset_id
+            description: A unique identifier for the dataset
+            required: true
+          - type: string
+            name: orig_dataset_id
+            required: true
+            description: The identifier of the original dataset from which this dataset was derived (if applicable)

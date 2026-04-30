@@ -1,28 +1,18 @@
 type: file
 example: "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr"
-# TODO: revert to the original example once file exists
-# example: "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr"
-label: "Raw iST Dataset"
+label: "Unlabelled Spatial Dataset"
 summary: A spatial transcriptomics dataset, preprocessed for this benchmark.
 description: |
-  This dataset contains preprocessed images, labels, points, shapes, and tables for spatial transcriptomics data.
+  This dataset contains preprocessed images and transcript point clouds for spatial transcriptomics data.
+  Ground truth segmentation labels are intentionally excluded to prevent methods from cheating.
 info:
   format:
     type: spatialdata_zarr
     images:
       - type: object
         name: morphology_mip
-        description: The raw image data
+        description: The raw morphology image (maximum intensity projection)
         required: true
-    labels:
-      - type: object
-        name: "cell_labels"
-        description: Cell segmentation labels
-        required: false
-      - type: object
-        name: "nucleus_labels"
-        description: Cell segmentation labels
-        required: false
     points:
       - type: dataframe
         name: transcripts
@@ -45,18 +35,6 @@ info:
             name: feature_name
             required: true
             description: Name of the feature
-          - type: integer
-            name: "cell_id"
-            required: false
-            description: Unique identifier of the cell
-          - type: integer
-            name: "nucleus_id"
-            required: false
-            description: Unique identifier of the nucleus
-          - type: string
-            name: "cell_type"
-            required: false
-            description: Cell type of the cell
           - type: float
             name: qv
             required: false
@@ -68,26 +46,7 @@ info:
           - type: boolean
             name: overlaps_nucleus
             required: false
-            description: Whether the point overlaps with a nucleus
-    shapes:
-      - type: dataframe
-        name: "cell_boundaries"
-        description: Cell boundaries
-        required: false
-        columns:
-          - type: object
-            name: "geometry"
-            required: true
-            description: Geometry of the cell boundary
-      - type: dataframe
-        name: "nucleus_boundaries"
-        description: Nucleus boundaries
-        required: false
-        columns:
-          - type: object
-            name: "geometry"
-            required: true
-            description: Geometry of the nucleus boundary
+            description: Whether the point overlaps with the nucleus (derived from morphology)
     tables:
       - type: anndata
         name: "table"
@@ -123,10 +82,9 @@ info:
             required: true
             description: The organism of the sample in the dataset
           - type: string
-            name: segmentation_id
+            name: orig_dataset_id
             required: true
-            multiple: true
-            description: A unique identifier for the segmentation
+            description: The identifier of the original dataset from which this dataset was derived (if applicable)
         obs:
           - type: string
             name: cell_id

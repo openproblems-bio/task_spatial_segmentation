@@ -1,4 +1,3 @@
-import random
 import anndata as ad
 import spatialdata as sd
 import scanpy as sc
@@ -7,8 +6,9 @@ import scanpy as sc
 par = {
     'input_sp': 'resources_test/common/2023_10x_mouse_brain_xenium_rep1/dataset.zarr',
     'input_sc': 'resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/dataset.h5ad',
-    'output_spatial_dataset': 'resources_test/task_spatial_segmentation/mouse_brain_combined/output_spatial_dataset.zarr',
-    'output_scrnaseq_reference': 'resources_test/task_spatial_segmentation/mouse_brain_combined/output_scrnaseq_reference.h5ad',
+    'output_spatial_dataset': 'resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr',
+    'output_spatial_solution': 'resources_test/task_spatial_segmentation/mouse_brain_combined/solution.zarr',
+    'output_scrnaseq_reference': 'resources_test/task_spatial_segmentation/mouse_brain_combined/scrnaseq_reference.h5ad',
     'span': 0.3,
     'seed': 123,
     'n_top_genes': 3000,
@@ -53,12 +53,6 @@ def sc_processing(adata):
         )
         adata.var.rename(columns={"highly_variable": "hvg"}, inplace=True)
 
-
-# set seed if need be
-if par["seed"]:
-    print(f">> Setting seed to {par['seed']}")
-    random.seed(par["seed"])
-
 print(">> Load data", flush=True)
 sc_data = ad.read_h5ad(par["input_sc"])
 print(f"single cell data: {sc_data}")
@@ -71,7 +65,7 @@ sc_data.uns["orig_dataset_id"] = sc_data.uns.get("dataset_id", None)
 for key in ["dataset_id", "dataset_name", "dataset_url", "dataset_summary", "dataset_description", "dataset_reference", "dataset_organism"]:
     sc_data.uns[key] = par[key]
 
-print(">> Writing data", flush=True)
+print(">> Writing scrnaseq reference", flush=True)
 sc_data.write_h5ad(par["output_scrnaseq_reference"], compression="gzip")
 
 # read input_sp
@@ -79,27 +73,64 @@ print(">> Read spatial data", flush=True)
 sp_data = sd.read_zarr(par["input_sp"])
 print(f"spatial data: {sp_data}")
 
-print(">> Processing spatial data", flush=True)
-sp_data_table = sp_data.tables['table']
-print(f"single cell part of spatial data: {sp_data_table}")
-sc_processing(sp_data_table)
+dataset_uns = {
+    "dataset_id": par["dataset_id"],
+    "dataset_name": par["dataset_name"],
+    "dataset_url": par["dataset_url"],
+    "dataset_summary": par["dataset_summary"],
+    "dataset_description": par["dataset_description"],
+    "dataset_reference": par["dataset_reference"],
+    "dataset_organism": par["dataset_organism"],
+    "orig_dataset_id": sp_data.tables["table"].uns.get("dataset_id", None),
+}
 
-if "cell_area" not in sp_data_table.obs:
-    print(">> Perform scanpy qc for cell area", flush=True)
-    sc.pp.calculate_qc_metrics(sp_data_table, layer="counts", inplace=True)
+# ---------------------------------------------------------------
+# output_spatial_dataset: image + transcripts (no ground truth)
+# ---------------------------------------------------------------
+print(">> Building spatial dataset for methods (no ground truth)", flush=True)
 
-for x in ["transcript_counts", "n_genes_by_counts"]:
-    if f"ca_normalized_{x}" not in sp_data_table.obs and x in sp_data_table.obs:
-        print(f">> Perform cell area normalization for {x}", flush=True)
-        sp_data_table.obs[f'ca_normalized_{x}'] = sp_data_table.obs[f"{x}"] / sp_data_table.obs["cell_area"]
+# Strip columns that reveal ground truth cell assignments from transcripts
+_GROUND_TRUTH_COLS = {"cell_id", "nucleus_id", "cell_type"}
+transcripts = sp_data.points["transcripts"]
+clean_transcript_cols = [c for c in transcripts.columns if c not in _GROUND_TRUTH_COLS]
+clean_transcripts = transcripts[clean_transcript_cols]
 
-print(">> Override dataset metadata in .uns", flush=True)
-sp_data_table.uns["orig_dataset_id"] = sp_data_table.uns.get("dataset_id", None)
-for key in ["dataset_id", "dataset_name", "dataset_url", "dataset_summary", "dataset_description", "dataset_reference", "dataset_organism"]:
-    sp_data_table.uns[key] = par[key]
+# Minimal table: just dataset metadata in uns, no per-cell obs
+minimal_table = ad.AnnData(uns=dataset_uns)
 
-print(f"spatial data: {sp_data}")
-print(f"spatial data tables['table']: {sp_data.tables['table']}")
+output_spatial = sd.SpatialData(
+    images={"morphology_mip": sp_data.images["morphology_mip"]},
+    points={"transcripts": clean_transcripts},
+    tables={"table": minimal_table},
+)
 
-print(">> Writing spatial data", flush=True)
-sp_data.write(par["output_spatial_dataset"], overwrite=True)
+print(">> Writing spatial unlabelled dataset", flush=True)
+output_spatial.write(par["output_spatial_unlabelled"], overwrite=True)
+
+# ---------------------------------------------------------------
+# output_spatial_solution: ground truth labels, shapes, reference table
+# ---------------------------------------------------------------
+print(">> Building spatial solution (ground truth)", flush=True)
+
+ref_table = sp_data.tables["table"]
+solution_obs = ref_table.obs[["cell_id", "region"]].copy()
+for extra_col in ["cell_area", "transcript_counts"]:
+    if extra_col in ref_table.obs.columns:
+        solution_obs[extra_col] = ref_table.obs[extra_col]
+
+solution_table = ad.AnnData(
+    obs=solution_obs,
+    uns={
+        "dataset_id": par["dataset_id"],
+        "spatialdata_attrs": ref_table.uns["spatialdata_attrs"],
+    },
+)
+
+output_solution = sd.SpatialData(
+    labels={k: v for k, v in sp_data.labels.items()},
+    shapes={k: v for k, v in sp_data.shapes.items()},
+    tables={"table": solution_table},
+)
+
+print(">> Writing spatial solution", flush=True)
+output_solution.write(par["output_spatial_solution"], overwrite=True)

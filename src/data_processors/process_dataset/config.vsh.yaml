@@ -5,10 +5,6 @@ name: process_dataset
 argument_groups:
   - name: "Processing parameters"
     arguments:
-      - name: "--seed"
-        type: "integer"
-        description: "A seed for the subsampling."
-        example: 123
       - name: "--span"
         type: double
         description: The fraction of the data (cells) used when estimating the variance in the loess model fit if flavor='seurat_v3'.
@@ -24,7 +20,6 @@ resources:
 
 engines:
   - type: docker
-    #image: openproblems/base_pytorch_nvidia:1 # TODO: ideally get gpu image to work
     image: openproblems/base_python:1
     setup:
       - type: python
@@ -37,4 +32,4 @@ runners:
   - type: executable
   - type: nextflow
     directives:
-      label: [highmem, midcpu, midtime]
+      label: [midmem, midcpu, midtime]

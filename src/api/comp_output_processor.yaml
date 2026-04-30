@@ -14,7 +14,7 @@ argument_groups:
         required: true
         direction: input
       - name: "--input_spatial_dataset"
-        __merge__: file_spatial_dataset.yaml
+        __merge__: file_spatial_unlabelled.yaml
         required: true
         direction: input
   - name: Outputs
