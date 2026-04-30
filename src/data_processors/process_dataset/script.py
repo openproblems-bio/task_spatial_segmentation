@@ -122,6 +122,7 @@ solution_table = ad.AnnData(
     obs=solution_obs,
     uns={
         "dataset_id": par["dataset_id"],
+        "orig_dataset_id": sp_data.tables["table"].uns.get("dataset_id", None),
         "spatialdata_attrs": ref_table.uns["spatialdata_attrs"],
     },
 )
