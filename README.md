@@ -38,25 +38,32 @@ should convince readers of the significance and relevance of your task.
 flowchart TB
   file_common_ist("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-common-ist-dataset'>Common iST Dataset</a>")
   comp_data_processor[/"<a href='https://github.com/openproblems-bio/task_spatial_segmentation#component-type-data-processor'>Data processor</a>"/]
-  file_spatial_dataset("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-raw-ist-dataset'>Raw iST Dataset</a>")
+  file_spatial_unlabelled("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-unlabelled-spatial-dataset'>Unlabelled Spatial Dataset</a>")
+  file_spatial_solution("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-spatial-segmentation-solution'>Spatial Segmentation Solution</a>")
   file_scrnaseq_reference("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-scrna-seq-reference'>scRNA-seq Reference</a>")
   comp_control_method[/"<a href='https://github.com/openproblems-bio/task_spatial_segmentation#component-type-control-method'>Control Method</a>"/]
   comp_method[/"<a href='https://github.com/openproblems-bio/task_spatial_segmentation#component-type-method'>Method</a>"/]
+  comp_output_processor[/"<a href='https://github.com/openproblems-bio/task_spatial_segmentation#component-type-data-processor'>Data processor</a>"/]
   comp_metric[/"<a href='https://github.com/openproblems-bio/task_spatial_segmentation#component-type-metric'>Metric</a>"/]
   file_prediction("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-predicted-data'>Predicted data</a>")
+  file_processed_prediction("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-processed-prediction'>Processed prediction</a>")
   file_score("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-score'>Score</a>")
   file_common_scrnaseq("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-common-sc-dataset'>Common SC Dataset</a>")
   file_common_ist---comp_data_processor
-  comp_data_processor-->file_spatial_dataset
+  comp_data_processor-->file_spatial_unlabelled
+  comp_data_processor-->file_spatial_solution
   comp_data_processor-->file_scrnaseq_reference
-  file_spatial_dataset---comp_control_method
-  file_spatial_dataset---comp_method
-  file_scrnaseq_reference---comp_control_method
-  file_scrnaseq_reference---comp_metric
+  file_spatial_unlabelled---comp_control_method
+  file_spatial_unlabelled---comp_method
+  file_spatial_unlabelled---comp_output_processor
+  file_spatial_solution---comp_control_method
+  file_spatial_solution---comp_metric
   comp_control_method-->file_prediction
   comp_method-->file_prediction
+  comp_output_processor-->file_processed_prediction
   comp_metric-->file_score
-  file_prediction---comp_metric
+  file_prediction---comp_output_processor
+  file_processed_prediction---comp_metric
   file_common_scrnaseq---comp_data_processor
 ```
 
@@ -176,11 +183,12 @@ Arguments:
 | `--input_sp` | `file` | An unprocessed spatial imaging dataset stored as a zarr file. |
 | `--input_sc` | `file` | An unprocessed dataset as output by a dataset loader. |
 | `--output_spatial_dataset` | `file` | (*Output*) A spatial transcriptomics dataset, preprocessed for this benchmark. |
+| `--output_spatial_solution` | `file` | (*Output*) Ground truth segmentation labels for evaluating spatial segmentation methods. |
 | `--output_scrnaseq_reference` | `file` | (*Output*) A single-cell reference dataset, preprocessed for this benchmark. |
 
 </div>
 
-## File format: Raw iST Dataset
+## File format: Unlabelled Spatial Dataset
 
 A spatial transcriptomics dataset, preprocessed for this benchmark.
 
@@ -189,8 +197,9 @@ Example file:
 
 Description:
 
-This dataset contains preprocessed images, labels, points, shapes, and
-tables for spatial transcriptomics data.
+This dataset contains preprocessed images and transcript point clouds
+for spatial transcriptomics data. Ground truth segmentation labels are
+intentionally excluded to prevent methods from cheating.
 
 Format:
 
@@ -198,9 +207,7 @@ Format:
 
     SpatialData object
      images: 'morphology_mip'
-     labels: 'cell_labels', 'nucleus_labels'
      points: 'transcripts'
-     shapes: 'cell_boundaries', 'nucleus_boundaries'
      tables: 'table'
      coordinate_systems: 'global'
 
@@ -212,16 +219,9 @@ Data structure:
 
 *images*
 
-| Name             | Description         |
-|:-----------------|:--------------------|
-| `morphology_mip` | The raw image data. |
-
-*labels*
-
-| Name             | Description                            |
-|:-----------------|:---------------------------------------|
-| `cell_labels`    | (*Optional*) Cell segmentation labels. |
-| `nucleus_labels` | (*Optional*) Cell segmentation labels. |
+| Name             | Description                                              |
+|:-----------------|:---------------------------------------------------------|
+| `morphology_mip` | The raw morphology image (maximum intensity projection). |
 
 *points*
 
@@ -233,26 +233,9 @@ Data structure:
 | `y` | `float` | y-coordinate of the point. |
 | `z` | `float` | (*Optional*) z-coordinate of the point. |
 | `feature_name` | `categorical` | Name of the feature. |
-| `cell_id` | `integer` | (*Optional*) Unique identifier of the cell. |
-| `nucleus_id` | `integer` | (*Optional*) Unique identifier of the nucleus. |
-| `cell_type` | `string` | (*Optional*) Cell type of the cell. |
 | `qv` | `float` | (*Optional*) Quality value of the point. |
 | `transcript_id` | `long` | Unique identifier of the transcript. |
-| `overlaps_nucleus` | `boolean` | (*Optional*) Whether the point overlaps with a nucleus. |
-
-*shapes*
-
-`cell_boundaries`: Cell boundaries.
-
-| Column     | Type     | Description                    |
-|:-----------|:---------|:-------------------------------|
-| `geometry` | `object` | Geometry of the cell boundary. |
-
-`nucleus_boundaries`: Nucleus boundaries.
-
-| Column     | Type     | Description                       |
-|:-----------|:---------|:----------------------------------|
-| `geometry` | `object` | Geometry of the nucleus boundary. |
+| `overlaps_nucleus` | `boolean` | (*Optional*) Whether the point overlaps with the nucleus (derived from morphology). |
 
 *tables*
 
@@ -271,13 +254,78 @@ Data structure:
 | `uns["dataset_summary"]` | `string` | Short description of the dataset. |
 | `uns["dataset_description"]` | `string` | Long description of the dataset. |
 | `uns["dataset_organism"]` | `string` | The organism of the sample in the dataset. |
-| `uns["segmentation_id"]` | `string` | A unique identifier for the segmentation. |
+| `uns["orig_dataset_id"]` | `string` | The identifier of the original dataset from which this dataset was derived (if applicable). |
 
 *coordinate_systems*
 
 | Name     | Description                         |
 |:---------|:------------------------------------|
 | `global` | Coordinate system of the replicate. |
+
+</div>
+
+## File format: Spatial Segmentation Solution
+
+Ground truth segmentation labels for evaluating spatial segmentation
+methods.
+
+Example file:
+`resources_test/task_spatial_segmentation/mouse_brain_combined/solution.zarr`
+
+Description:
+
+This dataset contains the ground truth cell and nucleus segmentation
+labels, cell boundaries, and a reference table matching each cell to its
+label region.
+
+Format:
+
+<div class="small">
+
+    SpatialData object
+     labels: 'cell_labels', 'nucleus_labels'
+     shapes: 'cell_boundaries', 'nucleus_boundaries'
+     tables: 'table'
+
+</div>
+
+Data structure:
+
+<div class="small">
+
+*labels*
+
+| Name             | Description                                            |
+|:-----------------|:-------------------------------------------------------|
+| `cell_labels`    | Ground truth cell segmentation labels.                 |
+| `nucleus_labels` | (*Optional*) Ground truth nucleus segmentation labels. |
+
+*shapes*
+
+`cell_boundaries`: Ground truth cell boundary shapes.
+
+| Column     | Type     | Description                    |
+|:-----------|:---------|:-------------------------------|
+| `geometry` | `object` | Geometry of the cell boundary. |
+
+`nucleus_boundaries`: Ground truth nucleus boundary shapes.
+
+| Column     | Type     | Description                       |
+|:-----------|:---------|:----------------------------------|
+| `geometry` | `object` | Geometry of the nucleus boundary. |
+
+*tables*
+
+`table`: Reference cell metadata table.
+
+| Slot | Type | Description |
+|:---|:---|:---|
+| `obs["cell_id"]` | `integer` | Unique cell identifier, matching instance IDs in the label images. |
+| `obs["region"]` | `string` | Name of the label image this cell belongs to (e.g. ‘cell_labels’). |
+| `obs["cell_area"]` | `double` | (*Optional*) Area of the cell in pixels. |
+| `obs["transcript_counts"]` | `integer` | (*Optional*) Total number of transcripts assigned to this cell. |
+| `uns["dataset_id"]` | `string` | A unique identifier for the dataset. |
+| `uns["orig_dataset_id"]` | `string` | The identifier of the original dataset from which this dataset was derived (if applicable). |
 
 </div>
 
@@ -347,7 +395,7 @@ Arguments:
 | Name | Type | Description |
 |:---|:---|:---|
 | `--input` | `file` | A spatial transcriptomics dataset, preprocessed for this benchmark. |
-| `--input_scrnaseq_reference` | `file` | A single-cell reference dataset, preprocessed for this benchmark. |
+| `--input_solution` | `file` | Ground truth segmentation labels for evaluating spatial segmentation methods. |
 | `--output` | `file` | (*Output*) A predicted dataset as output by a method. |
 
 </div>
@@ -367,6 +415,22 @@ Arguments:
 
 </div>
 
+## Component type: Data processor
+
+A data processor.
+
+Arguments:
+
+<div class="small">
+
+| Name | Type | Description |
+|:---|:---|:---|
+| `--input` | `file` | A predicted dataset as output by a method. |
+| `--input_spatial_dataset` | `file` | A spatial transcriptomics dataset, preprocessed for this benchmark. |
+| `--output` | `file` | (*Output*) A processed predicted dataset, ready to be used as input for the evaluation. |
+
+</div>
+
 ## Component type: Metric
 
 A task template metric.
@@ -377,8 +441,8 @@ Arguments:
 
 | Name | Type | Description |
 |:---|:---|:---|
-| `--input_prediction` | `file` | A predicted dataset as output by a method. |
-| `--input_scrnaseq_reference` | `file` | A single-cell reference dataset, preprocessed for this benchmark. |
+| `--input_prediction` | `file` | A processed predicted dataset, ready to be used as input for the evaluation. |
+| `--input_solution` | `file` | Ground truth segmentation labels for evaluating spatial segmentation methods. |
 | `--output` | `file` | (*Output*) File indicating the score of a metric. |
 
 </div>
@@ -388,7 +452,7 @@ Arguments:
 A predicted dataset as output by a method.
 
 Example file:
-`resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.h5ad`
+`resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.zarr`
 
 Format:
 
@@ -416,10 +480,56 @@ Data structure:
 
 | Slot                | Type     | Description                          |
 |:--------------------|:---------|:-------------------------------------|
-| `obs["cell_id"]`    | `string` | Cell ID.                             |
-| `obs["region"]`     | `string` | Region.                              |
 | `uns["dataset_id"]` | `string` | A unique identifier for the dataset. |
 | `uns["method_id"]`  | `string` | A unique identifier for the method.  |
+
+</div>
+
+## File format: Processed prediction
+
+A processed predicted dataset, ready to be used as input for the
+evaluation.
+
+Example file:
+`resources_test/task_spatial_segmentation/mouse_brain_combined/processed_prediction.h5ad`
+
+Format:
+
+<div class="small">
+
+    SpatialData object
+     labels: 'segmentation'
+     tables: 'table'
+
+</div>
+
+Data structure:
+
+<div class="small">
+
+*labels*
+
+| Name           | Description               |
+|:---------------|:--------------------------|
+| `segmentation` | Segmentation of the data. |
+
+*tables*
+
+`table`: AnnData table.
+
+| Slot | Type | Description |
+|:---|:---|:---|
+| `obs["cell_id"]` | `string` | Cell ID. |
+| `obs["region"]` | `string` | Region. |
+| `var["feature_id"]` | `string` | (*Optional*) Unique identifier for the feature, usually a ENSEMBL gene id. |
+| `var["feature_name"]` | `string` | A human-readable name for the feature, usually a gene symbol. |
+| `var["hvg"]` | `boolean` | Whether or not the feature is considered to be a ‘highly variable gene’. |
+| `layers["counts"]` | `integer` | Raw counts. |
+| `layers["normalized"]` | `double` | Normalized expression values. |
+| `layers["normalized_log"]` | `double` | Log1p normalized expression values. |
+| `layers["normalized_log_scaled"]` | `double` | Log1p normalized expression values scaled to unit variance and zero mean. |
+| `uns["dataset_id"]` | `string` | A unique identifier for the dataset. |
+| `uns["method_id"]` | `string` | A unique identifier for the method. |
 
 </div>
 
