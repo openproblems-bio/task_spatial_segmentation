@@ -28,9 +28,9 @@ should convince readers of the significance and relevance of your task.
 
 ## Authors & contributors
 
-| Name | Roles | Orcid | Twitter | Github | Email | Linkedin |
+| Name | Roles | Linkedin | Orcid | Twitter | Github | Email |
 |:---|:---|:---|:---|:---|:---|:---|
-| John Doe | author, maintainer | 0000-0000-0000-0000 | johndoe | johndoe | john@doe.me | johndoe |
+| John Doe | author, maintainer | johndoe | 0000-0000-0000-0000 | johndoe | johndoe | john@doe.me |
 
 ## API
 
@@ -182,7 +182,7 @@ Arguments:
 |:---|:---|:---|
 | `--input_sp` | `file` | An unprocessed spatial imaging dataset stored as a zarr file. |
 | `--input_sc` | `file` | An unprocessed dataset as output by a dataset loader. |
-| `--output_spatial_dataset` | `file` | (*Output*) A spatial transcriptomics dataset, preprocessed for this benchmark. |
+| `--output_spatial_unlabelled` | `file` | (*Output*) A spatial transcriptomics dataset, preprocessed for this benchmark. |
 | `--output_spatial_solution` | `file` | (*Output*) Ground truth segmentation labels for evaluating spatial segmentation methods. |
 | `--output_scrnaseq_reference` | `file` | (*Output*) A single-cell reference dataset, preprocessed for this benchmark. |
 
@@ -425,8 +425,8 @@ Arguments:
 
 | Name | Type | Description |
 |:---|:---|:---|
-| `--input` | `file` | A predicted dataset as output by a method. |
-| `--input_spatial_dataset` | `file` | A spatial transcriptomics dataset, preprocessed for this benchmark. |
+| `--input_prediction` | `file` | A predicted dataset as output by a method. |
+| `--input_spatial_unlabelled` | `file` | A spatial transcriptomics dataset, preprocessed for this benchmark. |
 | `--output` | `file` | (*Output*) A processed predicted dataset, ready to be used as input for the evaluation. |
 
 </div>

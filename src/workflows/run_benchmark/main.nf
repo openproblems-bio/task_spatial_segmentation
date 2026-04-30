@@ -33,7 +33,7 @@ workflow run_wf {
 
     // extract the dataset metadata
     | extract_uns_metadata.run(
-      fromState: [input: "input_solution"],
+      fromState: [input: "input_spatial_unlabelled"],
       toState: { id, output, state ->
         state + [
           dataset_uns: readYaml(output.output).uns
@@ -52,14 +52,8 @@ workflow run_wf {
 
       // use the 'filter' argument to only run a method on the normalisation the component is asking for
       filter: { id, state, comp ->
-        def norm = state.dataset_uns.normalization_id
-        def pref = comp.config.info.preferred_normalization
-        // if the preferred normalisation is none at all,
-        // we can pass whichever dataset we want
-        def norm_check = (norm == "log_cp10k" && pref == "counts") || norm == pref
         def method_check = !state.method_ids || state.method_ids.contains(comp.config.name)
-
-        method_check && norm_check
+        method_check
       },
 
       // define a new 'id' by appending the method name to the dataset id
@@ -70,11 +64,10 @@ workflow run_wf {
       // use 'fromState' to fetch the arguments the component requires from the overall state
       fromState: { id, state, comp ->
         def new_args = [
-          input_train: state.input_train,
-          input_test: state.input_test
+          input: state.input_spatial_unlabelled
         ]
         if (comp.config.info.type == "control_method") {
-          new_args.input_solution = state.input_solution
+          new_args.input_solution = state.input_spatial_solution
         }
         new_args
       },
@@ -96,7 +89,7 @@ workflow run_wf {
       },
       // use 'fromState' to fetch the arguments the component requires from the overall state
       fromState: [
-        input_solution: "input_solution", 
+        input_solution: "input_solution",
         input_prediction: "method_output"
       ],
       // use 'toState' to publish that component's outputs to the overall state
@@ -136,10 +129,8 @@ workflow run_wf {
 
   // extract the dataset metadata
   meta_ch = dataset_ch
-    // only keep one of the normalization methods
-    | filter{ id, state ->
-      state.dataset_uns.normalization_id == "log_cp10k"
-    }
+    // only keep one entry per dataset
+    | filter{ id, state -> true }
     | joinStates { ids, states ->
       // store the dataset metadata in a file
       def dataset_uns = states.collect{state ->

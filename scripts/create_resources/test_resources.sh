@@ -24,7 +24,8 @@ mkdir -p $DATASET_DIR
 viash run src/data_processors/process_dataset/config.vsh.yaml -- \
   --input_sp $RAW_DATA/2023_10x_mouse_brain_xenium_rep1/dataset.zarr \
   --input_sc $RAW_DATA/2023_yao_mouse_brain_scrnaseq_10xv2/dataset.h5ad \
-  --output_spatial_dataset $DATASET_DIR/spatial_dataset.zarr \
+  --output_spatial_unlabelled $DATASET_DIR/spatial_unlabelled.zarr \
+  --output_spatial_solution $DATASET_DIR/spatial_solution.zarr \
   --output_scrnaseq_reference $DATASET_DIR/scrnaseq_reference.h5ad \
   --dataset_id mouse_brain_combined \
   --dataset_name "Test data mouse brain combined 2023 tenx Xenium replicate 1 2023 Yao scRNAseq" \
@@ -36,7 +37,7 @@ viash run src/data_processors/process_dataset/config.vsh.yaml -- \
 
 # run one method
 viash run src/methods/cellpose/config.vsh.yaml -- \
-    --input $DATASET_DIR/spatial_dataset.zarr \
+    --input $DATASET_DIR/spatial_unlabelled.zarr \
     --output $DATASET_DIR/prediction.h5ad
 
 # run one metric
@@ -49,7 +50,8 @@ viash run src/methods/cellpose/config.vsh.yaml -- \
 # write manual state.yaml. this is not actually necessary but you never know it might be useful
 cat > $DATASET_DIR/state.yaml << HERE
 id: $DATASET_ID
-spatial_dataset: spatial_dataset.zarr
+spatial_unlabelled: spatial_unlabelled.zarr
+spatial_solution: spatial_solution.zarr
 scrnaseq_reference: scrnaseq_reference.h5ad
 prediction: prediction.h5ad
 score: score.h5ad

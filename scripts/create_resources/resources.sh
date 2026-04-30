@@ -16,9 +16,9 @@ exit 1
 
 cat > /tmp/params.yaml << 'HERE'
 input_states: s3://openproblems-data/resources/datasets/**/state.yaml
-rename_keys: 'input:output_dataset'
+rename_keys: 'input_spatial_unlabelled:output_spatial_unlabelled,input_spatial_solution:output_spatial_solution,input_scrnaseq_reference:output_scrnaseq_reference'
 output_state: '$id/state.yaml'
-settings: '{"output_spatial_dataset": "$id/output_spatial_dataset.zarr", "output_scrnaseq": "$id/output_scrnaseq.h5ad"}'
+settings: '{"output_spatial_unlabelled": "$id/output_spatial_unlabelled.zarr", "output_spatial_solution": "$id/output_spatial_solution.zarr", "output_scrnaseq": "$id/output_scrnaseq.h5ad"}'
 publish_dir: s3://openproblems-data/resources/task_template/datasets/
 HERE
 

@@ -9,11 +9,11 @@ info:
 argument_groups:
   - name: Inputs
     arguments:
-      - name: "--input"
+      - name: "--input_prediction"
         __merge__: file_prediction.yaml
         required: true
         direction: input
-      - name: "--input_spatial_dataset"
+      - name: "--input_spatial_unlabelled"
         __merge__: file_spatial_unlabelled.yaml
         required: true
         direction: input
