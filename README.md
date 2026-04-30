@@ -28,9 +28,9 @@ should convince readers of the significance and relevance of your task.
 
 ## Authors & contributors
 
-| Name | Roles | Linkedin | Orcid | Twitter | Github | Email |
+| Name | Roles | Orcid | Linkedin | Twitter | Email | Github |
 |:---|:---|:---|:---|:---|:---|:---|
-| John Doe | author, maintainer | johndoe | 0000-0000-0000-0000 | johndoe | johndoe | john@doe.me |
+| John Doe | author, maintainer | 0000-0000-0000-0000 | johndoe | johndoe | john@doe.me | johndoe |
 
 ## API
 
@@ -43,7 +43,7 @@ flowchart TB
   file_scrnaseq_reference("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-scrna-seq-reference'>scRNA-seq Reference</a>")
   comp_control_method[/"<a href='https://github.com/openproblems-bio/task_spatial_segmentation#component-type-control-method'>Control Method</a>"/]
   comp_method[/"<a href='https://github.com/openproblems-bio/task_spatial_segmentation#component-type-method'>Method</a>"/]
-  comp_output_processor[/"<a href='https://github.com/openproblems-bio/task_spatial_segmentation#component-type-data-processor'>Data processor</a>"/]
+  comp_output_processor[/"<a href='https://github.com/openproblems-bio/task_spatial_segmentation#component-type-output-processor'>Output processor</a>"/]
   comp_metric[/"<a href='https://github.com/openproblems-bio/task_spatial_segmentation#component-type-metric'>Metric</a>"/]
   file_prediction("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-predicted-data'>Predicted data</a>")
   file_processed_prediction("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-processed-prediction'>Processed prediction</a>")
@@ -415,9 +415,9 @@ Arguments:
 
 </div>
 
-## Component type: Data processor
+## Component type: Output processor
 
-A data processor.
+An output processor for the prediction.
 
 Arguments:
 

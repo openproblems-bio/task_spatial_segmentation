@@ -2,10 +2,10 @@ namespace: "data_processors"
 info:
   type: data_processor
   type_info:
-    label: Data processor
-    summary: A data processor.
+    label: Output processor
+    summary: An output processor for the prediction.
     description: |
-      A component for processing a Common Dataset into a task-specific dataset.
+      A component for a prediction dataset into a processed prediction dataset that can be evaluated by the metrics.
 argument_groups:
   - name: Inputs
     arguments:

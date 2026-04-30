@@ -59,7 +59,7 @@ count_matrix = (
 )
 
 obs = pd.DataFrame(
-    {"cell_id": count_matrix.index.astype(str), "region": "segmentation"},
+    {"cell_id": count_matrix.index.astype(str), "region": pd.Categorical(["segmentation"] * len(count_matrix))},
     index=count_matrix.index.astype(str),
 )
 var = pd.DataFrame(index=count_matrix.columns.astype(str))

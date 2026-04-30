@@ -38,7 +38,13 @@ viash run src/data_processors/process_dataset/config.vsh.yaml -- \
 # run one method
 viash run src/methods/cellpose/config.vsh.yaml -- \
     --input $DATASET_DIR/spatial_unlabelled.zarr \
-    --output $DATASET_DIR/prediction.h5ad
+    --output $DATASET_DIR/prediction.zarr
+
+# run prediction processor
+viash run src/data_processors/process_prediction/config.vsh.yaml -- \
+    --input_prediction $DATASET_DIR/prediction.zarr \
+    --input_spatial_unlabelled $DATASET_DIR/spatial_unlabelled.zarr \
+    --output $DATASET_DIR/processed_prediction.zarr
 
 # run one metric
 # TODO: implement this!
@@ -54,6 +60,7 @@ spatial_unlabelled: spatial_unlabelled.zarr
 spatial_solution: spatial_solution.zarr
 scrnaseq_reference: scrnaseq_reference.h5ad
 prediction: prediction.h5ad
+processed_prediction: processed_prediction.zarr
 score: score.h5ad
 HERE
 
