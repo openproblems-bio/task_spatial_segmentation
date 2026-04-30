@@ -28,9 +28,9 @@ should convince readers of the significance and relevance of your task.
 
 ## Authors & contributors
 
-| Name | Roles | Orcid | Linkedin | Twitter | Email | Github |
+| Name | Roles | Github | Twitter | Email | Linkedin | Orcid |
 |:---|:---|:---|:---|:---|:---|:---|
-| John Doe | author, maintainer | 0000-0000-0000-0000 | johndoe | johndoe | john@doe.me | johndoe |
+| John Doe | author, maintainer | johndoe | johndoe | john@doe.me | johndoe | 0000-0000-0000-0000 |
 
 ## API
 
@@ -193,7 +193,7 @@ Arguments:
 A spatial transcriptomics dataset, preprocessed for this benchmark.
 
 Example file:
-`resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr`
+`resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_unlabelled.zarr`
 
 Description:
 
@@ -270,7 +270,7 @@ Ground truth segmentation labels for evaluating spatial segmentation
 methods.
 
 Example file:
-`resources_test/task_spatial_segmentation/mouse_brain_combined/solution.zarr`
+`resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_solution.zarr`
 
 Description:
 

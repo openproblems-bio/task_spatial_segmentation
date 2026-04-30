@@ -1,5 +1,5 @@
 type: file
-example: "resources_test/task_spatial_segmentation/mouse_brain_combined/solution.zarr"
+example: "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_solution.zarr"
 label: "Spatial Segmentation Solution"
 summary: Ground truth segmentation labels for evaluating spatial segmentation methods.
 description: |

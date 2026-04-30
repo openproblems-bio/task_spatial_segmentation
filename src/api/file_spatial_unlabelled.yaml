@@ -1,5 +1,5 @@
 type: file
-example: "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr"
+example: "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_unlabelled.zarr"
 label: "Unlabelled Spatial Dataset"
 summary: A spatial transcriptomics dataset, preprocessed for this benchmark.
 description: |
