@@ -32,7 +32,6 @@ workflow run_wf {
     | map{ id, state -> 
       [id, state + ["_meta": [join_id: id]]]
     }
-    | view()
 
     // extract the dataset metadata
     | extract_uns_metadata.run(

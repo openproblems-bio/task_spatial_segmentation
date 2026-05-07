@@ -25,4 +25,5 @@ NXF_VER=25.10.4 nextflow run . \
   --input_spatial_solution resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_solution.zarr \
   --input_scrnaseq_reference resources_test/task_spatial_segmentation/mouse_brain_combined/scrnaseq_reference.h5ad \
   --output_state state.yaml \
-  --publish_dir "$publish_dir"
+  --publish_dir "$publish_dir" \
+  -with-trace "$publish_dir/trace.txt"

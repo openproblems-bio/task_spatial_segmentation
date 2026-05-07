@@ -2,6 +2,8 @@ import anndata as ad
 import pandas as pd
 import spatialdata as sd
 import scanpy as sc
+import os
+import shutil
 
 ## VIASH START
 par = {
@@ -63,8 +65,9 @@ sc_processing(sc_data)
 
 print(">> Override dataset metadata in .uns", flush=True)
 sc_data.uns["orig_dataset_id"] = sc_data.uns.get("dataset_id", None)
-for key in ["dataset_id", "dataset_name", "dataset_url", "dataset_summary", "dataset_description", "dataset_reference", "dataset_organism"]:
+for key in ["dataset_id", "dataset_name", "dataset_url", "dataset_summary", "dataset_description", "dataset_organism"]:
     sc_data.uns[key] = par[key]
+sc_data.uns["dataset_reference"] = {"doi": par["dataset_reference"]}
 
 print(">> Writing scrnaseq reference", flush=True)
 sc_data.write_h5ad(par["output_scrnaseq_reference"], compression="gzip")
@@ -80,7 +83,8 @@ dataset_uns = {
     "dataset_url": par["dataset_url"],
     "dataset_summary": par["dataset_summary"],
     "dataset_description": par["dataset_description"],
-    "dataset_reference": par["dataset_reference"],
+    # Join list into semicolon-separated string to match the expected string format
+    "dataset_reference": {"doi": par["dataset_reference"]},
     "dataset_organism": par["dataset_organism"],
     "orig_dataset_id": sp_data.tables["table"].uns.get("dataset_id", None),
 }
@@ -114,6 +118,12 @@ output_spatial = sd.SpatialData(
 )
 
 print(">> Writing spatial unlabelled dataset", flush=True)
+# remove if output exists
+if os.path.exists(par["output_spatial_unlabelled"]):
+    if os.path.isdir(par["output_spatial_unlabelled"]):
+        shutil.rmtree(par["output_spatial_unlabelled"])
+    else:
+        os.remove(par["output_spatial_unlabelled"])
 output_spatial.write(par["output_spatial_unlabelled"], overwrite=True)
 
 # ---------------------------------------------------------------
@@ -132,6 +142,12 @@ solution_table = ad.AnnData(
     var=var_df,
     uns={
         "dataset_id": par["dataset_id"],
+        "dataset_name": par["dataset_name"],
+        "dataset_url": par["dataset_url"],
+        "dataset_summary": par["dataset_summary"],
+        "dataset_description": par["dataset_description"],
+        "dataset_reference": {"doi": par["dataset_reference"]},
+        "dataset_organism": par["dataset_organism"],
         "orig_dataset_id": sp_data.tables["table"].uns.get("dataset_id", None),
         "spatialdata_attrs": ref_table.uns["spatialdata_attrs"],
     },
@@ -151,4 +167,9 @@ output_solution = sd.SpatialData(
 )
 
 print(">> Writing spatial solution", flush=True)
+if os.path.exists(par["output_spatial_solution"]):
+    if os.path.isdir(par["output_spatial_solution"]):
+        shutil.rmtree(par["output_spatial_solution"])
+    else:
+        os.remove(par["output_spatial_solution"])
 output_solution.write(par["output_spatial_solution"], overwrite=True)
