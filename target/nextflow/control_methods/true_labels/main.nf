@@ -3050,9 +3050,9 @@ meta = [
         {
           "type" : "file",
           "name" : "--input",
-          "label" : "Raw iST Dataset",
-          "summary" : "A spatial transcriptomics dataset, preprocessed for this benchmark.",
-          "description" : "This dataset contains preprocessed images, labels, points, shapes, and tables for spatial transcriptomics data.\n",
+          "label" : "Unlabelled",
+          "summary" : "Preprocessed spatial transcriptomics data without segmentation labels for method input.",
+          "description" : "This dataset contains preprocessed images and transcript point clouds for spatial transcriptomics data.\nGround truth segmentation labels are intentionally excluded to prevent methods from cheating.\n",
           "info" : {
             "format" : {
               "type" : "spatialdata_zarr",
@@ -3060,22 +3060,8 @@ meta = [
                 {
                   "type" : "object",
                   "name" : "morphology_mip",
-                  "description" : "The raw image data",
+                  "description" : "The raw morphology image (maximum intensity projection)",
                   "required" : true
-                }
-              ],
-              "labels" : [
-                {
-                  "type" : "object",
-                  "name" : "cell_labels",
-                  "description" : "Cell segmentation labels",
-                  "required" : false
-                },
-                {
-                  "type" : "object",
-                  "name" : "nucleus_labels",
-                  "description" : "Cell segmentation labels",
-                  "required" : false
                 }
               ],
               "points" : [
@@ -3110,24 +3096,6 @@ meta = [
                       "description" : "Name of the feature"
                     },
                     {
-                      "type" : "integer",
-                      "name" : "cell_id",
-                      "required" : false,
-                      "description" : "Unique identifier of the cell"
-                    },
-                    {
-                      "type" : "integer",
-                      "name" : "nucleus_id",
-                      "required" : false,
-                      "description" : "Unique identifier of the nucleus"
-                    },
-                    {
-                      "type" : "string",
-                      "name" : "cell_type",
-                      "required" : false,
-                      "description" : "Cell type of the cell"
-                    },
-                    {
                       "type" : "float",
                       "name" : "qv",
                       "required" : false,
@@ -3143,37 +3111,7 @@ meta = [
                       "type" : "boolean",
                       "name" : "overlaps_nucleus",
                       "required" : false,
-                      "description" : "Whether the point overlaps with a nucleus"
-                    }
-                  ]
-                }
-              ],
-              "shapes" : [
-                {
-                  "type" : "dataframe",
-                  "name" : "cell_boundaries",
-                  "description" : "Cell boundaries",
-                  "required" : false,
-                  "columns" : [
-                    {
-                      "type" : "object",
-                      "name" : "geometry",
-                      "required" : true,
-                      "description" : "Geometry of the cell boundary"
-                    }
-                  ]
-                },
-                {
-                  "type" : "dataframe",
-                  "name" : "nucleus_boundaries",
-                  "description" : "Nucleus boundaries",
-                  "required" : false,
-                  "columns" : [
-                    {
-                      "type" : "object",
-                      "name" : "geometry",
-                      "required" : true,
-                      "description" : "Geometry of the nucleus boundary"
+                      "description" : "Whether the point overlaps with the nucleus (derived from morphology)"
                     }
                   ]
                 }
@@ -3229,40 +3167,23 @@ meta = [
                     },
                     {
                       "type" : "string",
-                      "name" : "segmentation_id",
+                      "name" : "orig_dataset_id",
                       "required" : true,
-                      "multiple" : true,
-                      "description" : "A unique identifier for the segmentation"
-                    }
-                  ],
-                  "obs" : [
-                    {
-                      "type" : "string",
-                      "name" : "cell_id",
-                      "required" : true,
-                      "description" : "A unique identifier for the cell"
+                      "description" : "The identifier of the original dataset from which this dataset was derived (if applicable)"
                     }
                   ],
                   "var" : [
                     {
                       "type" : "string",
-                      "name" : "gene_ids",
-                      "required" : true,
-                      "description" : "Unique identifier for the gene"
+                      "name" : "feature_id",
+                      "required" : false,
+                      "description" : "Unique identifier for the feature, usually a ENSEMBL gene id."
                     },
                     {
                       "type" : "string",
-                      "name" : "feature_types",
+                      "name" : "feature_name",
                       "required" : true,
-                      "description" : "Type of the feature"
-                    }
-                  ],
-                  "obsm" : [
-                    {
-                      "type" : "double",
-                      "name" : "spatial",
-                      "required" : true,
-                      "description" : "Spatial coordinates of the cell"
+                      "description" : "A human-readable name for the feature, usually a gene symbol."
                     }
                   ]
                 }
@@ -3278,7 +3199,7 @@ meta = [
             }
           },
           "example" : [
-            "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr"
+            "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_unlabelled.zarr"
           ],
           "must_exist" : true,
           "create_parent" : true,
@@ -3289,147 +3210,169 @@ meta = [
         },
         {
           "type" : "file",
-          "name" : "--input_scrnaseq_reference",
-          "label" : "scRNA-seq Reference",
-          "summary" : "A single-cell reference dataset, preprocessed for this benchmark.",
-          "description" : "This dataset contains preprocessed counts and metadata for single-cell RNA-seq data.\n",
+          "name" : "--input_solution",
+          "label" : "Solution",
+          "summary" : "Ground truth segmentation labels and cell assignments for method evaluation.",
+          "description" : "This dataset contains the ground truth cell and nucleus segmentation labels,\ncell boundaries, and a reference table matching each cell to its label region.\n",
           "info" : {
             "format" : {
-              "type" : "h5ad",
-              "layers" : [
+              "type" : "spatialdata_zarr",
+              "points" : [
                 {
-                  "type" : "integer",
-                  "name" : "counts",
-                  "description" : "Raw counts",
-                  "required" : true
-                },
-                {
-                  "type" : "double",
-                  "name" : "normalized",
-                  "description" : "Normalized expression values",
-                  "required" : true
-                },
-                {
-                  "type" : "double",
-                  "name" : "normalized_log",
-                  "description" : "Log1p normalized expression values",
-                  "required" : true
-                },
-                {
-                  "type" : "double",
-                  "name" : "normalized_log_scaled",
-                  "description" : "Log1p normalized expression values scaled to unit variance and zero mean",
-                  "required" : true
+                  "type" : "dataframe",
+                  "name" : "transcripts",
+                  "description" : "Point cloud data of transcripts with ground truth cell assignments",
+                  "required" : true,
+                  "columns" : [
+                    {
+                      "type" : "float",
+                      "name" : "x",
+                      "required" : true,
+                      "description" : "x-coordinate of the point"
+                    },
+                    {
+                      "type" : "float",
+                      "name" : "y",
+                      "required" : true,
+                      "description" : "y-coordinate of the point"
+                    },
+                    {
+                      "type" : "float",
+                      "name" : "z",
+                      "required" : false,
+                      "description" : "z-coordinate of the point"
+                    },
+                    {
+                      "type" : "categorical",
+                      "name" : "feature_name",
+                      "required" : true,
+                      "description" : "Name of the feature"
+                    },
+                    {
+                      "type" : "integer",
+                      "name" : "cell_id",
+                      "required" : true,
+                      "description" : "Ground truth cell assignment (0 = background)"
+                    },
+                    {
+                      "type" : "long",
+                      "name" : "transcript_id",
+                      "required" : true,
+                      "description" : "Unique identifier of the transcript"
+                    }
+                  ]
                 }
               ],
-              "obs" : [
+              "labels" : [
                 {
-                  "type" : "string",
-                  "name" : "cell_type",
-                  "description" : "Classification of the cell type based on its characteristics and function within the tissue or organism.",
+                  "type" : "object",
+                  "name" : "cell_labels",
+                  "description" : "Ground truth cell segmentation labels",
                   "required" : true
-                }
-              ],
-              "var" : [
+                },
                 {
-                  "type" : "string",
-                  "name" : "feature_id",
-                  "description" : "Unique identifier for the feature, usually a ENSEMBL gene id.",
+                  "type" : "object",
+                  "name" : "nucleus_labels",
+                  "description" : "Ground truth nucleus segmentation labels",
                   "required" : false
-                },
-                {
-                  "type" : "string",
-                  "name" : "feature_name",
-                  "description" : "A human-readable name for the feature, usually a gene symbol.",
-                  "required" : true
-                },
-                {
-                  "type" : "boolean",
-                  "name" : "hvg",
-                  "description" : "Whether or not the feature is considered to be a 'highly variable gene'",
-                  "required" : true
                 }
               ],
-              "obsp" : [
+              "shapes" : [
                 {
-                  "type" : "double",
-                  "name" : "knn_distances",
-                  "description" : "K nearest neighbors distance matrix.",
-                  "required" : true
-                },
-                {
-                  "type" : "double",
-                  "name" : "knn_connectivities",
-                  "description" : "K nearest neighbors connectivities matrix.",
-                  "required" : true
-                }
-              ],
-              "obsm" : [
-                {
-                  "type" : "double",
-                  "name" : "X_pca",
-                  "description" : "The resulting PCA embedding.",
-                  "required" : true
-                }
-              ],
-              "varm" : [
-                {
-                  "type" : "double",
-                  "name" : "pca_loadings",
-                  "description" : "The PCA loadings matrix.",
-                  "required" : true
-                }
-              ],
-              "uns" : [
-                {
-                  "type" : "string",
-                  "name" : "dataset_id",
-                  "description" : "A unique identifier for the dataset. This is different from the `obs.dataset_id` field, which is the identifier for the dataset from which the cell data is derived.",
-                  "required" : true
-                },
-                {
-                  "name" : "dataset_name",
-                  "type" : "string",
-                  "description" : "A human-readable name for the dataset.",
-                  "required" : true
-                },
-                {
-                  "type" : "string",
-                  "name" : "dataset_url",
-                  "description" : "Link to the original source of the dataset.",
-                  "required" : false
-                },
-                {
-                  "name" : "dataset_reference",
-                  "type" : "string",
-                  "description" : "Bibtex reference of the paper in which the dataset was published.",
+                  "type" : "dataframe",
+                  "name" : "cell_boundaries",
+                  "description" : "Ground truth cell boundary shapes",
                   "required" : false,
-                  "multiple" : true
+                  "columns" : [
+                    {
+                      "type" : "object",
+                      "name" : "geometry",
+                      "required" : true,
+                      "description" : "Geometry of the cell boundary"
+                    }
+                  ]
                 },
                 {
-                  "name" : "dataset_summary",
-                  "type" : "string",
-                  "description" : "Short description of the dataset.",
-                  "required" : true
-                },
-                {
-                  "name" : "dataset_description",
-                  "type" : "string",
-                  "description" : "Long description of the dataset.",
-                  "required" : true
-                },
-                {
-                  "name" : "dataset_organism",
-                  "type" : "string",
-                  "description" : "The organism of the sample in the dataset.",
+                  "type" : "dataframe",
+                  "name" : "nucleus_boundaries",
+                  "description" : "Ground truth nucleus boundary shapes",
                   "required" : false,
-                  "multiple" : true
+                  "columns" : [
+                    {
+                      "type" : "object",
+                      "name" : "geometry",
+                      "required" : true,
+                      "description" : "Geometry of the nucleus boundary"
+                    }
+                  ]
+                }
+              ],
+              "tables" : [
+                {
+                  "type" : "anndata",
+                  "name" : "table",
+                  "description" : "Reference cell metadata table",
+                  "required" : true,
+                  "obs" : [
+                    {
+                      "type" : "integer",
+                      "name" : "cell_id",
+                      "description" : "Unique cell identifier, matching instance IDs in the label images",
+                      "required" : true
+                    },
+                    {
+                      "type" : "string",
+                      "name" : "region",
+                      "description" : "Name of the label image this cell belongs to (e.g. 'cell_labels')",
+                      "required" : true
+                    },
+                    {
+                      "type" : "double",
+                      "name" : "cell_area",
+                      "description" : "Area of the cell in pixels",
+                      "required" : false
+                    },
+                    {
+                      "type" : "integer",
+                      "name" : "transcript_counts",
+                      "description" : "Total number of transcripts assigned to this cell",
+                      "required" : false
+                    }
+                  ],
+                  "uns" : [
+                    {
+                      "type" : "string",
+                      "name" : "dataset_id",
+                      "description" : "A unique identifier for the dataset",
+                      "required" : true
+                    },
+                    {
+                      "type" : "string",
+                      "name" : "orig_dataset_id",
+                      "required" : true,
+                      "description" : "The identifier of the original dataset from which this dataset was derived (if applicable)"
+                    }
+                  ],
+                  "var" : [
+                    {
+                      "type" : "string",
+                      "name" : "feature_id",
+                      "required" : false,
+                      "description" : "Unique identifier for the feature, usually a ENSEMBL gene id."
+                    },
+                    {
+                      "type" : "string",
+                      "name" : "feature_name",
+                      "required" : true,
+                      "description" : "A human-readable name for the feature, usually a gene symbol."
+                    }
+                  ]
                 }
               ]
             }
           },
           "example" : [
-            "resources_test/task_spatial_segmentation/mouse_brain_combined/scrnaseq_reference.h5ad"
+            "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_solution.zarr"
           ],
           "must_exist" : true,
           "create_parent" : true,
@@ -3460,20 +3403,6 @@ meta = [
                   "name" : "table",
                   "description" : "AnnData table",
                   "required" : true,
-                  "obs" : [
-                    {
-                      "type" : "string",
-                      "name" : "cell_id",
-                      "description" : "Cell ID",
-                      "required" : true
-                    },
-                    {
-                      "type" : "string",
-                      "name" : "region",
-                      "description" : "Region",
-                      "required" : true
-                    }
-                  ],
                   "uns" : [
                     {
                       "type" : "string",
@@ -3493,7 +3422,7 @@ meta = [
             }
           },
           "example" : [
-            "resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.h5ad"
+            "resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.zarr"
           ],
           "must_exist" : true,
           "create_parent" : true,
@@ -3513,8 +3442,8 @@ meta = [
     }
   ],
   "label" : "True Labels",
-  "summary" : "a positive control, solution labels are copied 1 to 1 to the predicted data.",
-  "description" : "A positive control, where the solution labels are copied 1 to 1 to the predicted data.\n",
+  "summary" : "A positive control where the ground truth cell_labels are used as the prediction.",
+  "description" : "A positive control where the ground truth cell_labels segmentation is copied\ndirectly as the prediction. This represents the upper bound of performance\nfor any segmentation method.\n",
   "test_resources" : [
     {
       "type" : "python_script",
@@ -3533,7 +3462,6 @@ meta = [
     }
   ],
   "info" : {
-    "preferred_normalization" : "counts",
     "type" : "control_method",
     "type_info" : {
       "label" : "Control Method",
@@ -3605,7 +3533,19 @@ meta = [
       "type" : "docker",
       "id" : "docker",
       "image" : "openproblems/base_python:1",
-      "namespace_separator" : "/"
+      "namespace_separator" : "/",
+      "setup" : [
+        {
+          "type" : "python",
+          "user" : false,
+          "pypi" : [
+            "spatialdata>=0.7.3a1",
+            "anndata>=0.12.0",
+            "zarr>=3.0.0"
+          ],
+          "upgrade" : true
+        }
+      ]
     }
   ],
   "build_info" : {
@@ -3614,7 +3554,7 @@ meta = [
     "engine" : "docker",
     "output" : "target/nextflow/control_methods/true_labels",
     "viash_version" : "0.9.7",
-    "git_commit" : "c649fb8fb68960df0ba8f58f019a7ab6c0d68ef8",
+    "git_commit" : "80f470dfdb4a4eb616196573b8df98c2d4015793",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -3704,12 +3644,16 @@ def innerWorkflowFactory(args) {
 tempscript=".viash_script.py"
 cat > "$tempscript" << VIASHMAIN
 import anndata as ad
+import numpy as np
+import spatialdata as sd
+import xarray as xr
+from spatialdata.models import Labels2DModel
 
 ## VIASH START
 # The following code has been auto-generated by Viash.
 par = {
   'input': $( if [ ! -z ${VIASH_PAR_INPUT+x} ]; then echo "r'${VIASH_PAR_INPUT//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
-  'input_scrnaseq_reference': $( if [ ! -z ${VIASH_PAR_INPUT_SCRNASEQ_REFERENCE+x} ]; then echo "r'${VIASH_PAR_INPUT_SCRNASEQ_REFERENCE//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
+  'input_solution': $( if [ ! -z ${VIASH_PAR_INPUT_SOLUTION+x} ]; then echo "r'${VIASH_PAR_INPUT_SOLUTION//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
   'output': $( if [ ! -z ${VIASH_PAR_OUTPUT+x} ]; then echo "r'${VIASH_PAR_OUTPUT//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi )
 }
 meta = {
@@ -3739,34 +3683,48 @@ dep = {
 ## VIASH END
 
 print('Reading input files', flush=True)
-input_train = ad.read_h5ad(par['input_train'])
-input_test = ad.read_h5ad(par['input_test'])
-input_solution = ad.read_h5ad(par['input_solution'])
+sdata_solution = sd.read_zarr(par['input_solution'])
 
-print('Preprocess data', flush=True)
-# ... preprocessing ...
+print('Relabelling ground truth cell_labels as prediction', flush=True)
+gt_labels = sdata_solution['cell_labels']
 
-print('Train model', flush=True)
-# ... train model ...
+# Resolve the image array (handles both DataTree and DataArray)
+if isinstance(gt_labels, xr.DataTree):
+    gt_array = gt_labels['scale0'].image.to_numpy()
+else:
+    gt_array = gt_labels.to_numpy()
 
-print('Generate predictions', flush=True)
-# ... generate predictions ...
-obs_label_pred = input_solution.obs["label"]
+# Randomly permute cell IDs while keeping background (0) unchanged.
+# A correct metric (e.g. ARI) must be invariant to label permutation
+rng = np.random.default_rng(42)
+cell_ids = np.unique(gt_array[gt_array != 0])
+perm = rng.permutation(cell_ids)
+lut = np.zeros(cell_ids.max() + 1, dtype=gt_array.dtype)
+lut[cell_ids] = perm
+relabelled = np.where(gt_array != 0, lut[gt_array], 0)
 
-print("Write output AnnData to file", flush=True)
-output = ad.AnnData(
-  uns={
-    'dataset_id': input_train.uns['dataset_id'],
-    'normalization_id': input_train.uns['normalization_id'],
-    'method_id': meta['name']
+transform = sd.transformations.get_transformation(gt_labels, get_all=True)
+segmentation = Labels2DModel.parse(
+    relabelled,
+    transformations=transform,
+)
+
+output = sd.SpatialData(
+  labels={
+    'segmentation': segmentation
   },
-  obs={
-    'label_pred': obs_label_pred
+  tables={
+    'table': ad.AnnData(
+      uns={
+        'dataset_id': sdata_solution.tables['table'].uns['dataset_id'],
+        'method_id': meta['name']
+      }
+    )
   }
 )
-output.obs_names = input_test.obs_names
 
-output.write_h5ad(par['output'], compression='gzip')
+print('Writing output', flush=True)
+output.write(par['output'], overwrite=True)
 VIASHMAIN
 python -B "$tempscript"
 '''

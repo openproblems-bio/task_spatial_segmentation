@@ -452,9 +452,9 @@ RUN pip install --upgrade pip && \
   pip install --upgrade --no-cache-dir "scikit-learn" "scikit-misc"
 
 LABEL org.opencontainers.image.description="Companion container for running component data_processors process_dataset"
-LABEL org.opencontainers.image.created="2026-04-29T04:36:14Z"
+LABEL org.opencontainers.image.created="2026-05-07T10:16:22Z"
 LABEL org.opencontainers.image.source="https://github.com/openproblems-bio/task_spatial_segmentation"
-LABEL org.opencontainers.image.revision="c649fb8fb68960df0ba8f58f019a7ab6c0d68ef8"
+LABEL org.opencontainers.image.revision="80f470dfdb4a4eb616196573b8df98c2d4015793"
 LABEL org.opencontainers.image.version="build_main"
 
 VIASHDOCKER
@@ -593,12 +593,23 @@ function ViashHelp {
   echo "v4.0.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/4.0.0/schema.md)."
   echo ""
   echo "Outputs:"
-  echo "    --output_spatial_dataset"
+  echo "    --output_spatial_unlabelled"
   echo "        type: file, required parameter, output, file must exist"
   echo "        example:"
-  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr"
-  echo "        This dataset contains preprocessed images, labels, points, shapes, and"
-  echo "        tables for spatial transcriptomics data."
+  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_unlabelled.zarr"
+  echo "        This dataset contains preprocessed images and transcript point clouds"
+  echo "        for spatial transcriptomics data."
+  echo "        Ground truth segmentation labels are intentionally excluded to prevent"
+  echo "        methods from cheating."
+  echo ""
+  echo "    --output_spatial_solution"
+  echo "        type: file, required parameter, output, file must exist"
+  echo "        example:"
+  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_solution.zarr"
+  echo "        This dataset contains the ground truth cell and nucleus segmentation"
+  echo "        labels,"
+  echo "        cell boundaries, and a reference table matching each cell to its label"
+  echo "        region."
   echo ""
   echo "    --output_scrnaseq_reference"
   echo "        type: file, required parameter, output, file must exist"
@@ -639,11 +650,6 @@ function ViashHelp {
   echo "        The organism of the sample in the dataset."
   echo ""
   echo "Processing parameters:"
-  echo "    --seed"
-  echo "        type: integer"
-  echo "        example: 123"
-  echo "        A seed for the subsampling."
-  echo ""
   echo "    --span"
   echo "        type: double"
   echo "        default: 0.3"
@@ -728,15 +734,26 @@ while [[ $# -gt 0 ]]; do
             VIASH_PAR_INPUT_SC=$(ViashRemoveFlags "$1")
             shift 1
             ;;
-        --output_spatial_dataset)
-            [ -n "$VIASH_PAR_OUTPUT_SPATIAL_DATASET" ] && ViashError Bad arguments for option \'--output_spatial_dataset\': \'$VIASH_PAR_OUTPUT_SPATIAL_DATASET\' \& \'$2\' - you should provide exactly one argument for this option. && exit 1
-            VIASH_PAR_OUTPUT_SPATIAL_DATASET="$2"
-            [ $# -lt 2 ] && ViashError Not enough arguments passed to --output_spatial_dataset. Use "--help" to get more information on the parameters. && exit 1
+        --output_spatial_unlabelled)
+            [ -n "$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED" ] && ViashError Bad arguments for option \'--output_spatial_unlabelled\': \'$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED\' \& \'$2\' - you should provide exactly one argument for this option. && exit 1
+            VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED="$2"
+            [ $# -lt 2 ] && ViashError Not enough arguments passed to --output_spatial_unlabelled. Use "--help" to get more information on the parameters. && exit 1
             shift 2
             ;;
-        --output_spatial_dataset=*)
-            [ -n "$VIASH_PAR_OUTPUT_SPATIAL_DATASET" ] && ViashError Bad arguments for option \'--output_spatial_dataset=*\': \'$VIASH_PAR_OUTPUT_SPATIAL_DATASET\' \& \'$2\' - you should provide exactly one argument for this option. && exit 1
-            VIASH_PAR_OUTPUT_SPATIAL_DATASET=$(ViashRemoveFlags "$1")
+        --output_spatial_unlabelled=*)
+            [ -n "$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED" ] && ViashError Bad arguments for option \'--output_spatial_unlabelled=*\': \'$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED\' \& \'$2\' - you should provide exactly one argument for this option. && exit 1
+            VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED=$(ViashRemoveFlags "$1")
+            shift 1
+            ;;
+        --output_spatial_solution)
+            [ -n "$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION" ] && ViashError Bad arguments for option \'--output_spatial_solution\': \'$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION\' \& \'$2\' - you should provide exactly one argument for this option. && exit 1
+            VIASH_PAR_OUTPUT_SPATIAL_SOLUTION="$2"
+            [ $# -lt 2 ] && ViashError Not enough arguments passed to --output_spatial_solution. Use "--help" to get more information on the parameters. && exit 1
+            shift 2
+            ;;
+        --output_spatial_solution=*)
+            [ -n "$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION" ] && ViashError Bad arguments for option \'--output_spatial_solution=*\': \'$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION\' \& \'$2\' - you should provide exactly one argument for this option. && exit 1
+            VIASH_PAR_OUTPUT_SPATIAL_SOLUTION=$(ViashRemoveFlags "$1")
             shift 1
             ;;
         --output_scrnaseq_reference)
@@ -831,17 +848,6 @@ while [[ $# -gt 0 ]]; do
         --dataset_organism=*)
             [ -n "$VIASH_PAR_DATASET_ORGANISM" ] && ViashError Bad arguments for option \'--dataset_organism=*\': \'$VIASH_PAR_DATASET_ORGANISM\' \& \'$2\' - you should provide exactly one argument for this option. && exit 1
             VIASH_PAR_DATASET_ORGANISM=$(ViashRemoveFlags "$1")
-            shift 1
-            ;;
-        --seed)
-            [ -n "$VIASH_PAR_SEED" ] && ViashError Bad arguments for option \'--seed\': \'$VIASH_PAR_SEED\' \& \'$2\' - you should provide exactly one argument for this option. && exit 1
-            VIASH_PAR_SEED="$2"
-            [ $# -lt 2 ] && ViashError Not enough arguments passed to --seed. Use "--help" to get more information on the parameters. && exit 1
-            shift 2
-            ;;
-        --seed=*)
-            [ -n "$VIASH_PAR_SEED" ] && ViashError Bad arguments for option \'--seed=*\': \'$VIASH_PAR_SEED\' \& \'$2\' - you should provide exactly one argument for this option. && exit 1
-            VIASH_PAR_SEED=$(ViashRemoveFlags "$1")
             shift 1
             ;;
         --span)
@@ -1046,8 +1052,12 @@ if [ -z ${VIASH_PAR_INPUT_SC+x} ]; then
   ViashError '--input_sc' is a required argument. Use "--help" to get more information on the parameters.
   exit 1
 fi
-if [ -z ${VIASH_PAR_OUTPUT_SPATIAL_DATASET+x} ]; then
-  ViashError '--output_spatial_dataset' is a required argument. Use "--help" to get more information on the parameters.
+if [ -z ${VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED+x} ]; then
+  ViashError '--output_spatial_unlabelled' is a required argument. Use "--help" to get more information on the parameters.
+  exit 1
+fi
+if [ -z ${VIASH_PAR_OUTPUT_SPATIAL_SOLUTION+x} ]; then
+  ViashError '--output_spatial_solution' is a required argument. Use "--help" to get more information on the parameters.
   exit 1
 fi
 if [ -z ${VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE+x} ]; then
@@ -1126,12 +1136,6 @@ if [ ! -z "$VIASH_PAR_INPUT_SC" ] && [ ! -e "$VIASH_PAR_INPUT_SC" ]; then
 fi
 
 # check whether parameters values are of the right type
-if [[ -n "$VIASH_PAR_SEED" ]]; then
-  if ! [[ "$VIASH_PAR_SEED" =~ ^[-+]?[0-9]+$ ]]; then
-    ViashError '--seed' has to be an integer. Use "--help" to get more information on the parameters.
-    exit 1
-  fi
-fi
 if [[ -n "$VIASH_PAR_SPAN" ]]; then
   if ! [[ "$VIASH_PAR_SPAN" =~ ^[-+]?(\.[0-9]+|[0-9]+(\.[0-9]*)?)([eE][-+]?[0-9]+)?$ ]]; then
     ViashError '--span' has to be a double. Use "--help" to get more information on the parameters.
@@ -1218,8 +1222,11 @@ if [[ -n "$VIASH_META_MEMORY_PIB" ]]; then
 fi
 
 # create parent directories of output files, if so desired
-if [ ! -z "$VIASH_PAR_OUTPUT_SPATIAL_DATASET" ] && [ ! -d "$(dirname "$VIASH_PAR_OUTPUT_SPATIAL_DATASET")" ]; then
-  mkdir -p "$(dirname "$VIASH_PAR_OUTPUT_SPATIAL_DATASET")"
+if [ ! -z "$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED" ] && [ ! -d "$(dirname "$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED")" ]; then
+  mkdir -p "$(dirname "$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED")"
+fi
+if [ ! -z "$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION" ] && [ ! -d "$(dirname "$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION")" ]; then
+  mkdir -p "$(dirname "$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION")"
 fi
 if [ ! -z "$VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE" ] && [ ! -d "$(dirname "$VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE")" ]; then
   mkdir -p "$(dirname "$VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE")"
@@ -1245,10 +1252,15 @@ if [ ! -z "$VIASH_PAR_INPUT_SC" ]; then
   VIASH_DIRECTORY_MOUNTS+=( "$(ViashDockerAutodetectMountArg "$VIASH_PAR_INPUT_SC")" )
   VIASH_PAR_INPUT_SC=$(ViashDockerAutodetectMount "$VIASH_PAR_INPUT_SC")
 fi
-if [ ! -z "$VIASH_PAR_OUTPUT_SPATIAL_DATASET" ]; then
-  VIASH_DIRECTORY_MOUNTS+=( "$(ViashDockerAutodetectMountArg "$VIASH_PAR_OUTPUT_SPATIAL_DATASET")" )
-  VIASH_PAR_OUTPUT_SPATIAL_DATASET=$(ViashDockerAutodetectMount "$VIASH_PAR_OUTPUT_SPATIAL_DATASET")
-  VIASH_CHOWN_VARS+=( "$VIASH_PAR_OUTPUT_SPATIAL_DATASET" )
+if [ ! -z "$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED" ]; then
+  VIASH_DIRECTORY_MOUNTS+=( "$(ViashDockerAutodetectMountArg "$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED")" )
+  VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED=$(ViashDockerAutodetectMount "$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED")
+  VIASH_CHOWN_VARS+=( "$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED" )
+fi
+if [ ! -z "$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION" ]; then
+  VIASH_DIRECTORY_MOUNTS+=( "$(ViashDockerAutodetectMountArg "$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION")" )
+  VIASH_PAR_OUTPUT_SPATIAL_SOLUTION=$(ViashDockerAutodetectMount "$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION")
+  VIASH_CHOWN_VARS+=( "$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION" )
 fi
 if [ ! -z "$VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE" ]; then
   VIASH_DIRECTORY_MOUNTS+=( "$(ViashDockerAutodetectMountArg "$VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE")" )
@@ -1322,8 +1334,8 @@ function interrupt {
 trap clean_up EXIT
 trap interrupt INT SIGINT
 cat > "\$tempscript" << 'VIASHMAIN'
-import random
 import anndata as ad
+import pandas as pd
 import spatialdata as sd
 import scanpy as sc
 
@@ -1332,7 +1344,8 @@ import scanpy as sc
 par = {
   'input_sp': $( if [ ! -z ${VIASH_PAR_INPUT_SP+x} ]; then echo "r'${VIASH_PAR_INPUT_SP//\'/\'\"\'\"r\'}'"; else echo None; fi ),
   'input_sc': $( if [ ! -z ${VIASH_PAR_INPUT_SC+x} ]; then echo "r'${VIASH_PAR_INPUT_SC//\'/\'\"\'\"r\'}'"; else echo None; fi ),
-  'output_spatial_dataset': $( if [ ! -z ${VIASH_PAR_OUTPUT_SPATIAL_DATASET+x} ]; then echo "r'${VIASH_PAR_OUTPUT_SPATIAL_DATASET//\'/\'\"\'\"r\'}'"; else echo None; fi ),
+  'output_spatial_unlabelled': $( if [ ! -z ${VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED+x} ]; then echo "r'${VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED//\'/\'\"\'\"r\'}'"; else echo None; fi ),
+  'output_spatial_solution': $( if [ ! -z ${VIASH_PAR_OUTPUT_SPATIAL_SOLUTION+x} ]; then echo "r'${VIASH_PAR_OUTPUT_SPATIAL_SOLUTION//\'/\'\"\'\"r\'}'"; else echo None; fi ),
   'output_scrnaseq_reference': $( if [ ! -z ${VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE+x} ]; then echo "r'${VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE//\'/\'\"\'\"r\'}'"; else echo None; fi ),
   'dataset_id': $( if [ ! -z ${VIASH_PAR_DATASET_ID+x} ]; then echo "r'${VIASH_PAR_DATASET_ID//\'/\'\"\'\"r\'}'"; else echo None; fi ),
   'dataset_name': $( if [ ! -z ${VIASH_PAR_DATASET_NAME+x} ]; then echo "r'${VIASH_PAR_DATASET_NAME//\'/\'\"\'\"r\'}'"; else echo None; fi ),
@@ -1341,7 +1354,6 @@ par = {
   'dataset_summary': $( if [ ! -z ${VIASH_PAR_DATASET_SUMMARY+x} ]; then echo "r'${VIASH_PAR_DATASET_SUMMARY//\'/\'\"\'\"r\'}'"; else echo None; fi ),
   'dataset_description': $( if [ ! -z ${VIASH_PAR_DATASET_DESCRIPTION+x} ]; then echo "r'${VIASH_PAR_DATASET_DESCRIPTION//\'/\'\"\'\"r\'}'"; else echo None; fi ),
   'dataset_organism': $( if [ ! -z ${VIASH_PAR_DATASET_ORGANISM+x} ]; then echo "r'${VIASH_PAR_DATASET_ORGANISM//\'/\'\"\'\"r\'}'"; else echo None; fi ),
-  'seed': $( if [ ! -z ${VIASH_PAR_SEED+x} ]; then echo "int(r'${VIASH_PAR_SEED//\'/\'\"\'\"r\'}')"; else echo None; fi ),
   'span': $( if [ ! -z ${VIASH_PAR_SPAN+x} ]; then echo "float(r'${VIASH_PAR_SPAN//\'/\'\"\'\"r\'}')"; else echo None; fi ),
   'n_top_genes': $( if [ ! -z ${VIASH_PAR_N_TOP_GENES+x} ]; then echo "int(r'${VIASH_PAR_N_TOP_GENES//\'/\'\"\'\"r\'}')"; else echo None; fi )
 }
@@ -1402,12 +1414,6 @@ def sc_processing(adata):
         )
         adata.var.rename(columns={"highly_variable": "hvg"}, inplace=True)
 
-
-# set seed if need be
-if par["seed"]:
-    print(f">> Setting seed to {par['seed']}")
-    random.seed(par["seed"])
-
 print(">> Load data", flush=True)
 sc_data = ad.read_h5ad(par["input_sc"])
 print(f"single cell data: {sc_data}")
@@ -1420,7 +1426,7 @@ sc_data.uns["orig_dataset_id"] = sc_data.uns.get("dataset_id", None)
 for key in ["dataset_id", "dataset_name", "dataset_url", "dataset_summary", "dataset_description", "dataset_reference", "dataset_organism"]:
     sc_data.uns[key] = par[key]
 
-print(">> Writing data", flush=True)
+print(">> Writing scrnaseq reference", flush=True)
 sc_data.write_h5ad(par["output_scrnaseq_reference"], compression="gzip")
 
 # read input_sp
@@ -1428,30 +1434,84 @@ print(">> Read spatial data", flush=True)
 sp_data = sd.read_zarr(par["input_sp"])
 print(f"spatial data: {sp_data}")
 
-print(">> Processing spatial data", flush=True)
-sp_data_table = sp_data.tables['table']
-print(f"single cell part of spatial data: {sp_data_table}")
-sc_processing(sp_data_table)
+dataset_uns = {
+    "dataset_id": par["dataset_id"],
+    "dataset_name": par["dataset_name"],
+    "dataset_url": par["dataset_url"],
+    "dataset_summary": par["dataset_summary"],
+    "dataset_description": par["dataset_description"],
+    "dataset_reference": par["dataset_reference"],
+    "dataset_organism": par["dataset_organism"],
+    "orig_dataset_id": sp_data.tables["table"].uns.get("dataset_id", None),
+}
 
-if "cell_area" not in sp_data_table.obs:
-    print(">> Perform scanpy qc for cell area", flush=True)
-    sc.pp.calculate_qc_metrics(sp_data_table, layer="counts", inplace=True)
+# ---------------------------------------------------------------
+# output_spatial_dataset: image + transcripts (no ground truth)
+# ---------------------------------------------------------------
+print(">> Building spatial dataset for methods (no ground truth)", flush=True)
 
-for x in ["transcript_counts", "n_genes_by_counts"]:
-    if f"ca_normalized_{x}" not in sp_data_table.obs and x in sp_data_table.obs:
-        print(f">> Perform cell area normalization for {x}", flush=True)
-        sp_data_table.obs[f'ca_normalized_{x}'] = sp_data_table.obs[f"{x}"] / sp_data_table.obs["cell_area"]
+# Strip columns that reveal ground truth cell assignments from transcripts
+_GROUND_TRUTH_COLS = {"cell_id", "nucleus_id", "cell_type"}
+transcripts = sp_data.points["transcripts"]
+clean_transcript_cols = [c for c in transcripts.columns if c not in _GROUND_TRUTH_COLS]
+clean_transcripts = transcripts[clean_transcript_cols]
 
-print(">> Override dataset metadata in .uns", flush=True)
-sp_data_table.uns["orig_dataset_id"] = sp_data_table.uns.get("dataset_id", None)
-for key in ["dataset_id", "dataset_name", "dataset_url", "dataset_summary", "dataset_description", "dataset_reference", "dataset_organism"]:
-    sp_data_table.uns[key] = par[key]
+# Build var from unique feature names in transcripts, mapping to feature_ids from metadata
+feature_names = transcripts["feature_name"].compute().unique().tolist()
+var_df = pd.DataFrame({"feature_name": feature_names}, index=feature_names)
+var_df.index.name = "feature_name"
+if "metadata" in sp_data.tables and "gene_ids" in sp_data.tables["metadata"].var.columns:
+    id_map = sp_data.tables["metadata"].var["gene_ids"]
+    var_df["feature_id"] = var_df.index.map(id_map)
 
-print(f"spatial data: {sp_data}")
-print(f"spatial data tables['table']: {sp_data.tables['table']}")
+# Minimal table: dataset metadata in uns, gene list in var
+minimal_table = ad.AnnData(var=var_df, uns=dataset_uns)
 
-print(">> Writing spatial data", flush=True)
-sp_data.write(par["output_spatial_dataset"], overwrite=True)
+output_spatial = sd.SpatialData(
+    images={"morphology_mip": sp_data.images["morphology_mip"]},
+    points={"transcripts": clean_transcripts},
+    tables={"table": minimal_table},
+)
+
+print(">> Writing spatial unlabelled dataset", flush=True)
+output_spatial.write(par["output_spatial_unlabelled"], overwrite=True)
+
+# ---------------------------------------------------------------
+# output_spatial_solution: ground truth labels, shapes, reference table
+# ---------------------------------------------------------------
+print(">> Building spatial solution (ground truth)", flush=True)
+
+ref_table = sp_data.tables["table"]
+solution_obs = ref_table.obs[["cell_id", "region"]].copy()
+for extra_col in ["cell_area", "transcript_counts"]:
+    if extra_col in ref_table.obs.columns:
+        solution_obs[extra_col] = ref_table.obs[extra_col]
+
+solution_table = ad.AnnData(
+    obs=solution_obs,
+    var=var_df,
+    uns={
+        "dataset_id": par["dataset_id"],
+        "orig_dataset_id": sp_data.tables["table"].uns.get("dataset_id", None),
+        "spatialdata_attrs": ref_table.uns["spatialdata_attrs"],
+    },
+)
+
+# Keep only the columns needed for the solution (ground truth assignments)
+_SOLUTION_TRANSCRIPT_COLS = ["x", "y", "feature_name", "cell_id", "transcript_id"]
+if "z" in transcripts.columns:
+    _SOLUTION_TRANSCRIPT_COLS = ["x", "y", "z"] + _SOLUTION_TRANSCRIPT_COLS[2:]
+solution_transcripts = transcripts[[c for c in _SOLUTION_TRANSCRIPT_COLS if c in transcripts.columns]]
+
+output_solution = sd.SpatialData(
+    points={"transcripts": solution_transcripts},
+    labels={k: v for k, v in sp_data.labels.items()},
+    shapes={k: v for k, v in sp_data.shapes.items()},
+    tables={"table": solution_table},
+)
+
+print(">> Writing spatial solution", flush=True)
+output_solution.write(par["output_spatial_solution"], overwrite=True)
 VIASHMAIN
 python -B "\$tempscript" &
 wait "\$!"
@@ -1468,8 +1528,11 @@ if [[ "$VIASH_ENGINE_TYPE" == "docker" ]]; then
   if [ ! -z "$VIASH_PAR_INPUT_SC" ]; then
     VIASH_PAR_INPUT_SC=$(ViashDockerStripAutomount "$VIASH_PAR_INPUT_SC")
   fi
-  if [ ! -z "$VIASH_PAR_OUTPUT_SPATIAL_DATASET" ]; then
-    VIASH_PAR_OUTPUT_SPATIAL_DATASET=$(ViashDockerStripAutomount "$VIASH_PAR_OUTPUT_SPATIAL_DATASET")
+  if [ ! -z "$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED" ]; then
+    VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED=$(ViashDockerStripAutomount "$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED")
+  fi
+  if [ ! -z "$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION" ]; then
+    VIASH_PAR_OUTPUT_SPATIAL_SOLUTION=$(ViashDockerStripAutomount "$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION")
   fi
   if [ ! -z "$VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE" ]; then
     VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE=$(ViashDockerStripAutomount "$VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE")
@@ -1490,8 +1553,12 @@ fi
 
 
 # check whether required files exist
-if [ ! -z "$VIASH_PAR_OUTPUT_SPATIAL_DATASET" ] && [ ! -e "$VIASH_PAR_OUTPUT_SPATIAL_DATASET" ]; then
-  ViashError "Output file '$VIASH_PAR_OUTPUT_SPATIAL_DATASET' does not exist."
+if [ ! -z "$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED" ] && [ ! -e "$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED" ]; then
+  ViashError "Output file '$VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED' does not exist."
+  exit 1
+fi
+if [ ! -z "$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION" ] && [ ! -e "$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION" ]; then
+  ViashError "Output file '$VIASH_PAR_OUTPUT_SPATIAL_SOLUTION' does not exist."
   exit 1
 fi
 if [ ! -z "$VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE" ] && [ ! -e "$VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE" ]; then

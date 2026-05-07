@@ -1,0 +1,108 @@
+type: file
+example: "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_solution.zarr"
+label: "Solution"
+summary: Ground truth segmentation labels and cell assignments for method evaluation.
+description: |
+  This dataset contains the ground truth cell and nucleus segmentation labels,
+  cell boundaries, and a reference table matching each cell to its label region.
+info:
+  format:
+    type: spatialdata_zarr
+    points:
+      - type: dataframe
+        name: transcripts
+        description: Point cloud data of transcripts with ground truth cell assignments
+        required: true
+        columns:
+          - type: float
+            name: "x"
+            required: true
+            description: x-coordinate of the point
+          - type: float
+            name: "y"
+            required: true
+            description: y-coordinate of the point
+          - type: float
+            name: "z"
+            required: false
+            description: z-coordinate of the point
+          - type: categorical
+            name: feature_name
+            required: true
+            description: Name of the feature
+          - type: integer
+            name: cell_id
+            required: true
+            description: Ground truth cell assignment (0 = background)
+          - type: long
+            name: transcript_id
+            required: true
+            description: Unique identifier of the transcript
+    labels:
+      - type: object
+        name: "cell_labels"
+        description: Ground truth cell segmentation labels
+        required: true
+      - type: object
+        name: "nucleus_labels"
+        description: Ground truth nucleus segmentation labels
+        required: false
+    shapes:
+      - type: dataframe
+        name: "cell_boundaries"
+        description: Ground truth cell boundary shapes
+        required: false
+        columns:
+          - type: object
+            name: "geometry"
+            required: true
+            description: Geometry of the cell boundary
+      - type: dataframe
+        name: "nucleus_boundaries"
+        description: Ground truth nucleus boundary shapes
+        required: false
+        columns:
+          - type: object
+            name: "geometry"
+            required: true
+            description: Geometry of the nucleus boundary
+    tables:
+      - type: anndata
+        name: "table"
+        description: Reference cell metadata table
+        required: true
+        obs:
+          - type: integer
+            name: cell_id
+            description: Unique cell identifier, matching instance IDs in the label images
+            required: true
+          - type: string
+            name: region
+            description: Name of the label image this cell belongs to (e.g. 'cell_labels')
+            required: true
+          - type: double
+            name: cell_area
+            description: Area of the cell in pixels
+            required: false
+          - type: integer
+            name: transcript_counts
+            description: Total number of transcripts assigned to this cell
+            required: false
+        uns:
+          - type: string
+            name: dataset_id
+            description: A unique identifier for the dataset
+            required: true
+          - type: string
+            name: orig_dataset_id
+            required: true
+            description: The identifier of the original dataset from which this dataset was derived (if applicable)
+        var:
+          - type: string
+            name: feature_id
+            required: false
+            description: Unique identifier for the feature, usually a ENSEMBL gene id.
+          - type: string
+            name: feature_name
+            required: true
+            description: A human-readable name for the feature, usually a gene symbol.

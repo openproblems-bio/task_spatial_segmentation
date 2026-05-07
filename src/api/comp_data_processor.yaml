@@ -19,8 +19,12 @@ argument_groups:
         direction: input
   - name: Outputs
     arguments:
-      - name: "--output_spatial_dataset"
-        __merge__: file_spatial_dataset.yaml
+      - name: "--output_spatial_unlabelled"
+        __merge__: file_spatial_unlabelled.yaml
+        direction: output
+        required: true
+      - name: "--output_spatial_solution"
+        __merge__: file_spatial_solution.yaml
         direction: output
         required: true
       - name: "--output_scrnaseq_reference"
@@ -80,4 +84,3 @@ test_resources:
     dest: resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2
   - type: python_script
     path: /common/component_tests/run_and_check_output.py
-      

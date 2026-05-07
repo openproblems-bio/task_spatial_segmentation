@@ -1,0 +1,23 @@
+__merge__: ../../api/comp_output_processor.yaml
+
+name: process_prediction
+
+resources:
+  - type: python_script
+    path: script.py
+
+engines:
+  - type: docker
+    image: openproblems/base_python:1
+    setup:
+      - type: python
+        packages: [scikit-learn, scikit-misc]
+    __merge__: 
+      - /src/base/setup_spatialdata_partial.yaml
+  - type: native
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [midmem, midcpu, midtime]

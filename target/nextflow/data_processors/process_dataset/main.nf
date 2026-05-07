@@ -3613,10 +3613,10 @@ meta = [
       "arguments" : [
         {
           "type" : "file",
-          "name" : "--output_spatial_dataset",
-          "label" : "Raw iST Dataset",
-          "summary" : "A spatial transcriptomics dataset, preprocessed for this benchmark.",
-          "description" : "This dataset contains preprocessed images, labels, points, shapes, and tables for spatial transcriptomics data.\n",
+          "name" : "--output_spatial_unlabelled",
+          "label" : "Unlabelled",
+          "summary" : "Preprocessed spatial transcriptomics data without segmentation labels for method input.",
+          "description" : "This dataset contains preprocessed images and transcript point clouds for spatial transcriptomics data.\nGround truth segmentation labels are intentionally excluded to prevent methods from cheating.\n",
           "info" : {
             "format" : {
               "type" : "spatialdata_zarr",
@@ -3624,22 +3624,8 @@ meta = [
                 {
                   "type" : "object",
                   "name" : "morphology_mip",
-                  "description" : "The raw image data",
+                  "description" : "The raw morphology image (maximum intensity projection)",
                   "required" : true
-                }
-              ],
-              "labels" : [
-                {
-                  "type" : "object",
-                  "name" : "cell_labels",
-                  "description" : "Cell segmentation labels",
-                  "required" : false
-                },
-                {
-                  "type" : "object",
-                  "name" : "nucleus_labels",
-                  "description" : "Cell segmentation labels",
-                  "required" : false
                 }
               ],
               "points" : [
@@ -3674,24 +3660,6 @@ meta = [
                       "description" : "Name of the feature"
                     },
                     {
-                      "type" : "integer",
-                      "name" : "cell_id",
-                      "required" : false,
-                      "description" : "Unique identifier of the cell"
-                    },
-                    {
-                      "type" : "integer",
-                      "name" : "nucleus_id",
-                      "required" : false,
-                      "description" : "Unique identifier of the nucleus"
-                    },
-                    {
-                      "type" : "string",
-                      "name" : "cell_type",
-                      "required" : false,
-                      "description" : "Cell type of the cell"
-                    },
-                    {
                       "type" : "float",
                       "name" : "qv",
                       "required" : false,
@@ -3707,37 +3675,7 @@ meta = [
                       "type" : "boolean",
                       "name" : "overlaps_nucleus",
                       "required" : false,
-                      "description" : "Whether the point overlaps with a nucleus"
-                    }
-                  ]
-                }
-              ],
-              "shapes" : [
-                {
-                  "type" : "dataframe",
-                  "name" : "cell_boundaries",
-                  "description" : "Cell boundaries",
-                  "required" : false,
-                  "columns" : [
-                    {
-                      "type" : "object",
-                      "name" : "geometry",
-                      "required" : true,
-                      "description" : "Geometry of the cell boundary"
-                    }
-                  ]
-                },
-                {
-                  "type" : "dataframe",
-                  "name" : "nucleus_boundaries",
-                  "description" : "Nucleus boundaries",
-                  "required" : false,
-                  "columns" : [
-                    {
-                      "type" : "object",
-                      "name" : "geometry",
-                      "required" : true,
-                      "description" : "Geometry of the nucleus boundary"
+                      "description" : "Whether the point overlaps with the nucleus (derived from morphology)"
                     }
                   ]
                 }
@@ -3793,40 +3731,23 @@ meta = [
                     },
                     {
                       "type" : "string",
-                      "name" : "segmentation_id",
+                      "name" : "orig_dataset_id",
                       "required" : true,
-                      "multiple" : true,
-                      "description" : "A unique identifier for the segmentation"
-                    }
-                  ],
-                  "obs" : [
-                    {
-                      "type" : "string",
-                      "name" : "cell_id",
-                      "required" : true,
-                      "description" : "A unique identifier for the cell"
+                      "description" : "The identifier of the original dataset from which this dataset was derived (if applicable)"
                     }
                   ],
                   "var" : [
                     {
                       "type" : "string",
-                      "name" : "gene_ids",
-                      "required" : true,
-                      "description" : "Unique identifier for the gene"
+                      "name" : "feature_id",
+                      "required" : false,
+                      "description" : "Unique identifier for the feature, usually a ENSEMBL gene id."
                     },
                     {
                       "type" : "string",
-                      "name" : "feature_types",
+                      "name" : "feature_name",
                       "required" : true,
-                      "description" : "Type of the feature"
-                    }
-                  ],
-                  "obsm" : [
-                    {
-                      "type" : "double",
-                      "name" : "spatial",
-                      "required" : true,
-                      "description" : "Spatial coordinates of the cell"
+                      "description" : "A human-readable name for the feature, usually a gene symbol."
                     }
                   ]
                 }
@@ -3842,7 +3763,180 @@ meta = [
             }
           },
           "example" : [
-            "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr"
+            "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_unlabelled.zarr"
+          ],
+          "must_exist" : true,
+          "create_parent" : true,
+          "required" : true,
+          "direction" : "output",
+          "multiple" : false,
+          "multiple_sep" : ";"
+        },
+        {
+          "type" : "file",
+          "name" : "--output_spatial_solution",
+          "label" : "Solution",
+          "summary" : "Ground truth segmentation labels and cell assignments for method evaluation.",
+          "description" : "This dataset contains the ground truth cell and nucleus segmentation labels,\ncell boundaries, and a reference table matching each cell to its label region.\n",
+          "info" : {
+            "format" : {
+              "type" : "spatialdata_zarr",
+              "points" : [
+                {
+                  "type" : "dataframe",
+                  "name" : "transcripts",
+                  "description" : "Point cloud data of transcripts with ground truth cell assignments",
+                  "required" : true,
+                  "columns" : [
+                    {
+                      "type" : "float",
+                      "name" : "x",
+                      "required" : true,
+                      "description" : "x-coordinate of the point"
+                    },
+                    {
+                      "type" : "float",
+                      "name" : "y",
+                      "required" : true,
+                      "description" : "y-coordinate of the point"
+                    },
+                    {
+                      "type" : "float",
+                      "name" : "z",
+                      "required" : false,
+                      "description" : "z-coordinate of the point"
+                    },
+                    {
+                      "type" : "categorical",
+                      "name" : "feature_name",
+                      "required" : true,
+                      "description" : "Name of the feature"
+                    },
+                    {
+                      "type" : "integer",
+                      "name" : "cell_id",
+                      "required" : true,
+                      "description" : "Ground truth cell assignment (0 = background)"
+                    },
+                    {
+                      "type" : "long",
+                      "name" : "transcript_id",
+                      "required" : true,
+                      "description" : "Unique identifier of the transcript"
+                    }
+                  ]
+                }
+              ],
+              "labels" : [
+                {
+                  "type" : "object",
+                  "name" : "cell_labels",
+                  "description" : "Ground truth cell segmentation labels",
+                  "required" : true
+                },
+                {
+                  "type" : "object",
+                  "name" : "nucleus_labels",
+                  "description" : "Ground truth nucleus segmentation labels",
+                  "required" : false
+                }
+              ],
+              "shapes" : [
+                {
+                  "type" : "dataframe",
+                  "name" : "cell_boundaries",
+                  "description" : "Ground truth cell boundary shapes",
+                  "required" : false,
+                  "columns" : [
+                    {
+                      "type" : "object",
+                      "name" : "geometry",
+                      "required" : true,
+                      "description" : "Geometry of the cell boundary"
+                    }
+                  ]
+                },
+                {
+                  "type" : "dataframe",
+                  "name" : "nucleus_boundaries",
+                  "description" : "Ground truth nucleus boundary shapes",
+                  "required" : false,
+                  "columns" : [
+                    {
+                      "type" : "object",
+                      "name" : "geometry",
+                      "required" : true,
+                      "description" : "Geometry of the nucleus boundary"
+                    }
+                  ]
+                }
+              ],
+              "tables" : [
+                {
+                  "type" : "anndata",
+                  "name" : "table",
+                  "description" : "Reference cell metadata table",
+                  "required" : true,
+                  "obs" : [
+                    {
+                      "type" : "integer",
+                      "name" : "cell_id",
+                      "description" : "Unique cell identifier, matching instance IDs in the label images",
+                      "required" : true
+                    },
+                    {
+                      "type" : "string",
+                      "name" : "region",
+                      "description" : "Name of the label image this cell belongs to (e.g. 'cell_labels')",
+                      "required" : true
+                    },
+                    {
+                      "type" : "double",
+                      "name" : "cell_area",
+                      "description" : "Area of the cell in pixels",
+                      "required" : false
+                    },
+                    {
+                      "type" : "integer",
+                      "name" : "transcript_counts",
+                      "description" : "Total number of transcripts assigned to this cell",
+                      "required" : false
+                    }
+                  ],
+                  "uns" : [
+                    {
+                      "type" : "string",
+                      "name" : "dataset_id",
+                      "description" : "A unique identifier for the dataset",
+                      "required" : true
+                    },
+                    {
+                      "type" : "string",
+                      "name" : "orig_dataset_id",
+                      "required" : true,
+                      "description" : "The identifier of the original dataset from which this dataset was derived (if applicable)"
+                    }
+                  ],
+                  "var" : [
+                    {
+                      "type" : "string",
+                      "name" : "feature_id",
+                      "required" : false,
+                      "description" : "Unique identifier for the feature, usually a ENSEMBL gene id."
+                    },
+                    {
+                      "type" : "string",
+                      "name" : "feature_name",
+                      "required" : true,
+                      "description" : "A human-readable name for the feature, usually a gene symbol."
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "example" : [
+            "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_solution.zarr"
           ],
           "must_exist" : true,
           "create_parent" : true,
@@ -4101,18 +4195,6 @@ meta = [
       "name" : "Processing parameters",
       "arguments" : [
         {
-          "type" : "integer",
-          "name" : "--seed",
-          "description" : "A seed for the subsampling.",
-          "example" : [
-            123
-          ],
-          "required" : false,
-          "direction" : "input",
-          "multiple" : false,
-          "multiple_sep" : ";"
-        },
-        {
           "type" : "double",
           "name" : "--span",
           "description" : "The fraction of the data (cells) used when estimating the variance in the loess model fit if flavor='seurat_v3'.",
@@ -4200,7 +4282,7 @@ meta = [
       "id" : "nextflow",
       "directives" : {
         "label" : [
-          "highmem",
+          "midmem",
           "midcpu",
           "midtime"
         ],
@@ -4269,7 +4351,7 @@ meta = [
     "engine" : "docker|native",
     "output" : "target/nextflow/data_processors/process_dataset",
     "viash_version" : "0.9.7",
-    "git_commit" : "c649fb8fb68960df0ba8f58f019a7ab6c0d68ef8",
+    "git_commit" : "80f470dfdb4a4eb616196573b8df98c2d4015793",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -4358,8 +4440,8 @@ def innerWorkflowFactory(args) {
   def rawScript = '''set -e
 tempscript=".viash_script.py"
 cat > "$tempscript" << VIASHMAIN
-import random
 import anndata as ad
+import pandas as pd
 import spatialdata as sd
 import scanpy as sc
 
@@ -4368,7 +4450,8 @@ import scanpy as sc
 par = {
   'input_sp': $( if [ ! -z ${VIASH_PAR_INPUT_SP+x} ]; then echo "r'${VIASH_PAR_INPUT_SP//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
   'input_sc': $( if [ ! -z ${VIASH_PAR_INPUT_SC+x} ]; then echo "r'${VIASH_PAR_INPUT_SC//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
-  'output_spatial_dataset': $( if [ ! -z ${VIASH_PAR_OUTPUT_SPATIAL_DATASET+x} ]; then echo "r'${VIASH_PAR_OUTPUT_SPATIAL_DATASET//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
+  'output_spatial_unlabelled': $( if [ ! -z ${VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED+x} ]; then echo "r'${VIASH_PAR_OUTPUT_SPATIAL_UNLABELLED//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
+  'output_spatial_solution': $( if [ ! -z ${VIASH_PAR_OUTPUT_SPATIAL_SOLUTION+x} ]; then echo "r'${VIASH_PAR_OUTPUT_SPATIAL_SOLUTION//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
   'output_scrnaseq_reference': $( if [ ! -z ${VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE+x} ]; then echo "r'${VIASH_PAR_OUTPUT_SCRNASEQ_REFERENCE//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
   'dataset_id': $( if [ ! -z ${VIASH_PAR_DATASET_ID+x} ]; then echo "r'${VIASH_PAR_DATASET_ID//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
   'dataset_name': $( if [ ! -z ${VIASH_PAR_DATASET_NAME+x} ]; then echo "r'${VIASH_PAR_DATASET_NAME//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
@@ -4377,7 +4460,6 @@ par = {
   'dataset_summary': $( if [ ! -z ${VIASH_PAR_DATASET_SUMMARY+x} ]; then echo "r'${VIASH_PAR_DATASET_SUMMARY//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
   'dataset_description': $( if [ ! -z ${VIASH_PAR_DATASET_DESCRIPTION+x} ]; then echo "r'${VIASH_PAR_DATASET_DESCRIPTION//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
   'dataset_organism': $( if [ ! -z ${VIASH_PAR_DATASET_ORGANISM+x} ]; then echo "r'${VIASH_PAR_DATASET_ORGANISM//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
-  'seed': $( if [ ! -z ${VIASH_PAR_SEED+x} ]; then echo "int(r'${VIASH_PAR_SEED//\\'/\\'\\"\\'\\"r\\'}')"; else echo None; fi ),
   'span': $( if [ ! -z ${VIASH_PAR_SPAN+x} ]; then echo "float(r'${VIASH_PAR_SPAN//\\'/\\'\\"\\'\\"r\\'}')"; else echo None; fi ),
   'n_top_genes': $( if [ ! -z ${VIASH_PAR_N_TOP_GENES+x} ]; then echo "int(r'${VIASH_PAR_N_TOP_GENES//\\'/\\'\\"\\'\\"r\\'}')"; else echo None; fi )
 }
@@ -4438,12 +4520,6 @@ def sc_processing(adata):
         )
         adata.var.rename(columns={"highly_variable": "hvg"}, inplace=True)
 
-
-# set seed if need be
-if par["seed"]:
-    print(f">> Setting seed to {par['seed']}")
-    random.seed(par["seed"])
-
 print(">> Load data", flush=True)
 sc_data = ad.read_h5ad(par["input_sc"])
 print(f"single cell data: {sc_data}")
@@ -4456,7 +4532,7 @@ sc_data.uns["orig_dataset_id"] = sc_data.uns.get("dataset_id", None)
 for key in ["dataset_id", "dataset_name", "dataset_url", "dataset_summary", "dataset_description", "dataset_reference", "dataset_organism"]:
     sc_data.uns[key] = par[key]
 
-print(">> Writing data", flush=True)
+print(">> Writing scrnaseq reference", flush=True)
 sc_data.write_h5ad(par["output_scrnaseq_reference"], compression="gzip")
 
 # read input_sp
@@ -4464,30 +4540,84 @@ print(">> Read spatial data", flush=True)
 sp_data = sd.read_zarr(par["input_sp"])
 print(f"spatial data: {sp_data}")
 
-print(">> Processing spatial data", flush=True)
-sp_data_table = sp_data.tables['table']
-print(f"single cell part of spatial data: {sp_data_table}")
-sc_processing(sp_data_table)
+dataset_uns = {
+    "dataset_id": par["dataset_id"],
+    "dataset_name": par["dataset_name"],
+    "dataset_url": par["dataset_url"],
+    "dataset_summary": par["dataset_summary"],
+    "dataset_description": par["dataset_description"],
+    "dataset_reference": par["dataset_reference"],
+    "dataset_organism": par["dataset_organism"],
+    "orig_dataset_id": sp_data.tables["table"].uns.get("dataset_id", None),
+}
 
-if "cell_area" not in sp_data_table.obs:
-    print(">> Perform scanpy qc for cell area", flush=True)
-    sc.pp.calculate_qc_metrics(sp_data_table, layer="counts", inplace=True)
+# ---------------------------------------------------------------
+# output_spatial_dataset: image + transcripts (no ground truth)
+# ---------------------------------------------------------------
+print(">> Building spatial dataset for methods (no ground truth)", flush=True)
 
-for x in ["transcript_counts", "n_genes_by_counts"]:
-    if f"ca_normalized_{x}" not in sp_data_table.obs and x in sp_data_table.obs:
-        print(f">> Perform cell area normalization for {x}", flush=True)
-        sp_data_table.obs[f'ca_normalized_{x}'] = sp_data_table.obs[f"{x}"] / sp_data_table.obs["cell_area"]
+# Strip columns that reveal ground truth cell assignments from transcripts
+_GROUND_TRUTH_COLS = {"cell_id", "nucleus_id", "cell_type"}
+transcripts = sp_data.points["transcripts"]
+clean_transcript_cols = [c for c in transcripts.columns if c not in _GROUND_TRUTH_COLS]
+clean_transcripts = transcripts[clean_transcript_cols]
 
-print(">> Override dataset metadata in .uns", flush=True)
-sp_data_table.uns["orig_dataset_id"] = sp_data_table.uns.get("dataset_id", None)
-for key in ["dataset_id", "dataset_name", "dataset_url", "dataset_summary", "dataset_description", "dataset_reference", "dataset_organism"]:
-    sp_data_table.uns[key] = par[key]
+# Build var from unique feature names in transcripts, mapping to feature_ids from metadata
+feature_names = transcripts["feature_name"].compute().unique().tolist()
+var_df = pd.DataFrame({"feature_name": feature_names}, index=feature_names)
+var_df.index.name = "feature_name"
+if "metadata" in sp_data.tables and "gene_ids" in sp_data.tables["metadata"].var.columns:
+    id_map = sp_data.tables["metadata"].var["gene_ids"]
+    var_df["feature_id"] = var_df.index.map(id_map)
 
-print(f"spatial data: {sp_data}")
-print(f"spatial data tables['table']: {sp_data.tables['table']}")
+# Minimal table: dataset metadata in uns, gene list in var
+minimal_table = ad.AnnData(var=var_df, uns=dataset_uns)
 
-print(">> Writing spatial data", flush=True)
-sp_data.write(par["output_spatial_dataset"], overwrite=True)
+output_spatial = sd.SpatialData(
+    images={"morphology_mip": sp_data.images["morphology_mip"]},
+    points={"transcripts": clean_transcripts},
+    tables={"table": minimal_table},
+)
+
+print(">> Writing spatial unlabelled dataset", flush=True)
+output_spatial.write(par["output_spatial_unlabelled"], overwrite=True)
+
+# ---------------------------------------------------------------
+# output_spatial_solution: ground truth labels, shapes, reference table
+# ---------------------------------------------------------------
+print(">> Building spatial solution (ground truth)", flush=True)
+
+ref_table = sp_data.tables["table"]
+solution_obs = ref_table.obs[["cell_id", "region"]].copy()
+for extra_col in ["cell_area", "transcript_counts"]:
+    if extra_col in ref_table.obs.columns:
+        solution_obs[extra_col] = ref_table.obs[extra_col]
+
+solution_table = ad.AnnData(
+    obs=solution_obs,
+    var=var_df,
+    uns={
+        "dataset_id": par["dataset_id"],
+        "orig_dataset_id": sp_data.tables["table"].uns.get("dataset_id", None),
+        "spatialdata_attrs": ref_table.uns["spatialdata_attrs"],
+    },
+)
+
+# Keep only the columns needed for the solution (ground truth assignments)
+_SOLUTION_TRANSCRIPT_COLS = ["x", "y", "feature_name", "cell_id", "transcript_id"]
+if "z" in transcripts.columns:
+    _SOLUTION_TRANSCRIPT_COLS = ["x", "y", "z"] + _SOLUTION_TRANSCRIPT_COLS[2:]
+solution_transcripts = transcripts[[c for c in _SOLUTION_TRANSCRIPT_COLS if c in transcripts.columns]]
+
+output_solution = sd.SpatialData(
+    points={"transcripts": solution_transcripts},
+    labels={k: v for k, v in sp_data.labels.items()},
+    shapes={k: v for k, v in sp_data.shapes.items()},
+    tables={"table": solution_table},
+)
+
+print(">> Writing spatial solution", flush=True)
+output_solution.write(par["output_spatial_solution"], overwrite=True)
 VIASHMAIN
 python -B "$tempscript"
 '''
@@ -4873,7 +5003,7 @@ meta["defaults"] = [
     "tag" : "build_main"
   },
   "label" : [
-    "highmem",
+    "midmem",
     "midcpu",
     "midtime"
   ],

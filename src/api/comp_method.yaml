@@ -8,7 +8,7 @@ info:
       A method to predict the task effects.
 arguments:
   - name: --input
-    __merge__: file_spatial_dataset.yaml
+    __merge__: file_spatial_unlabelled.yaml
     required: true
     direction: input
   - name: --output

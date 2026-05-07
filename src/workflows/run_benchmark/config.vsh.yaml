@@ -4,13 +4,17 @@ namespace: workflows
 argument_groups:
   - name: Inputs
     arguments:
-      - name: "--input_spatial_dataset"
-        __merge__: /src/api/file_spatial_dataset.yaml
-        direction: output
+      - name: "--input_spatial_unlabelled"
+        __merge__: /src/api/file_spatial_unlabelled.yaml
+        direction: input
+        required: true
+      - name: "--input_spatial_solution"
+        __merge__: /src/api/file_spatial_solution.yaml
+        direction: input
         required: true
       - name: "--input_scrnaseq_reference"
         __merge__: /src/api/file_scrnaseq_reference.yaml
-        direction: output
+        direction: input
         required: true
   - name: Outputs
     arguments:
@@ -58,8 +62,11 @@ dependencies:
   - name: utils/extract_uns_metadata
     repository: openproblems
   - name: control_methods/true_labels
+  - name: control_methods/empty_labels
+  - name: control_methods/random_voronoi
   - name: methods/cellpose
-  - name: metrics/accuracy
+  - name: metrics/ari
+  - name: data_processors/process_prediction
 
 runners:
   - type: nextflow

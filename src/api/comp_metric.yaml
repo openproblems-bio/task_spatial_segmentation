@@ -8,11 +8,11 @@ info:
       A metric for evaluating method predictions.
 arguments:
   - name: "--input_prediction"
-    __merge__: file_prediction.yaml
+    __merge__: file_processed_prediction.yaml
     direction: input
     required: true
-  - name: "--input_scrnaseq_reference"
-    __merge__: file_scrnaseq_reference.yaml
+  - name: "--input_solution"
+    __merge__: file_spatial_solution.yaml
     direction: input
     required: true
   - name: "--output"

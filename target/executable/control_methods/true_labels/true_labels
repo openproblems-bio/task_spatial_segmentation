@@ -445,10 +445,13 @@ function ViashDockerfile {
     cat << 'VIASHDOCKER'
 FROM openproblems/base_python:1
 ENTRYPOINT []
+RUN pip install --upgrade pip && \
+  pip install --upgrade --no-cache-dir "spatialdata>=0.7.3a1" "anndata>=0.12.0" "zarr>=3.0.0"
+
 LABEL org.opencontainers.image.description="Companion container for running component control_methods true_labels"
-LABEL org.opencontainers.image.created="2026-04-29T04:36:14Z"
+LABEL org.opencontainers.image.created="2026-05-07T10:16:23Z"
 LABEL org.opencontainers.image.source="https://github.com/openproblems-bio/task_spatial_segmentation"
-LABEL org.opencontainers.image.revision="c649fb8fb68960df0ba8f58f019a7ab6c0d68ef8"
+LABEL org.opencontainers.image.revision="80f470dfdb4a4eb616196573b8df98c2d4015793"
 LABEL org.opencontainers.image.version="build_main"
 
 VIASHDOCKER
@@ -568,28 +571,33 @@ VIASH_DOCKER_RUN_ARGS=(-i --rm)
 function ViashHelp {
   echo "true_labels build_main"
   echo ""
-  echo "A positive control, where the solution labels are copied 1 to 1 to the predicted"
-  echo "data."
+  echo "A positive control where the ground truth cell_labels segmentation is copied"
+  echo "directly as the prediction. This represents the upper bound of performance"
+  echo "for any segmentation method."
   echo ""
   echo "Arguments:"
   echo "    --input"
   echo "        type: file, required parameter, file must exist"
   echo "        example:"
-  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr"
-  echo "        This dataset contains preprocessed images, labels, points, shapes, and"
-  echo "        tables for spatial transcriptomics data."
+  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_unlabelled.zarr"
+  echo "        This dataset contains preprocessed images and transcript point clouds"
+  echo "        for spatial transcriptomics data."
+  echo "        Ground truth segmentation labels are intentionally excluded to prevent"
+  echo "        methods from cheating."
   echo ""
-  echo "    --input_scrnaseq_reference"
+  echo "    --input_solution"
   echo "        type: file, required parameter, file must exist"
   echo "        example:"
-  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/scrnaseq_reference.h5ad"
-  echo "        This dataset contains preprocessed counts and metadata for single-cell"
-  echo "        RNA-seq data."
+  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_solution.zarr"
+  echo "        This dataset contains the ground truth cell and nucleus segmentation"
+  echo "        labels,"
+  echo "        cell boundaries, and a reference table matching each cell to its label"
+  echo "        region."
   echo ""
   echo "    --output"
   echo "        type: file, required parameter, output, file must exist"
   echo "        example:"
-  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.h5ad"
+  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.zarr"
   echo ""
   echo "Viash built in Computational Requirements:"
   echo "    ---cpus=INT"
@@ -652,15 +660,15 @@ while [[ $# -gt 0 ]]; do
             VIASH_PAR_INPUT=$(ViashRemoveFlags "$1")
             shift 1
             ;;
-        --input_scrnaseq_reference)
-            [ -n "$VIASH_PAR_INPUT_SCRNASEQ_REFERENCE" ] && ViashError Bad arguments for option \'--input_scrnaseq_reference\': \'$VIASH_PAR_INPUT_SCRNASEQ_REFERENCE\' \& \'$2\' - you should provide exactly one argument for this option. && exit 1
-            VIASH_PAR_INPUT_SCRNASEQ_REFERENCE="$2"
-            [ $# -lt 2 ] && ViashError Not enough arguments passed to --input_scrnaseq_reference. Use "--help" to get more information on the parameters. && exit 1
+        --input_solution)
+            [ -n "$VIASH_PAR_INPUT_SOLUTION" ] && ViashError Bad arguments for option \'--input_solution\': \'$VIASH_PAR_INPUT_SOLUTION\' \& \'$2\' - you should provide exactly one argument for this option. && exit 1
+            VIASH_PAR_INPUT_SOLUTION="$2"
+            [ $# -lt 2 ] && ViashError Not enough arguments passed to --input_solution. Use "--help" to get more information on the parameters. && exit 1
             shift 2
             ;;
-        --input_scrnaseq_reference=*)
-            [ -n "$VIASH_PAR_INPUT_SCRNASEQ_REFERENCE" ] && ViashError Bad arguments for option \'--input_scrnaseq_reference=*\': \'$VIASH_PAR_INPUT_SCRNASEQ_REFERENCE\' \& \'$2\' - you should provide exactly one argument for this option. && exit 1
-            VIASH_PAR_INPUT_SCRNASEQ_REFERENCE=$(ViashRemoveFlags "$1")
+        --input_solution=*)
+            [ -n "$VIASH_PAR_INPUT_SOLUTION" ] && ViashError Bad arguments for option \'--input_solution=*\': \'$VIASH_PAR_INPUT_SOLUTION\' \& \'$2\' - you should provide exactly one argument for this option. && exit 1
+            VIASH_PAR_INPUT_SOLUTION=$(ViashRemoveFlags "$1")
             shift 1
             ;;
         --output)
@@ -848,8 +856,8 @@ if [ -z ${VIASH_PAR_INPUT+x} ]; then
   ViashError '--input' is a required argument. Use "--help" to get more information on the parameters.
   exit 1
 fi
-if [ -z ${VIASH_PAR_INPUT_SCRNASEQ_REFERENCE+x} ]; then
-  ViashError '--input_scrnaseq_reference' is a required argument. Use "--help" to get more information on the parameters.
+if [ -z ${VIASH_PAR_INPUT_SOLUTION+x} ]; then
+  ViashError '--input_solution' is a required argument. Use "--help" to get more information on the parameters.
   exit 1
 fi
 if [ -z ${VIASH_PAR_OUTPUT+x} ]; then
@@ -886,8 +894,8 @@ if [ ! -z "$VIASH_PAR_INPUT" ] && [ ! -e "$VIASH_PAR_INPUT" ]; then
   ViashError "Input file '$VIASH_PAR_INPUT' does not exist."
   exit 1
 fi
-if [ ! -z "$VIASH_PAR_INPUT_SCRNASEQ_REFERENCE" ] && [ ! -e "$VIASH_PAR_INPUT_SCRNASEQ_REFERENCE" ]; then
-  ViashError "Input file '$VIASH_PAR_INPUT_SCRNASEQ_REFERENCE' does not exist."
+if [ ! -z "$VIASH_PAR_INPUT_SOLUTION" ] && [ ! -e "$VIASH_PAR_INPUT_SOLUTION" ]; then
+  ViashError "Input file '$VIASH_PAR_INPUT_SOLUTION' does not exist."
   exit 1
 fi
 
@@ -977,9 +985,9 @@ if [ ! -z "$VIASH_PAR_INPUT" ]; then
   VIASH_DIRECTORY_MOUNTS+=( "$(ViashDockerAutodetectMountArg "$VIASH_PAR_INPUT")" )
   VIASH_PAR_INPUT=$(ViashDockerAutodetectMount "$VIASH_PAR_INPUT")
 fi
-if [ ! -z "$VIASH_PAR_INPUT_SCRNASEQ_REFERENCE" ]; then
-  VIASH_DIRECTORY_MOUNTS+=( "$(ViashDockerAutodetectMountArg "$VIASH_PAR_INPUT_SCRNASEQ_REFERENCE")" )
-  VIASH_PAR_INPUT_SCRNASEQ_REFERENCE=$(ViashDockerAutodetectMount "$VIASH_PAR_INPUT_SCRNASEQ_REFERENCE")
+if [ ! -z "$VIASH_PAR_INPUT_SOLUTION" ]; then
+  VIASH_DIRECTORY_MOUNTS+=( "$(ViashDockerAutodetectMountArg "$VIASH_PAR_INPUT_SOLUTION")" )
+  VIASH_PAR_INPUT_SOLUTION=$(ViashDockerAutodetectMount "$VIASH_PAR_INPUT_SOLUTION")
 fi
 if [ ! -z "$VIASH_PAR_OUTPUT" ]; then
   VIASH_DIRECTORY_MOUNTS+=( "$(ViashDockerAutodetectMountArg "$VIASH_PAR_OUTPUT")" )
@@ -1054,12 +1062,16 @@ trap clean_up EXIT
 trap interrupt INT SIGINT
 cat > "\$tempscript" << 'VIASHMAIN'
 import anndata as ad
+import numpy as np
+import spatialdata as sd
+import xarray as xr
+from spatialdata.models import Labels2DModel
 
 ## VIASH START
 # The following code has been auto-generated by Viash.
 par = {
   'input': $( if [ ! -z ${VIASH_PAR_INPUT+x} ]; then echo "r'${VIASH_PAR_INPUT//\'/\'\"\'\"r\'}'"; else echo None; fi ),
-  'input_scrnaseq_reference': $( if [ ! -z ${VIASH_PAR_INPUT_SCRNASEQ_REFERENCE+x} ]; then echo "r'${VIASH_PAR_INPUT_SCRNASEQ_REFERENCE//\'/\'\"\'\"r\'}'"; else echo None; fi ),
+  'input_solution': $( if [ ! -z ${VIASH_PAR_INPUT_SOLUTION+x} ]; then echo "r'${VIASH_PAR_INPUT_SOLUTION//\'/\'\"\'\"r\'}'"; else echo None; fi ),
   'output': $( if [ ! -z ${VIASH_PAR_OUTPUT+x} ]; then echo "r'${VIASH_PAR_OUTPUT//\'/\'\"\'\"r\'}'"; else echo None; fi )
 }
 meta = {
@@ -1089,34 +1101,48 @@ dep = {
 ## VIASH END
 
 print('Reading input files', flush=True)
-input_train = ad.read_h5ad(par['input_train'])
-input_test = ad.read_h5ad(par['input_test'])
-input_solution = ad.read_h5ad(par['input_solution'])
+sdata_solution = sd.read_zarr(par['input_solution'])
 
-print('Preprocess data', flush=True)
-# ... preprocessing ...
+print('Relabelling ground truth cell_labels as prediction', flush=True)
+gt_labels = sdata_solution['cell_labels']
 
-print('Train model', flush=True)
-# ... train model ...
+# Resolve the image array (handles both DataTree and DataArray)
+if isinstance(gt_labels, xr.DataTree):
+    gt_array = gt_labels['scale0'].image.to_numpy()
+else:
+    gt_array = gt_labels.to_numpy()
 
-print('Generate predictions', flush=True)
-# ... generate predictions ...
-obs_label_pred = input_solution.obs["label"]
+# Randomly permute cell IDs while keeping background (0) unchanged.
+# A correct metric (e.g. ARI) must be invariant to label permutation
+rng = np.random.default_rng(42)
+cell_ids = np.unique(gt_array[gt_array != 0])
+perm = rng.permutation(cell_ids)
+lut = np.zeros(cell_ids.max() + 1, dtype=gt_array.dtype)
+lut[cell_ids] = perm
+relabelled = np.where(gt_array != 0, lut[gt_array], 0)
 
-print("Write output AnnData to file", flush=True)
-output = ad.AnnData(
-  uns={
-    'dataset_id': input_train.uns['dataset_id'],
-    'normalization_id': input_train.uns['normalization_id'],
-    'method_id': meta['name']
+transform = sd.transformations.get_transformation(gt_labels, get_all=True)
+segmentation = Labels2DModel.parse(
+    relabelled,
+    transformations=transform,
+)
+
+output = sd.SpatialData(
+  labels={
+    'segmentation': segmentation
   },
-  obs={
-    'label_pred': obs_label_pred
+  tables={
+    'table': ad.AnnData(
+      uns={
+        'dataset_id': sdata_solution.tables['table'].uns['dataset_id'],
+        'method_id': meta['name']
+      }
+    )
   }
 )
-output.obs_names = input_test.obs_names
 
-output.write_h5ad(par['output'], compression='gzip')
+print('Writing output', flush=True)
+output.write(par['output'], overwrite=True)
 VIASHMAIN
 python -B "\$tempscript" &
 wait "\$!"
@@ -1130,8 +1156,8 @@ if [[ "$VIASH_ENGINE_TYPE" == "docker" ]]; then
   if [ ! -z "$VIASH_PAR_INPUT" ]; then
     VIASH_PAR_INPUT=$(ViashDockerStripAutomount "$VIASH_PAR_INPUT")
   fi
-  if [ ! -z "$VIASH_PAR_INPUT_SCRNASEQ_REFERENCE" ]; then
-    VIASH_PAR_INPUT_SCRNASEQ_REFERENCE=$(ViashDockerStripAutomount "$VIASH_PAR_INPUT_SCRNASEQ_REFERENCE")
+  if [ ! -z "$VIASH_PAR_INPUT_SOLUTION" ]; then
+    VIASH_PAR_INPUT_SOLUTION=$(ViashDockerStripAutomount "$VIASH_PAR_INPUT_SOLUTION")
   fi
   if [ ! -z "$VIASH_PAR_OUTPUT" ]; then
     VIASH_PAR_OUTPUT=$(ViashDockerStripAutomount "$VIASH_PAR_OUTPUT")

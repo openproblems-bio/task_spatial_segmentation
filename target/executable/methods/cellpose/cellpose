@@ -455,9 +455,9 @@ RUN pip install --upgrade pip && \
   python -c 'from cellpose.models import CellposeModel; model = CellposeModel()'
 
 LABEL org.opencontainers.image.description="Companion container for running component methods cellpose"
-LABEL org.opencontainers.image.created="2026-04-29T04:36:14Z"
+LABEL org.opencontainers.image.created="2026-05-07T10:16:23Z"
 LABEL org.opencontainers.image.source="https://github.com/mouseland/cellpose"
-LABEL org.opencontainers.image.revision="c649fb8fb68960df0ba8f58f019a7ab6c0d68ef8"
+LABEL org.opencontainers.image.revision="80f470dfdb4a4eb616196573b8df98c2d4015793"
 LABEL org.opencontainers.image.version="build_main"
 
 VIASHDOCKER
@@ -583,14 +583,16 @@ function ViashHelp {
   echo "    --input"
   echo "        type: file, required parameter, file must exist"
   echo "        example:"
-  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr"
-  echo "        This dataset contains preprocessed images, labels, points, shapes, and"
-  echo "        tables for spatial transcriptomics data."
+  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_unlabelled.zarr"
+  echo "        This dataset contains preprocessed images and transcript point clouds"
+  echo "        for spatial transcriptomics data."
+  echo "        Ground truth segmentation labels are intentionally excluded to prevent"
+  echo "        methods from cheating."
   echo ""
   echo "    --output"
   echo "        type: file, required parameter, output, file must exist"
   echo "        example:"
-  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.h5ad"
+  echo "resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.zarr"
   echo ""
   echo "    --diameter"
   echo "        type: double"
@@ -1226,24 +1228,23 @@ masks, _, _ = model.eval(image[0], progress=True, **eval_params)
 print('Cellpose segmentation finished, post-processing results', flush=True)
 masks = convert_to_lower_dtype(masks)
 
-print('Segmentation done, preparing output', flush=True)
-sd_output = sd.SpatialData()
-data_array = xr.DataArray(masks, name='segmentation', dims=('y', 'x'))
-parsed = Labels2DModel.parse(data_array, transformations=transformation)
-sd_output.labels['segmentation'] = parsed
-
-cell_ids = np.unique(masks)[1:]  # exclude background (0)
-table = ad.AnnData(
-  obs=pd.DataFrame(
-    {'cell_id': cell_ids.astype(str), 'region': 'segmentation'},
-    index=cell_ids.astype(str),
-  ),
-  uns={
-    'dataset_id': sdata.tables['table'].uns['dataset_id'],
-    'method_id': meta['name']
+print('Creating output data structure', flush=True)
+sd_output = sd.SpatialData(
+  labels={
+    'segmentation': Labels2DModel.parse(
+      xr.DataArray(masks, name='segmentation', dims=('y', 'x')),
+      transformations=transformation
+    )
+  },
+  tables={
+    'table': ad.AnnData(
+      uns={
+        'dataset_id': sdata.tables['table'].uns['dataset_id'],
+        'method_id': meta['name']
+      }
+    )
   }
 )
-sd_output.tables['table'] = table
 
 print('Saving output', flush=True)
 if os.path.exists(par["output"]):

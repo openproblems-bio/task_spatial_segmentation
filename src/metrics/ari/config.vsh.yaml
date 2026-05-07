@@ -1,0 +1,36 @@
+__merge__: ../../api/comp_metric.yaml
+
+name: ari
+
+info:
+  metrics:
+    - name: ari
+      label: "Adjusted Rand Index"
+      summary: "ARI between ground truth and predicted transcript-to-cell assignments."
+      description: |
+        For each transcript, its cell ID is looked up in both the ground truth
+        label image (cell_labels) and the predicted segmentation label image.
+        The Adjusted Rand Index (ARI) is then computed between the two resulting
+        assignment vectors. ARI = 1 is perfect agreement; values near 0 are random.
+        Background transcripts (cell_id = 0 in both) are excluded.
+      # TODO: add ref and link
+      references:
+        doi: 10.1007/BF01908075
+      min: -1
+      max: 1
+      maximize: true
+
+resources:
+  - type: python_script
+    path: script.py
+
+engines:
+  - type: docker
+    image: openproblems/base_python:1
+    __merge__: ../../base/setup_spatialdata_partial.yaml
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [midtime, midmem, midcpu]

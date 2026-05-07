@@ -3049,10 +3049,10 @@ meta = [
       "arguments" : [
         {
           "type" : "file",
-          "name" : "--input_spatial_dataset",
-          "label" : "Raw iST Dataset",
-          "summary" : "A spatial transcriptomics dataset, preprocessed for this benchmark.",
-          "description" : "This dataset contains preprocessed images, labels, points, shapes, and tables for spatial transcriptomics data.\n",
+          "name" : "--input_spatial_unlabelled",
+          "label" : "Unlabelled",
+          "summary" : "Preprocessed spatial transcriptomics data without segmentation labels for method input.",
+          "description" : "This dataset contains preprocessed images and transcript point clouds for spatial transcriptomics data.\nGround truth segmentation labels are intentionally excluded to prevent methods from cheating.\n",
           "info" : {
             "format" : {
               "type" : "spatialdata_zarr",
@@ -3060,22 +3060,8 @@ meta = [
                 {
                   "type" : "object",
                   "name" : "morphology_mip",
-                  "description" : "The raw image data",
+                  "description" : "The raw morphology image (maximum intensity projection)",
                   "required" : true
-                }
-              ],
-              "labels" : [
-                {
-                  "type" : "object",
-                  "name" : "cell_labels",
-                  "description" : "Cell segmentation labels",
-                  "required" : false
-                },
-                {
-                  "type" : "object",
-                  "name" : "nucleus_labels",
-                  "description" : "Cell segmentation labels",
-                  "required" : false
                 }
               ],
               "points" : [
@@ -3110,24 +3096,6 @@ meta = [
                       "description" : "Name of the feature"
                     },
                     {
-                      "type" : "integer",
-                      "name" : "cell_id",
-                      "required" : false,
-                      "description" : "Unique identifier of the cell"
-                    },
-                    {
-                      "type" : "integer",
-                      "name" : "nucleus_id",
-                      "required" : false,
-                      "description" : "Unique identifier of the nucleus"
-                    },
-                    {
-                      "type" : "string",
-                      "name" : "cell_type",
-                      "required" : false,
-                      "description" : "Cell type of the cell"
-                    },
-                    {
                       "type" : "float",
                       "name" : "qv",
                       "required" : false,
@@ -3143,37 +3111,7 @@ meta = [
                       "type" : "boolean",
                       "name" : "overlaps_nucleus",
                       "required" : false,
-                      "description" : "Whether the point overlaps with a nucleus"
-                    }
-                  ]
-                }
-              ],
-              "shapes" : [
-                {
-                  "type" : "dataframe",
-                  "name" : "cell_boundaries",
-                  "description" : "Cell boundaries",
-                  "required" : false,
-                  "columns" : [
-                    {
-                      "type" : "object",
-                      "name" : "geometry",
-                      "required" : true,
-                      "description" : "Geometry of the cell boundary"
-                    }
-                  ]
-                },
-                {
-                  "type" : "dataframe",
-                  "name" : "nucleus_boundaries",
-                  "description" : "Nucleus boundaries",
-                  "required" : false,
-                  "columns" : [
-                    {
-                      "type" : "object",
-                      "name" : "geometry",
-                      "required" : true,
-                      "description" : "Geometry of the nucleus boundary"
+                      "description" : "Whether the point overlaps with the nucleus (derived from morphology)"
                     }
                   ]
                 }
@@ -3229,40 +3167,23 @@ meta = [
                     },
                     {
                       "type" : "string",
-                      "name" : "segmentation_id",
+                      "name" : "orig_dataset_id",
                       "required" : true,
-                      "multiple" : true,
-                      "description" : "A unique identifier for the segmentation"
-                    }
-                  ],
-                  "obs" : [
-                    {
-                      "type" : "string",
-                      "name" : "cell_id",
-                      "required" : true,
-                      "description" : "A unique identifier for the cell"
+                      "description" : "The identifier of the original dataset from which this dataset was derived (if applicable)"
                     }
                   ],
                   "var" : [
                     {
                       "type" : "string",
-                      "name" : "gene_ids",
-                      "required" : true,
-                      "description" : "Unique identifier for the gene"
+                      "name" : "feature_id",
+                      "required" : false,
+                      "description" : "Unique identifier for the feature, usually a ENSEMBL gene id."
                     },
                     {
                       "type" : "string",
-                      "name" : "feature_types",
+                      "name" : "feature_name",
                       "required" : true,
-                      "description" : "Type of the feature"
-                    }
-                  ],
-                  "obsm" : [
-                    {
-                      "type" : "double",
-                      "name" : "spatial",
-                      "required" : true,
-                      "description" : "Spatial coordinates of the cell"
+                      "description" : "A human-readable name for the feature, usually a gene symbol."
                     }
                   ]
                 }
@@ -3278,12 +3199,185 @@ meta = [
             }
           },
           "example" : [
-            "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr"
+            "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_unlabelled.zarr"
           ],
           "must_exist" : true,
           "create_parent" : true,
           "required" : true,
-          "direction" : "output",
+          "direction" : "input",
+          "multiple" : false,
+          "multiple_sep" : ";"
+        },
+        {
+          "type" : "file",
+          "name" : "--input_spatial_solution",
+          "label" : "Solution",
+          "summary" : "Ground truth segmentation labels and cell assignments for method evaluation.",
+          "description" : "This dataset contains the ground truth cell and nucleus segmentation labels,\ncell boundaries, and a reference table matching each cell to its label region.\n",
+          "info" : {
+            "format" : {
+              "type" : "spatialdata_zarr",
+              "points" : [
+                {
+                  "type" : "dataframe",
+                  "name" : "transcripts",
+                  "description" : "Point cloud data of transcripts with ground truth cell assignments",
+                  "required" : true,
+                  "columns" : [
+                    {
+                      "type" : "float",
+                      "name" : "x",
+                      "required" : true,
+                      "description" : "x-coordinate of the point"
+                    },
+                    {
+                      "type" : "float",
+                      "name" : "y",
+                      "required" : true,
+                      "description" : "y-coordinate of the point"
+                    },
+                    {
+                      "type" : "float",
+                      "name" : "z",
+                      "required" : false,
+                      "description" : "z-coordinate of the point"
+                    },
+                    {
+                      "type" : "categorical",
+                      "name" : "feature_name",
+                      "required" : true,
+                      "description" : "Name of the feature"
+                    },
+                    {
+                      "type" : "integer",
+                      "name" : "cell_id",
+                      "required" : true,
+                      "description" : "Ground truth cell assignment (0 = background)"
+                    },
+                    {
+                      "type" : "long",
+                      "name" : "transcript_id",
+                      "required" : true,
+                      "description" : "Unique identifier of the transcript"
+                    }
+                  ]
+                }
+              ],
+              "labels" : [
+                {
+                  "type" : "object",
+                  "name" : "cell_labels",
+                  "description" : "Ground truth cell segmentation labels",
+                  "required" : true
+                },
+                {
+                  "type" : "object",
+                  "name" : "nucleus_labels",
+                  "description" : "Ground truth nucleus segmentation labels",
+                  "required" : false
+                }
+              ],
+              "shapes" : [
+                {
+                  "type" : "dataframe",
+                  "name" : "cell_boundaries",
+                  "description" : "Ground truth cell boundary shapes",
+                  "required" : false,
+                  "columns" : [
+                    {
+                      "type" : "object",
+                      "name" : "geometry",
+                      "required" : true,
+                      "description" : "Geometry of the cell boundary"
+                    }
+                  ]
+                },
+                {
+                  "type" : "dataframe",
+                  "name" : "nucleus_boundaries",
+                  "description" : "Ground truth nucleus boundary shapes",
+                  "required" : false,
+                  "columns" : [
+                    {
+                      "type" : "object",
+                      "name" : "geometry",
+                      "required" : true,
+                      "description" : "Geometry of the nucleus boundary"
+                    }
+                  ]
+                }
+              ],
+              "tables" : [
+                {
+                  "type" : "anndata",
+                  "name" : "table",
+                  "description" : "Reference cell metadata table",
+                  "required" : true,
+                  "obs" : [
+                    {
+                      "type" : "integer",
+                      "name" : "cell_id",
+                      "description" : "Unique cell identifier, matching instance IDs in the label images",
+                      "required" : true
+                    },
+                    {
+                      "type" : "string",
+                      "name" : "region",
+                      "description" : "Name of the label image this cell belongs to (e.g. 'cell_labels')",
+                      "required" : true
+                    },
+                    {
+                      "type" : "double",
+                      "name" : "cell_area",
+                      "description" : "Area of the cell in pixels",
+                      "required" : false
+                    },
+                    {
+                      "type" : "integer",
+                      "name" : "transcript_counts",
+                      "description" : "Total number of transcripts assigned to this cell",
+                      "required" : false
+                    }
+                  ],
+                  "uns" : [
+                    {
+                      "type" : "string",
+                      "name" : "dataset_id",
+                      "description" : "A unique identifier for the dataset",
+                      "required" : true
+                    },
+                    {
+                      "type" : "string",
+                      "name" : "orig_dataset_id",
+                      "required" : true,
+                      "description" : "The identifier of the original dataset from which this dataset was derived (if applicable)"
+                    }
+                  ],
+                  "var" : [
+                    {
+                      "type" : "string",
+                      "name" : "feature_id",
+                      "required" : false,
+                      "description" : "Unique identifier for the feature, usually a ENSEMBL gene id."
+                    },
+                    {
+                      "type" : "string",
+                      "name" : "feature_name",
+                      "required" : true,
+                      "description" : "A human-readable name for the feature, usually a gene symbol."
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "example" : [
+            "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_solution.zarr"
+          ],
+          "must_exist" : true,
+          "create_parent" : true,
+          "required" : true,
+          "direction" : "input",
           "multiple" : false,
           "multiple_sep" : ";"
         },
@@ -3434,7 +3528,7 @@ meta = [
           "must_exist" : true,
           "create_parent" : true,
           "required" : true,
-          "direction" : "output",
+          "direction" : "input",
           "multiple" : false,
           "multiple_sep" : ";"
         }
@@ -3559,13 +3653,31 @@ meta = [
       }
     },
     {
+      "name" : "control_methods/empty_labels",
+      "repository" : {
+        "type" : "local"
+      }
+    },
+    {
+      "name" : "control_methods/random_voronoi",
+      "repository" : {
+        "type" : "local"
+      }
+    },
+    {
       "name" : "methods/cellpose",
       "repository" : {
         "type" : "local"
       }
     },
     {
-      "name" : "metrics/accuracy",
+      "name" : "metrics/ari",
+      "repository" : {
+        "type" : "local"
+      }
+    },
+    {
+      "name" : "data_processors/process_prediction",
       "repository" : {
         "type" : "local"
       }
@@ -3627,7 +3739,7 @@ meta = [
     "engine" : "native",
     "output" : "target/nextflow/workflows/run_benchmark",
     "viash_version" : "0.9.7",
-    "git_commit" : "c649fb8fb68960df0ba8f58f019a7ab6c0d68ef8",
+    "git_commit" : "80f470dfdb4a4eb616196573b8df98c2d4015793",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -3711,8 +3823,11 @@ meta = [
 meta["root_dir"] = getRootDir()
 include { extract_uns_metadata } from "${meta.root_dir}/dependencies/github/openproblems-bio/openproblems/build/main/nextflow/utils/extract_uns_metadata/main.nf"
 include { true_labels } from "${meta.resources_dir}/../../../nextflow/control_methods/true_labels/main.nf"
+include { empty_labels } from "${meta.resources_dir}/../../../nextflow/control_methods/empty_labels/main.nf"
+include { random_voronoi } from "${meta.resources_dir}/../../../nextflow/control_methods/random_voronoi/main.nf"
 include { cellpose } from "${meta.resources_dir}/../../../nextflow/methods/cellpose/main.nf"
-include { accuracy } from "${meta.resources_dir}/../../../nextflow/metrics/accuracy/main.nf"
+include { ari } from "${meta.resources_dir}/../../../nextflow/metrics/ari/main.nf"
+include { process_prediction } from "${meta.resources_dir}/../../../nextflow/data_processors/process_prediction/main.nf"
 
 // inner workflow
 // user-provided Nextflow code
@@ -3726,12 +3841,14 @@ workflow auto {
 // construct list of methods and control methods
 methods = [
   true_labels,
+  empty_labels,
+  random_voronoi,
   cellpose
 ]
 
 // construct list of metrics
 metrics = [
-  accuracy
+  ari
 ]
 
 workflow run_wf {
@@ -3751,7 +3868,7 @@ workflow run_wf {
 
     // extract the dataset metadata
     | extract_uns_metadata.run(
-      fromState: [input: "input_solution"],
+      fromState: [input: "input_spatial_unlabelled"],
       toState: { id, output, state ->
         state + [
           dataset_uns: readYaml(output.output).uns
@@ -3770,14 +3887,8 @@ workflow run_wf {
 
       // use the 'filter' argument to only run a method on the normalisation the component is asking for
       filter: { id, state, comp ->
-        def norm = state.dataset_uns.normalization_id
-        def pref = comp.config.info.preferred_normalization
-        // if the preferred normalisation is none at all,
-        // we can pass whichever dataset we want
-        def norm_check = (norm == "log_cp10k" && pref == "counts") || norm == pref
         def method_check = !state.method_ids || state.method_ids.contains(comp.config.name)
-
-        method_check && norm_check
+        method_check
       },
 
       // define a new 'id' by appending the method name to the dataset id
@@ -3788,11 +3899,10 @@ workflow run_wf {
       // use 'fromState' to fetch the arguments the component requires from the overall state
       fromState: { id, state, comp ->
         def new_args = [
-          input_train: state.input_train,
-          input_test: state.input_test
+          input: state.input_spatial_unlabelled
         ]
         if (comp.config.info.type == "control_method") {
-          new_args.input_solution = state.input_solution
+          new_args.input_solution = state.input_spatial_solution
         }
         new_args
       },
@@ -3806,6 +3916,15 @@ workflow run_wf {
       }
     )
 
+    | process_prediction.run(
+      fromState: [input: "method_output"],
+      toState: { id, output, state ->
+        state + [
+          input_prediction: output.output
+        ]
+      }
+    )
+
     // run all metrics
     | runEach(
       components: metrics,
@@ -3814,8 +3933,8 @@ workflow run_wf {
       },
       // use 'fromState' to fetch the arguments the component requires from the overall state
       fromState: [
-        input_solution: "input_solution", 
-        input_prediction: "method_output"
+        input_solution: "input_solution",
+        input_prediction: "input_prediction"
       ],
       // use 'toState' to publish that component's outputs to the overall state
       toState: { id, output, state, comp ->
@@ -3854,10 +3973,8 @@ workflow run_wf {
 
   // extract the dataset metadata
   meta_ch = dataset_ch
-    // only keep one of the normalization methods
-    | filter{ id, state ->
-      state.dataset_uns.normalization_id == "log_cp10k"
-    }
+    // only keep one entry per dataset
+    | filter{ id, state -> true }
     | joinStates { ids, states ->
       // store the dataset metadata in a file
       def dataset_uns = states.collect{state ->

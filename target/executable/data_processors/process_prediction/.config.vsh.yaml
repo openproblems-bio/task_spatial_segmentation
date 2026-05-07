@@ -1,0 +1,390 @@
+name: "process_prediction"
+namespace: "data_processors"
+version: "build_main"
+argument_groups:
+- name: "Inputs"
+  arguments:
+  - type: "file"
+    name: "--input_prediction"
+    label: "Predicted data"
+    summary: "A predicted dataset as output by a method."
+    info:
+      format:
+        type: "spatialdata_zarr"
+        labels:
+        - type: "object"
+          name: "segmentation"
+          description: "Segmentation of the data"
+          required: true
+        tables:
+        - type: "anndata"
+          name: "table"
+          description: "AnnData table"
+          required: true
+          uns:
+          - type: "string"
+            name: "dataset_id"
+            description: "A unique identifier for the dataset"
+            required: true
+          - type: "string"
+            name: "method_id"
+            description: "A unique identifier for the method"
+            required: true
+    example:
+    - "resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.zarr"
+    must_exist: true
+    create_parent: true
+    required: true
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+  - type: "file"
+    name: "--input_spatial_unlabelled"
+    label: "Unlabelled"
+    summary: "Preprocessed spatial transcriptomics data without segmentation labels\
+      \ for method input."
+    description: "This dataset contains preprocessed images and transcript point clouds\
+      \ for spatial transcriptomics data.\nGround truth segmentation labels are intentionally\
+      \ excluded to prevent methods from cheating.\n"
+    info:
+      format:
+        type: "spatialdata_zarr"
+        images:
+        - type: "object"
+          name: "morphology_mip"
+          description: "The raw morphology image (maximum intensity projection)"
+          required: true
+        points:
+        - type: "dataframe"
+          name: "transcripts"
+          description: "Point cloud data of transcripts"
+          required: true
+          columns:
+          - type: "float"
+            name: "x"
+            required: true
+            description: "x-coordinate of the point"
+          - type: "float"
+            name: "y"
+            required: true
+            description: "y-coordinate of the point"
+          - type: "float"
+            name: "z"
+            required: false
+            description: "z-coordinate of the point"
+          - type: "categorical"
+            name: "feature_name"
+            required: true
+            description: "Name of the feature"
+          - type: "float"
+            name: "qv"
+            required: false
+            description: "Quality value of the point"
+          - type: "long"
+            name: "transcript_id"
+            required: true
+            description: "Unique identifier of the transcript"
+          - type: "boolean"
+            name: "overlaps_nucleus"
+            required: false
+            description: "Whether the point overlaps with the nucleus (derived from\
+              \ morphology)"
+        tables:
+        - type: "anndata"
+          name: "table"
+          description: "Metadata of spatial dataset"
+          required: true
+          uns:
+          - type: "string"
+            name: "dataset_id"
+            required: true
+            description: "A unique identifier for the dataset"
+          - type: "string"
+            name: "dataset_name"
+            required: true
+            description: "A human-readable name for the dataset"
+          - type: "string"
+            name: "dataset_url"
+            required: true
+            description: "Link to the original source of the dataset"
+          - type: "string"
+            name: "dataset_reference"
+            required: true
+            description: "Bibtex reference of the paper in which the dataset was published"
+          - type: "string"
+            name: "dataset_summary"
+            required: true
+            description: "Short description of the dataset"
+          - type: "string"
+            name: "dataset_description"
+            required: true
+            description: "Long description of the dataset"
+          - type: "string"
+            name: "dataset_organism"
+            required: true
+            description: "The organism of the sample in the dataset"
+          - type: "string"
+            name: "orig_dataset_id"
+            required: true
+            description: "The identifier of the original dataset from which this dataset\
+              \ was derived (if applicable)"
+          var:
+          - type: "string"
+            name: "feature_id"
+            required: false
+            description: "Unique identifier for the feature, usually a ENSEMBL gene\
+              \ id."
+          - type: "string"
+            name: "feature_name"
+            required: true
+            description: "A human-readable name for the feature, usually a gene symbol."
+        coordinate_systems:
+        - type: "object"
+          name: "global"
+          description: "Coordinate system of the replicate"
+          required: true
+    example:
+    - "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_unlabelled.zarr"
+    must_exist: true
+    create_parent: true
+    required: true
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+- name: "Outputs"
+  arguments:
+  - type: "file"
+    name: "--output"
+    label: "Processed prediction"
+    summary: "A processed predicted dataset, ready to be used as input for the evaluation."
+    info:
+      format:
+        type: "spatialdata_zarr"
+        labels:
+        - type: "object"
+          name: "segmentation"
+          description: "Segmentation of the data"
+          required: true
+        tables:
+        - type: "anndata"
+          name: "table"
+          description: "AnnData table"
+          required: true
+          layers:
+          - type: "integer"
+            name: "counts"
+            description: "Raw counts"
+            required: true
+          - type: "double"
+            name: "normalized"
+            description: "Normalized expression values"
+            required: true
+          - type: "double"
+            name: "normalized_log"
+            description: "Log1p normalized expression values"
+            required: true
+          - type: "double"
+            name: "normalized_log_scaled"
+            description: "Log1p normalized expression values scaled to unit variance\
+              \ and zero mean"
+            required: true
+          obs:
+          - type: "string"
+            name: "cell_id"
+            description: "Cell ID"
+            required: true
+          - type: "string"
+            name: "region"
+            description: "Region"
+            required: true
+          var:
+          - type: "string"
+            name: "feature_id"
+            description: "Unique identifier for the feature, usually a ENSEMBL gene\
+              \ id."
+            required: false
+          - type: "string"
+            name: "feature_name"
+            description: "A human-readable name for the feature, usually a gene symbol."
+            required: true
+          - type: "boolean"
+            name: "hvg"
+            description: "Whether or not the feature is considered to be a 'highly\
+              \ variable gene'"
+            required: true
+          uns:
+          - type: "string"
+            name: "dataset_id"
+            description: "A unique identifier for the dataset"
+            required: true
+          - type: "string"
+            name: "method_id"
+            description: "A unique identifier for the method"
+            required: true
+    example:
+    - "resources_test/task_spatial_segmentation/mouse_brain_combined/processed_prediction.zarr"
+    must_exist: true
+    create_parent: true
+    required: true
+    direction: "output"
+    multiple: false
+    multiple_sep: ";"
+resources:
+- type: "python_script"
+  path: "script.py"
+  is_executable: true
+test_resources:
+- type: "python_script"
+  path: "run_and_check_output.py"
+  is_executable: true
+- type: "file"
+  path: "resources_test/task_spatial_segmentation/mouse_brain_combined"
+  dest: "resources_test/task_spatial_segmentation/mouse_brain_combined"
+info:
+  type: "data_processor"
+  type_info:
+    label: "Output processor"
+    summary: "An output processor for the prediction."
+    description: "A component for a prediction dataset into a processed prediction\
+      \ dataset that can be evaluated by the metrics.\n"
+status: "enabled"
+scope:
+  image: "public"
+  target: "public"
+repositories:
+- type: "github"
+  name: "openproblems"
+  repo: "openproblems-bio/openproblems"
+  tag: "build/main"
+license: "MIT"
+links:
+  repository: "https://github.com/openproblems-bio/task_spatial_segmentation"
+  docker_registry: "ghcr.io"
+runners:
+- type: "executable"
+  id: "executable"
+  docker_setup_strategy: "ifneedbepullelsecachedbuild"
+- type: "nextflow"
+  id: "nextflow"
+  directives:
+    label:
+    - "midmem"
+    - "midcpu"
+    - "midtime"
+    tag: "$id"
+  auto:
+    simplifyInput: true
+    simplifyOutput: false
+    transcript: false
+    publish: false
+  config:
+    labels:
+      lowmem: "memory = 20.Gb"
+      midmem: "memory = 50.Gb"
+      highmem: "memory = 100.Gb"
+      lowcpu: "cpus = 5"
+      midcpu: "cpus = 15"
+      highcpu: "cpus = 30"
+      lowtime: "time = 1.h"
+      midtime: "time = 4.h"
+      hightime: "time = 8.h"
+      veryhightime: "time = 24.h"
+  debug: false
+  container: "docker"
+engines:
+- type: "docker"
+  id: "docker"
+  image: "openproblems/base_python:1"
+  namespace_separator: "/"
+  setup:
+  - type: "python"
+    user: false
+    pypi:
+    - "spatialdata>=0.7.3a1"
+    - "anndata>=0.12.0"
+    - "zarr>=3.0.0"
+    upgrade: true
+  - type: "python"
+    user: false
+    packages:
+    - "scikit-learn"
+    - "scikit-misc"
+    upgrade: true
+  entrypoint: []
+  cmd: null
+- type: "native"
+  id: "native"
+build_info:
+  config: "src/data_processors/process_prediction/config.vsh.yaml"
+  runner: "executable"
+  engine: "docker|native"
+  output: "target/executable/data_processors/process_prediction"
+  executable: "target/executable/data_processors/process_prediction/process_prediction"
+  viash_version: "0.9.7"
+  git_commit: "80f470dfdb4a4eb616196573b8df98c2d4015793"
+  git_remote: "https://github.com/openproblems-bio/task_spatial_segmentation"
+package_config:
+  name: "task_spatial_segmentation"
+  version: "build_main"
+  label: "Spatial Segmentation"
+  summary: "A one sentence summary of purpose and methodology. Used for creating an\
+    \ overview tables."
+  description: "Provide a clear and concise description of your task, detailing the\
+    \ specific problem it aims\nto solve. Outline the input data types, the expected\
+    \ output, and any assumptions or constraints.\nBe sure to explain any terminology\
+    \ or concepts that are essential for understanding the task.\n\nExplain the motivation\
+    \ behind your proposed task. Describe the biological or computational \nproblem\
+    \ you aim to address and why it's important. Discuss the current state of research\
+    \ in\nthis area and any gaps or challenges that your task could help address.\
+    \ This section \nshould convince readers of the significance and relevance of\
+    \ your task.\n"
+  info:
+    image: "The name of the image file to use for the component on the website."
+    test_resources:
+    - type: "s3"
+      path: "s3://openproblems-data/resources_test/common/2023_10x_mouse_brain_xenium_rep1/"
+      dest: "resources_test/common/2023_10x_mouse_brain_xenium_rep1/"
+    - type: "s3"
+      path: "s3://openproblems-data/resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/"
+      dest: "resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/"
+    - type: "s3"
+      path: "s3://openproblems-data/resources_test/task_spatial_segmentation/"
+      dest: "resources_test/task_spatial_segmentation"
+  repositories:
+  - type: "github"
+    name: "openproblems"
+    repo: "openproblems-bio/openproblems"
+    tag: "build/main"
+  viash_version: "0.9.7"
+  source: "src"
+  target: "target"
+  config_mods:
+  - ".runners[.type == \"nextflow\"].config.labels := { lowmem : \"memory = 20.Gb\"\
+    , midmem : \"memory = 50.Gb\", highmem : \"memory = 100.Gb\", lowcpu : \"cpus\
+    \ = 5\", midcpu : \"cpus = 15\", highcpu : \"cpus = 30\", lowtime : \"time = 1.h\"\
+    , midtime : \"time = 4.h\", hightime : \"time = 8.h\", veryhightime : \"time =\
+    \ 24.h\" }\n"
+  authors:
+  - name: "John Doe"
+    roles:
+    - "author"
+    - "maintainer"
+    info:
+      github: "johndoe"
+      orcid: "0000-0000-0000-0000"
+      email: "john@doe.me"
+      twitter: "johndoe"
+      linkedin: "johndoe"
+  keywords:
+  - "single-cell"
+  - "openproblems"
+  - "benchmark"
+  license: "MIT"
+  organization: "openproblems-bio"
+  references:
+    doi:
+    - "10.21203/rs.3.rs-4181617/v1"
+  links:
+    repository: "https://github.com/openproblems-bio/task_spatial_segmentation"
+    docker_registry: "ghcr.io"
+    issue_tracker: "https://github.com/openproblems-bio/task_spatial_segmentation/issues"

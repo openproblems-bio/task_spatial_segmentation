@@ -3050,9 +3050,9 @@ meta = [
         {
           "type" : "file",
           "name" : "--input",
-          "label" : "Raw iST Dataset",
-          "summary" : "A spatial transcriptomics dataset, preprocessed for this benchmark.",
-          "description" : "This dataset contains preprocessed images, labels, points, shapes, and tables for spatial transcriptomics data.\n",
+          "label" : "Unlabelled",
+          "summary" : "Preprocessed spatial transcriptomics data without segmentation labels for method input.",
+          "description" : "This dataset contains preprocessed images and transcript point clouds for spatial transcriptomics data.\nGround truth segmentation labels are intentionally excluded to prevent methods from cheating.\n",
           "info" : {
             "format" : {
               "type" : "spatialdata_zarr",
@@ -3060,22 +3060,8 @@ meta = [
                 {
                   "type" : "object",
                   "name" : "morphology_mip",
-                  "description" : "The raw image data",
+                  "description" : "The raw morphology image (maximum intensity projection)",
                   "required" : true
-                }
-              ],
-              "labels" : [
-                {
-                  "type" : "object",
-                  "name" : "cell_labels",
-                  "description" : "Cell segmentation labels",
-                  "required" : false
-                },
-                {
-                  "type" : "object",
-                  "name" : "nucleus_labels",
-                  "description" : "Cell segmentation labels",
-                  "required" : false
                 }
               ],
               "points" : [
@@ -3110,24 +3096,6 @@ meta = [
                       "description" : "Name of the feature"
                     },
                     {
-                      "type" : "integer",
-                      "name" : "cell_id",
-                      "required" : false,
-                      "description" : "Unique identifier of the cell"
-                    },
-                    {
-                      "type" : "integer",
-                      "name" : "nucleus_id",
-                      "required" : false,
-                      "description" : "Unique identifier of the nucleus"
-                    },
-                    {
-                      "type" : "string",
-                      "name" : "cell_type",
-                      "required" : false,
-                      "description" : "Cell type of the cell"
-                    },
-                    {
                       "type" : "float",
                       "name" : "qv",
                       "required" : false,
@@ -3143,37 +3111,7 @@ meta = [
                       "type" : "boolean",
                       "name" : "overlaps_nucleus",
                       "required" : false,
-                      "description" : "Whether the point overlaps with a nucleus"
-                    }
-                  ]
-                }
-              ],
-              "shapes" : [
-                {
-                  "type" : "dataframe",
-                  "name" : "cell_boundaries",
-                  "description" : "Cell boundaries",
-                  "required" : false,
-                  "columns" : [
-                    {
-                      "type" : "object",
-                      "name" : "geometry",
-                      "required" : true,
-                      "description" : "Geometry of the cell boundary"
-                    }
-                  ]
-                },
-                {
-                  "type" : "dataframe",
-                  "name" : "nucleus_boundaries",
-                  "description" : "Nucleus boundaries",
-                  "required" : false,
-                  "columns" : [
-                    {
-                      "type" : "object",
-                      "name" : "geometry",
-                      "required" : true,
-                      "description" : "Geometry of the nucleus boundary"
+                      "description" : "Whether the point overlaps with the nucleus (derived from morphology)"
                     }
                   ]
                 }
@@ -3229,40 +3167,23 @@ meta = [
                     },
                     {
                       "type" : "string",
-                      "name" : "segmentation_id",
+                      "name" : "orig_dataset_id",
                       "required" : true,
-                      "multiple" : true,
-                      "description" : "A unique identifier for the segmentation"
-                    }
-                  ],
-                  "obs" : [
-                    {
-                      "type" : "string",
-                      "name" : "cell_id",
-                      "required" : true,
-                      "description" : "A unique identifier for the cell"
+                      "description" : "The identifier of the original dataset from which this dataset was derived (if applicable)"
                     }
                   ],
                   "var" : [
                     {
                       "type" : "string",
-                      "name" : "gene_ids",
-                      "required" : true,
-                      "description" : "Unique identifier for the gene"
+                      "name" : "feature_id",
+                      "required" : false,
+                      "description" : "Unique identifier for the feature, usually a ENSEMBL gene id."
                     },
                     {
                       "type" : "string",
-                      "name" : "feature_types",
+                      "name" : "feature_name",
                       "required" : true,
-                      "description" : "Type of the feature"
-                    }
-                  ],
-                  "obsm" : [
-                    {
-                      "type" : "double",
-                      "name" : "spatial",
-                      "required" : true,
-                      "description" : "Spatial coordinates of the cell"
+                      "description" : "A human-readable name for the feature, usually a gene symbol."
                     }
                   ]
                 }
@@ -3278,7 +3199,7 @@ meta = [
             }
           },
           "example" : [
-            "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_dataset.zarr"
+            "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_unlabelled.zarr"
           ],
           "must_exist" : true,
           "create_parent" : true,
@@ -3309,20 +3230,6 @@ meta = [
                   "name" : "table",
                   "description" : "AnnData table",
                   "required" : true,
-                  "obs" : [
-                    {
-                      "type" : "string",
-                      "name" : "cell_id",
-                      "description" : "Cell ID",
-                      "required" : true
-                    },
-                    {
-                      "type" : "string",
-                      "name" : "region",
-                      "description" : "Region",
-                      "required" : true
-                    }
-                  ],
                   "uns" : [
                     {
                       "type" : "string",
@@ -3342,7 +3249,7 @@ meta = [
             }
           },
           "example" : [
-            "resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.h5ad"
+            "resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.zarr"
           ],
           "must_exist" : true,
           "create_parent" : true,
@@ -3561,7 +3468,7 @@ meta = [
     "engine" : "docker|native",
     "output" : "target/nextflow/methods/cellpose",
     "viash_version" : "0.9.7",
-    "git_commit" : "c649fb8fb68960df0ba8f58f019a7ab6c0d68ef8",
+    "git_commit" : "80f470dfdb4a4eb616196573b8df98c2d4015793",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -3726,24 +3633,23 @@ masks, _, _ = model.eval(image[0], progress=True, **eval_params)
 print('Cellpose segmentation finished, post-processing results', flush=True)
 masks = convert_to_lower_dtype(masks)
 
-print('Segmentation done, preparing output', flush=True)
-sd_output = sd.SpatialData()
-data_array = xr.DataArray(masks, name='segmentation', dims=('y', 'x'))
-parsed = Labels2DModel.parse(data_array, transformations=transformation)
-sd_output.labels['segmentation'] = parsed
-
-cell_ids = np.unique(masks)[1:]  # exclude background (0)
-table = ad.AnnData(
-  obs=pd.DataFrame(
-    {'cell_id': cell_ids.astype(str), 'region': 'segmentation'},
-    index=cell_ids.astype(str),
-  ),
-  uns={
-    'dataset_id': sdata.tables['table'].uns['dataset_id'],
-    'method_id': meta['name']
+print('Creating output data structure', flush=True)
+sd_output = sd.SpatialData(
+  labels={
+    'segmentation': Labels2DModel.parse(
+      xr.DataArray(masks, name='segmentation', dims=('y', 'x')),
+      transformations=transformation
+    )
+  },
+  tables={
+    'table': ad.AnnData(
+      uns={
+        'dataset_id': sdata.tables['table'].uns['dataset_id'],
+        'method_id': meta['name']
+      }
+    )
   }
 )
-sd_output.tables['table'] = table
 
 print('Saving output', flush=True)
 if os.path.exists(par["output"]):
