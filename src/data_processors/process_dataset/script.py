@@ -1,4 +1,5 @@
 import anndata as ad
+import pandas as pd
 import spatialdata as sd
 import scanpy as sc
 
@@ -95,8 +96,16 @@ transcripts = sp_data.points["transcripts"]
 clean_transcript_cols = [c for c in transcripts.columns if c not in _GROUND_TRUTH_COLS]
 clean_transcripts = transcripts[clean_transcript_cols]
 
-# Minimal table: just dataset metadata in uns, no per-cell obs
-minimal_table = ad.AnnData(uns=dataset_uns)
+# Build var from unique feature names in transcripts, mapping to feature_ids from metadata
+feature_names = transcripts["feature_name"].compute().unique().tolist()
+var_df = pd.DataFrame({"feature_name": feature_names}, index=feature_names)
+var_df.index.name = "feature_name"
+if "metadata" in sp_data.tables and "gene_ids" in sp_data.tables["metadata"].var.columns:
+    id_map = sp_data.tables["metadata"].var["gene_ids"]
+    var_df["feature_id"] = var_df.index.map(id_map)
+
+# Minimal table: dataset metadata in uns, gene list in var
+minimal_table = ad.AnnData(var=var_df, uns=dataset_uns)
 
 output_spatial = sd.SpatialData(
     images={"morphology_mip": sp_data.images["morphology_mip"]},
@@ -120,6 +129,7 @@ for extra_col in ["cell_area", "transcript_counts"]:
 
 solution_table = ad.AnnData(
     obs=solution_obs,
+    var=var_df,
     uns={
         "dataset_id": par["dataset_id"],
         "orig_dataset_id": sp_data.tables["table"].uns.get("dataset_id", None),

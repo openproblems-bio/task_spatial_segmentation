@@ -64,6 +64,10 @@ obs = pd.DataFrame(
 )
 var = pd.DataFrame(index=count_matrix.columns.astype(str))
 var.index.name = "feature_name"
+var["feature_name"] = var.index
+if "var" in dir(sdata_sp.tables["table"]) and "feature_id" in sdata_sp.tables["table"].var.columns:
+    id_map = sdata_sp.tables["table"].var["feature_id"]
+    var["feature_id"] = var.index.map(id_map)
 
 table = ad.AnnData(X=count_matrix.values.astype(np.float32), obs=obs, var=var)
 table.layers["counts"] = table.X.copy()

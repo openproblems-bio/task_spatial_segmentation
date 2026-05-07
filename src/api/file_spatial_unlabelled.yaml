@@ -85,6 +85,15 @@ info:
             name: orig_dataset_id
             required: true
             description: The identifier of the original dataset from which this dataset was derived (if applicable)
+        var:
+          - type: string
+            name: feature_id
+            required: false
+            description: Unique identifier for the feature, usually a ENSEMBL gene id.
+          - type: string
+            name: feature_name
+            required: true
+            description: A human-readable name for the feature, usually a gene symbol.
     coordinate_systems:
       - type: object
         name: global

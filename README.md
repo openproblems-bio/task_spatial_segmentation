@@ -28,9 +28,9 @@ should convince readers of the significance and relevance of your task.
 
 ## Authors & contributors
 
-| Name | Roles | Orcid | Linkedin | Twitter | Email | Github |
+| Name | Roles | Twitter | Linkedin | Email | Github | Orcid |
 |:---|:---|:---|:---|:---|:---|:---|
-| John Doe | author, maintainer | 0000-0000-0000-0000 | johndoe | johndoe | john@doe.me | johndoe |
+| John Doe | author, maintainer | johndoe | johndoe | john@doe.me | johndoe | 0000-0000-0000-0000 |
 
 ## API
 
@@ -243,6 +243,8 @@ Data structure:
 
 | Slot | Type | Description |
 |:---|:---|:---|
+| `var["feature_id"]` | `string` | (*Optional*) Unique identifier for the feature, usually a ENSEMBL gene id. |
+| `var["feature_name"]` | `string` | A human-readable name for the feature, usually a gene symbol. |
 | `uns["dataset_id"]` | `string` | A unique identifier for the dataset. |
 | `uns["dataset_name"]` | `string` | A human-readable name for the dataset. |
 | `uns["dataset_url"]` | `string` | Link to the original source of the dataset. |
@@ -320,6 +322,8 @@ Data structure:
 | `obs["region"]` | `string` | Name of the label image this cell belongs to (e.g. ‘cell_labels’). |
 | `obs["cell_area"]` | `double` | (*Optional*) Area of the cell in pixels. |
 | `obs["transcript_counts"]` | `integer` | (*Optional*) Total number of transcripts assigned to this cell. |
+| `var["feature_id"]` | `string` | (*Optional*) Unique identifier for the feature, usually a ENSEMBL gene id. |
+| `var["feature_name"]` | `string` | A human-readable name for the feature, usually a gene symbol. |
 | `uns["dataset_id"]` | `string` | A unique identifier for the dataset. |
 | `uns["orig_dataset_id"]` | `string` | The identifier of the original dataset from which this dataset was derived (if applicable). |
 
