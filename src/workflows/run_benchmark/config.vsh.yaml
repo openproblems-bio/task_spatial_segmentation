@@ -62,6 +62,8 @@ dependencies:
   - name: utils/extract_uns_metadata
     repository: openproblems
   - name: control_methods/true_labels
+  - name: control_methods/empty_labels
+  - name: control_methods/random_voronoi
   - name: methods/cellpose
   - name: metrics/ari
   - name: data_processors/process_prediction
