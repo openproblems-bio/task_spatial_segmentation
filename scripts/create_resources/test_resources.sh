@@ -47,11 +47,10 @@ viash run src/data_processors/process_prediction/config.vsh.yaml -- \
     --output $DATASET_DIR/processed_prediction.zarr
 
 # run one metric
-# TODO: implement this!
-# viash run src/metrics/ari/config.vsh.yaml -- \
-#     --input_prediction $DATASET_DIR/prediction.h5ad \
-#     --input_scrnaseq_reference $DATASET_DIR/scrnaseq_reference.h5ad \
-#     --output $DATASET_DIR/score.h5ad
+viash run src/metrics/ari/config.vsh.yaml -- \
+    --input_prediction $DATASET_DIR/processed_prediction.zarr \
+    --input_solution $DATASET_DIR/spatial_solution.zarr \
+    --output $DATASET_DIR/score.h5ad
 
 # write manual state.yaml. this is not actually necessary but you never know it might be useful
 cat > $DATASET_DIR/state.yaml << HERE
@@ -59,7 +58,7 @@ id: $DATASET_ID
 spatial_unlabelled: spatial_unlabelled.zarr
 spatial_solution: spatial_solution.zarr
 scrnaseq_reference: scrnaseq_reference.h5ad
-prediction: prediction.h5ad
+prediction: prediction.zarr
 processed_prediction: processed_prediction.zarr
 score: score.h5ad
 HERE

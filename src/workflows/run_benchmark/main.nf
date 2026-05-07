@@ -13,7 +13,7 @@ methods = [
 
 // construct list of metrics
 metrics = [
-  accuracy
+  ari
 ]
 
 workflow run_wf {
@@ -81,6 +81,15 @@ workflow run_wf {
       }
     )
 
+    | process_prediction.run(
+      fromState: [input: "method_output"],
+      toState: { id, output, state ->
+        state + [
+          input_prediction: output.output
+        ]
+      }
+    )
+
     // run all metrics
     | runEach(
       components: metrics,
@@ -90,7 +99,7 @@ workflow run_wf {
       // use 'fromState' to fetch the arguments the component requires from the overall state
       fromState: [
         input_solution: "input_solution",
-        input_prediction: "method_output"
+        input_prediction: "input_prediction"
       ],
       // use 'toState' to publish that component's outputs to the overall state
       toState: { id, output, state, comp ->

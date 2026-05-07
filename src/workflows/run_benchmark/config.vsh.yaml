@@ -63,7 +63,8 @@ dependencies:
     repository: openproblems
   - name: control_methods/true_labels
   - name: methods/cellpose
-  - name: metrics/accuracy
+  - name: metrics/ari
+  - name: data_processors/process_prediction
 
 runners:
   - type: nextflow
