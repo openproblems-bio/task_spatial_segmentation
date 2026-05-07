@@ -65,9 +65,8 @@ sc_processing(sc_data)
 
 print(">> Override dataset metadata in .uns", flush=True)
 sc_data.uns["orig_dataset_id"] = sc_data.uns.get("dataset_id", None)
-for key in ["dataset_id", "dataset_name", "dataset_url", "dataset_summary", "dataset_description", "dataset_organism"]:
+for key in ["dataset_id", "dataset_name", "dataset_url", "dataset_summary", "dataset_description", "dataset_organism", "dataset_reference"]:
     sc_data.uns[key] = par[key]
-sc_data.uns["dataset_reference"] = {"doi": par["dataset_reference"]}
 
 print(">> Writing scrnaseq reference", flush=True)
 sc_data.write_h5ad(par["output_scrnaseq_reference"], compression="gzip")
@@ -83,8 +82,7 @@ dataset_uns = {
     "dataset_url": par["dataset_url"],
     "dataset_summary": par["dataset_summary"],
     "dataset_description": par["dataset_description"],
-    # Join list into semicolon-separated string to match the expected string format
-    "dataset_reference": {"doi": par["dataset_reference"]},
+    "dataset_reference": par["dataset_reference"],
     "dataset_organism": par["dataset_organism"],
     "orig_dataset_id": sp_data.tables["table"].uns.get("dataset_id", None),
 }
@@ -146,7 +144,7 @@ solution_table = ad.AnnData(
         "dataset_url": par["dataset_url"],
         "dataset_summary": par["dataset_summary"],
         "dataset_description": par["dataset_description"],
-        "dataset_reference": {"doi": par["dataset_reference"]},
+        "dataset_reference": par["dataset_reference"],
         "dataset_organism": par["dataset_organism"],
         "orig_dataset_id": sp_data.tables["table"].uns.get("dataset_id", None),
         "spatialdata_attrs": ref_table.uns["spatialdata_attrs"],
