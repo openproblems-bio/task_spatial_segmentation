@@ -1,73 +1,36 @@
-# The API specifies which type of component this is.
-# It contains specifications for:
-#   - The input/output files
-#   - Common parameters
-#   - A unit test
 __merge__: ../../api/comp_metric.yaml
 
-
-# A unique identifier for your component (required).
-# Can contain only lowercase letters or underscores.
 name: ari
 
-# Metadata for your component
 info:
   metrics:
-    # A unique identifier for your metric (required).
-    # Can contain only lowercase letters or underscores.
     - name: ari
-      # A relatively short label, used when rendering visualisarions (required)
-      label: ARI
-      # A one sentence summary of how this metric works (required). Used when 
-      # rendering summary tables.
-      summary: "Adjusted Rand index to measure the similarity between two data clusterings."
-      # A multi-line description of how this component works (required). Used
-      # when rendering reference documentation.
+      label: "Adjusted Rand Index"
+      summary: "ARI between ground truth and predicted transcript-to-cell assignments."
       description: |
-        The Rand index is the accuracy of determining if a link belongs within a cluster or not.
-        The Rand index has a value between 0 and 1, with 0 indicating that the two data clusterings do not agree on any pair of points and 1 indicating that the data clusterings are exactly the same.
-      # A reference key from the bibtex library at src/common/library.bib (required).
+        For each transcript, its cell ID is looked up in both the ground truth
+        label image (cell_labels) and the predicted segmentation label image.
+        The Adjusted Rand Index (ARI) is then computed between the two resulting
+        assignment vectors. ARI = 1 is perfect agreement; values near 0 are random.
+        Background transcripts (cell_id = 0 in both) are excluded.
+      # TODO: add ref and link
       references:
-        doi: 10.1080/01621459.1971.10482356
-      # The minimum possible value for this metric (required)
-      min: 0
-      # The maximum possible value for this metric (required)
+        doi: 10.1007/BF01908075
+      min: -1
       max: 1
-      # Whether a higher value represents a 'better' solution (required)
       maximize: true
 
-# Component-specific parameters (optional)
-arguments:
-  - name: "--label"
-    type: "string"
-    default: "leiden"
-    description: Label to be used to perform ARI.
-
-# Resources required to run the component
 resources:
-  # The script of your component (required)
   - type: python_script
     path: script.py
-  # Additional resources your script needs (optional)
-  # - type: file
-  #   path: weights.pt
 
 engines:
-  # Specifications for the Docker image for this component.
   - type: docker
     image: openproblems/base_python:1
-    # Add custom dependencies here (optional). For more information, see
-    # https://viash.io/reference/config/engines/docker/#setup .
-    setup:
-      - type: python
-        packages: scikit-learn
-      - type: python
-        packages: leidenalg
+    __merge__: ../../base/setup_spatialdata_partial.yaml
 
 runners:
-  # This platform allows running the component natively
   - type: executable
-  # Allows turning the component into a Nextflow module / pipeline.
   - type: nextflow
     directives:
       label: [midtime, midmem, midcpu]

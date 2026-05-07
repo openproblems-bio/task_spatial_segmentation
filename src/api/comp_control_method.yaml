@@ -13,11 +13,11 @@ info:
       in the task.
 arguments:
   - name: --input
-    __merge__: file_spatial_dataset.yaml
+    __merge__: file_spatial_unlabelled.yaml
     required: true
     direction: input
-  - name: "--input_scrnaseq_reference"
-    __merge__: file_scrnaseq_reference.yaml
+  - name: "--input_solution"
+    __merge__: file_spatial_solution.yaml
     direction: input
     required: true
   - name: --output

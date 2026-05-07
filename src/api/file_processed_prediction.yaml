@@ -1,0 +1,67 @@
+type: file
+example: "resources_test/task_spatial_segmentation/mouse_brain_combined/processed_prediction.zarr"
+label: "Processed prediction"
+summary: A processed predicted dataset, ready to be used as input for the evaluation.
+info:
+  format:
+    type: spatialdata_zarr
+    labels:
+      - type: object
+        name: "segmentation"
+        description: Segmentation of the data
+        required: true
+    tables:
+      - type: anndata
+        name: table
+        description: AnnData table
+        required: true
+        # TODO: what is it that this component adds to the anndata?
+        layers:
+          - type: integer
+            name: counts
+            description: Raw counts
+            required: true
+          - type: double
+            name: normalized
+            description: Normalized expression values
+            required: true
+          - type: double
+            name: normalized_log
+            description: Log1p normalized expression values
+            required: true
+          - type: double
+            name: normalized_log_scaled
+            description: Log1p normalized expression values scaled to unit variance and zero mean
+            required: true
+        obs:
+          - type: string
+            name: cell_id
+            description: Cell ID
+            required: true
+          - type: string
+            name: region
+            description: Region
+            required: true
+          # .... cell info ... ?
+        var:
+          - type: string
+            name: feature_id
+            description: Unique identifier for the feature, usually a ENSEMBL gene id.
+            required: false    
+          - type: string
+            name: feature_name
+            description: A human-readable name for the feature, usually a gene symbol.
+            required: true
+          - type: boolean
+            name: hvg
+            description: Whether or not the feature is considered to be a 'highly variable gene'
+            required: true
+        uns:
+          - type: string
+            name: dataset_id
+            description: "A unique identifier for the dataset"
+            required: true
+          - type: string
+            name: method_id
+            description: "A unique identifier for the method"
+            required: true

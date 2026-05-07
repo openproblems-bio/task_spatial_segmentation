@@ -1,0 +1,25 @@
+__merge__: ../../api/comp_control_method.yaml
+
+name: empty_labels
+label: Empty Labels
+summary: "A negative control that predicts no cells (all background)."
+description: |
+  A negative control where no cells are detected — the segmentation label image
+  is filled with zeros (background). This represents a lower bound of performance
+  for any segmentation method and is useful for verifying that metrics can
+  distinguish between no prediction and a perfect prediction.
+
+resources:
+  - type: python_script
+    path: script.py
+
+engines:
+  - type: docker
+    image: openproblems/base_python:1
+    __merge__: ../../base/setup_spatialdata_partial.yaml
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [midtime, lowmem, lowcpu]

@@ -1,6 +1,6 @@
 #TODO: Change to the required and/or optional fields of the anndata
 type: file
-example: "resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.h5ad"
+example: "resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.zarr"
 label: "Predicted data"
 summary: A predicted dataset as output by a method.
 info:
@@ -16,15 +16,6 @@ info:
         name: table
         description: AnnData table
         required: true
-        obs:
-          - type: string
-            name: cell_id
-            description: Cell ID
-            required: true
-          - type: string
-            name: region
-            description: Region
-            required: true
         uns:
           - type: string
             name: dataset_id

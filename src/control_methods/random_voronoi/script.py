@@ -2,6 +2,7 @@ import anndata as ad
 import numpy as np
 import spatialdata as sd
 import xarray as xr
+from scipy.spatial import cKDTree
 from spatialdata.models import Labels2DModel
 
 ## VIASH START
@@ -11,14 +12,14 @@ par = {
   'output': 'output.zarr'
 }
 meta = {
-  'name': 'true_labels'
+  'name': 'random_voronoi'
 }
 ## VIASH END
 
 print('Reading input files', flush=True)
 sdata_solution = sd.read_zarr(par['input_solution'])
 
-print('Relabelling ground truth cell_labels as prediction', flush=True)
+print('Building random Voronoi segmentation', flush=True)
 gt_labels = sdata_solution['cell_labels']
 
 # Resolve the image array (handles both DataTree and DataArray)
@@ -27,18 +28,29 @@ if isinstance(gt_labels, xr.DataTree):
 else:
     gt_array = gt_labels.to_numpy()
 
-# Randomly permute cell IDs while keeping background (0) unchanged.
-# A correct metric (e.g. ARI) must be invariant to label permutation
+H, W = gt_array.shape
 rng = np.random.default_rng(42)
-cell_ids = np.unique(gt_array[gt_array != 0])
-perm = rng.permutation(cell_ids)
-lut = np.zeros(cell_ids.max() + 1, dtype=gt_array.dtype)
-lut[cell_ids] = perm
-relabelled = np.where(gt_array != 0, lut[gt_array], 0)
 
+# Use the same number of cells as in the ground truth
+n_cells = len(np.unique(gt_array)) - 1  # subtract 1 for background (0)
+n_cells = max(n_cells, 1)
+
+# Place seed points uniformly at random
+seeds_y = rng.integers(0, H, size=n_cells)
+seeds_x = rng.integers(0, W, size=n_cells)
+seeds = np.column_stack([seeds_y, seeds_x])
+
+# Assign every pixel to the nearest seed via KD-tree
+print(f'Assigning {H * W} pixels to {n_cells} random seeds', flush=True)
+yx = np.mgrid[0:H, 0:W].reshape(2, -1).T  # (H*W, 2)
+tree = cKDTree(seeds)
+_, idx = tree.query(yx, workers=-1)
+voronoi_array = (idx + 1).reshape(H, W).astype(np.int32)  # labels start at 1
+
+# Preserve the same coordinate system and transform as the GT labels
 transform = sd.transformations.get_transformation(gt_labels, get_all=True)
 segmentation = Labels2DModel.parse(
-    relabelled,
+    voronoi_array,
     transformations=transform,
 )
 

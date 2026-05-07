@@ -31,7 +31,7 @@ publish_dir="resources/results/${RUN_ID}"
 # write the parameters to file
 cat > /tmp/params.yaml << HERE
 input_states: resources/datasets/**/state.yaml
-rename_keys: 'input_spatial_dataset:output_spatial_dataset,input_scrnaseq_reference:output_scrnaseq_reference'
+rename_keys: 'input_spatial_unlabelled:output_spatial_unlabelled,input_spatial_solution:output_spatial_solution,input_scrnaseq_reference:output_scrnaseq_reference'
 output_state: "state.yaml"
 publish_dir: "$publish_dir"
 HERE
