@@ -28,9 +28,9 @@ should convince readers of the significance and relevance of your task.
 
 ## Authors & contributors
 
-| Name | Roles | Twitter | Linkedin | Email | Github | Orcid |
+| Name | Roles | Email | Twitter | Orcid | Github | Linkedin |
 |:---|:---|:---|:---|:---|:---|:---|
-| John Doe | author, maintainer | johndoe | johndoe | john@doe.me | johndoe | 0000-0000-0000-0000 |
+| John Doe | author, maintainer | john@doe.me | johndoe | 0000-0000-0000-0000 | johndoe | johndoe |
 
 ## API
 
@@ -282,6 +282,7 @@ Format:
 
     SpatialData object
      labels: 'cell_labels', 'nucleus_labels'
+     points: 'transcripts'
      shapes: 'cell_boundaries', 'nucleus_boundaries'
      tables: 'table'
 
@@ -297,6 +298,20 @@ Data structure:
 |:-----------------|:-------------------------------------------------------|
 | `cell_labels`    | Ground truth cell segmentation labels.                 |
 | `nucleus_labels` | (*Optional*) Ground truth nucleus segmentation labels. |
+
+*points*
+
+`transcripts`: Point cloud data of transcripts with ground truth cell
+assignments.
+
+| Column | Type | Description |
+|:---|:---|:---|
+| `x` | `float` | x-coordinate of the point. |
+| `y` | `float` | y-coordinate of the point. |
+| `z` | `float` | (*Optional*) z-coordinate of the point. |
+| `feature_name` | `categorical` | Name of the feature. |
+| `cell_id` | `integer` | Ground truth cell assignment (0 = background). |
+| `transcript_id` | `long` | Unique identifier of the transcript. |
 
 *shapes*
 

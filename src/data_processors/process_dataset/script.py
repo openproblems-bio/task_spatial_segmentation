@@ -137,7 +137,14 @@ solution_table = ad.AnnData(
     },
 )
 
+# Keep only the columns needed for the solution (ground truth assignments)
+_SOLUTION_TRANSCRIPT_COLS = ["x", "y", "feature_name", "cell_id", "transcript_id"]
+if "z" in transcripts.columns:
+    _SOLUTION_TRANSCRIPT_COLS = ["x", "y", "z"] + _SOLUTION_TRANSCRIPT_COLS[2:]
+solution_transcripts = transcripts[[c for c in _SOLUTION_TRANSCRIPT_COLS if c in transcripts.columns]]
+
 output_solution = sd.SpatialData(
+    points={"transcripts": solution_transcripts},
     labels={k: v for k, v in sp_data.labels.items()},
     shapes={k: v for k, v in sp_data.shapes.items()},
     tables={"table": solution_table},
