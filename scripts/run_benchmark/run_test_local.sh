@@ -27,3 +27,5 @@ NXF_VER=25.10.4 nextflow run . \
   --output_state state.yaml \
   --publish_dir "$publish_dir" \
   -with-trace "$publish_dir/trace.txt"
+
+common/scripts/render_results_report local "$publish_dir" --output "$publish_dir/report/"
