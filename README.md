@@ -28,9 +28,9 @@ should convince readers of the significance and relevance of your task.
 
 ## Authors & contributors
 
-| Name | Roles | Email | Twitter | Orcid | Github | Linkedin |
+| Name | Roles | Github | Twitter | Email | Orcid | Linkedin |
 |:---|:---|:---|:---|:---|:---|:---|
-| John Doe | author, maintainer | john@doe.me | johndoe | 0000-0000-0000-0000 | johndoe | johndoe |
+| John Doe | author, maintainer | johndoe | johndoe | john@doe.me | 0000-0000-0000-0000 | johndoe |
 
 ## API
 
@@ -38,8 +38,8 @@ should convince readers of the significance and relevance of your task.
 flowchart TB
   file_common_ist("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-common-ist-dataset'>Common iST Dataset</a>")
   comp_data_processor[/"<a href='https://github.com/openproblems-bio/task_spatial_segmentation#component-type-data-processor'>Data processor</a>"/]
-  file_spatial_unlabelled("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-unlabelled-spatial-dataset'>Unlabelled Spatial Dataset</a>")
-  file_spatial_solution("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-spatial-segmentation-solution'>Spatial Segmentation Solution</a>")
+  file_spatial_unlabelled("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-unlabelled'>Unlabelled</a>")
+  file_spatial_solution("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-solution'>Solution</a>")
   file_scrnaseq_reference("<a href='https://github.com/openproblems-bio/task_spatial_segmentation#file-format-scrna-seq-reference'>scRNA-seq Reference</a>")
   comp_control_method[/"<a href='https://github.com/openproblems-bio/task_spatial_segmentation#component-type-control-method'>Control Method</a>"/]
   comp_method[/"<a href='https://github.com/openproblems-bio/task_spatial_segmentation#component-type-method'>Method</a>"/]
@@ -182,15 +182,16 @@ Arguments:
 |:---|:---|:---|
 | `--input_sp` | `file` | An unprocessed spatial imaging dataset stored as a zarr file. |
 | `--input_sc` | `file` | An unprocessed dataset as output by a dataset loader. |
-| `--output_spatial_unlabelled` | `file` | (*Output*) A spatial transcriptomics dataset, preprocessed for this benchmark. |
-| `--output_spatial_solution` | `file` | (*Output*) Ground truth segmentation labels for evaluating spatial segmentation methods. |
+| `--output_spatial_unlabelled` | `file` | (*Output*) Preprocessed spatial transcriptomics data without segmentation labels for method input. |
+| `--output_spatial_solution` | `file` | (*Output*) Ground truth segmentation labels and cell assignments for method evaluation. |
 | `--output_scrnaseq_reference` | `file` | (*Output*) A single-cell reference dataset, preprocessed for this benchmark. |
 
 </div>
 
-## File format: Unlabelled Spatial Dataset
+## File format: Unlabelled
 
-A spatial transcriptomics dataset, preprocessed for this benchmark.
+Preprocessed spatial transcriptomics data without segmentation labels
+for method input.
 
 Example file:
 `resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_unlabelled.zarr`
@@ -262,10 +263,10 @@ Data structure:
 
 </div>
 
-## File format: Spatial Segmentation Solution
+## File format: Solution
 
-Ground truth segmentation labels for evaluating spatial segmentation
-methods.
+Ground truth segmentation labels and cell assignments for method
+evaluation.
 
 Example file:
 `resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_solution.zarr`
@@ -409,8 +410,8 @@ Arguments:
 
 | Name | Type | Description |
 |:---|:---|:---|
-| `--input` | `file` | A spatial transcriptomics dataset, preprocessed for this benchmark. |
-| `--input_solution` | `file` | Ground truth segmentation labels for evaluating spatial segmentation methods. |
+| `--input` | `file` | Preprocessed spatial transcriptomics data without segmentation labels for method input. |
+| `--input_solution` | `file` | Ground truth segmentation labels and cell assignments for method evaluation. |
 | `--output` | `file` | (*Output*) A predicted dataset as output by a method. |
 
 </div>
@@ -425,7 +426,7 @@ Arguments:
 
 | Name | Type | Description |
 |:---|:---|:---|
-| `--input` | `file` | A spatial transcriptomics dataset, preprocessed for this benchmark. |
+| `--input` | `file` | Preprocessed spatial transcriptomics data without segmentation labels for method input. |
 | `--output` | `file` | (*Output*) A predicted dataset as output by a method. |
 
 </div>
@@ -441,7 +442,7 @@ Arguments:
 | Name | Type | Description |
 |:---|:---|:---|
 | `--input_prediction` | `file` | A predicted dataset as output by a method. |
-| `--input_spatial_unlabelled` | `file` | A spatial transcriptomics dataset, preprocessed for this benchmark. |
+| `--input_spatial_unlabelled` | `file` | Preprocessed spatial transcriptomics data without segmentation labels for method input. |
 | `--output` | `file` | (*Output*) A processed predicted dataset, ready to be used as input for the evaluation. |
 
 </div>
@@ -457,7 +458,7 @@ Arguments:
 | Name | Type | Description |
 |:---|:---|:---|
 | `--input_prediction` | `file` | A processed predicted dataset, ready to be used as input for the evaluation. |
-| `--input_solution` | `file` | Ground truth segmentation labels for evaluating spatial segmentation methods. |
+| `--input_solution` | `file` | Ground truth segmentation labels and cell assignments for method evaluation. |
 | `--output` | `file` | (*Output*) File indicating the score of a metric. |
 
 </div>

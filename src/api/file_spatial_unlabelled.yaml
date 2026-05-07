@@ -1,7 +1,7 @@
 type: file
 example: "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_unlabelled.zarr"
-label: "Unlabelled Spatial Dataset"
-summary: A spatial transcriptomics dataset, preprocessed for this benchmark.
+label: "Unlabelled"
+summary: Preprocessed spatial transcriptomics data without segmentation labels for method input.
 description: |
   This dataset contains preprocessed images and transcript point clouds for spatial transcriptomics data.
   Ground truth segmentation labels are intentionally excluded to prevent methods from cheating.

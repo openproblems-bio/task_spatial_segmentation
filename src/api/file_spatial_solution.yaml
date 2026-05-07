@@ -1,7 +1,7 @@
 type: file
 example: "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_solution.zarr"
-label: "Spatial Segmentation Solution"
-summary: Ground truth segmentation labels for evaluating spatial segmentation methods.
+label: "Solution"
+summary: Ground truth segmentation labels and cell assignments for method evaluation.
 description: |
   This dataset contains the ground truth cell and nucleus segmentation labels,
   cell boundaries, and a reference table matching each cell to its label region.
