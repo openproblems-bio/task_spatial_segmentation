@@ -3501,7 +3501,7 @@ meta = [
     "engine" : "docker|native",
     "output" : "target/nextflow/data_processors/process_prediction",
     "viash_version" : "0.9.7",
-    "git_commit" : "80f470dfdb4a4eb616196573b8df98c2d4015793",
+    "git_commit" : "7e61b6f9c680380e0afb2b9aaae5f11f1423ae94",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -3700,22 +3700,28 @@ sc.pp.scale(table)
 table.layers["normalized_log_scaled"] = table.X.copy()
 
 print(">> Computing highly variable genes", flush=True)
-# Reset X to counts for HVG computation
-table.X = table.layers["counts"].copy()
-try:
-    sc.pp.highly_variable_genes(table, flavor="seurat_v3", layer="counts", n_top_genes=min(3000, table.n_vars))
-except ValueError:
-    # seurat_v3 loess fitting can fail on small datasets; fall back to seurat flavor
-    sc.pp.normalize_total(table, target_sum=1e4)
-    sc.pp.log1p(table)
-    sc.pp.highly_variable_genes(table, flavor="seurat", n_top_genes=min(3000, table.n_vars))
-table.var.rename(columns={"highly_variable": "hvg"}, inplace=True)
+if table.n_vars == 0 or table.n_obs == 0:
+    # No cells detected (e.g. empty_labels negative control); mark all vars as non-HVG
+    table.var["hvg"] = False
+else:
+    # Reset X to counts for HVG computation
+    table.X = table.layers["counts"].copy()
+    try:
+        sc.pp.highly_variable_genes(table, flavor="seurat_v3", layer="counts", n_top_genes=min(3000, table.n_vars))
+    except ValueError:
+        # seurat_v3 loess fitting can fail on small datasets; fall back to seurat flavor
+        sc.pp.normalize_total(table, target_sum=1e4)
+        sc.pp.log1p(table)
+        sc.pp.highly_variable_genes(table, flavor="seurat", n_top_genes=min(3000, table.n_vars))
+    table.var.rename(columns={"highly_variable": "hvg"}, inplace=True)
 
 table.uns["dataset_id"] = dataset_id
 table.uns["method_id"] = method_id
 table.uns["spatialdata_attrs"] = {
     "instance_key": "cell_id",
-    "region": ["segmentation"],
+    # Derive regions from actual obs to handle the empty-table case (e.g. empty_labels
+    # negative control) where no cells were detected and obs has 0 rows.
+    "region": list(table.obs["region"].unique()),
     "region_key": "region",
 }
 

@@ -35,7 +35,7 @@ workflow run_wf {
 
     // extract the dataset metadata
     | extract_uns_metadata.run(
-      fromState: [input: "input_spatial_unlabelled"],
+      fromState: [input: "input_scrnaseq_reference"],
       toState: { id, output, state ->
         state + [
           dataset_uns: readYaml(output.output).uns
@@ -84,7 +84,10 @@ workflow run_wf {
     )
 
     | process_prediction.run(
-      fromState: [input: "method_output"],
+      fromState: [
+        input_prediction: "method_output",
+        input_spatial_unlabelled: "input_spatial_unlabelled"
+      ],
       toState: { id, output, state ->
         state + [
           input_prediction: output.output
@@ -100,7 +103,7 @@ workflow run_wf {
       },
       // use 'fromState' to fetch the arguments the component requires from the overall state
       fromState: [
-        input_solution: "input_solution",
+        input_solution: "input_spatial_solution",
         input_prediction: "input_prediction"
       ],
       // use 'toState' to publish that component's outputs to the overall state
