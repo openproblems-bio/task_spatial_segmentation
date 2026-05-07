@@ -28,9 +28,9 @@ should convince readers of the significance and relevance of your task.
 
 ## Authors & contributors
 
-| Name | Roles | Twitter | Email | Orcid | Github | Linkedin |
+| Name | Roles | Orcid | Linkedin | Twitter | Email | Github |
 |:---|:---|:---|:---|:---|:---|:---|
-| John Doe | author, maintainer | johndoe | john@doe.me | 0000-0000-0000-0000 | johndoe | johndoe |
+| John Doe | author, maintainer | 0000-0000-0000-0000 | johndoe | johndoe | john@doe.me | johndoe |
 
 ## API
 
@@ -487,7 +487,7 @@ A processed predicted dataset, ready to be used as input for the
 evaluation.
 
 Example file:
-`resources_test/task_spatial_segmentation/mouse_brain_combined/processed_prediction.h5ad`
+`resources_test/task_spatial_segmentation/mouse_brain_combined/processed_prediction.zarr`
 
 Format:
 

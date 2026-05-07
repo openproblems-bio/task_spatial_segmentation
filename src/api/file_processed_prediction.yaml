@@ -1,5 +1,5 @@
 type: file
-example: "resources_test/task_spatial_segmentation/mouse_brain_combined/processed_prediction.h5ad"
+example: "resources_test/task_spatial_segmentation/mouse_brain_combined/processed_prediction.zarr"
 label: "Processed prediction"
 summary: A processed predicted dataset, ready to be used as input for the evaluation.
 info:
