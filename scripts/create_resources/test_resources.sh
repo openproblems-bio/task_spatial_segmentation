@@ -36,8 +36,9 @@ viash run src/data_processors/process_dataset/config.vsh.yaml -- \
   --dataset_organism "mus_musculus"
 
 # run one method
-viash run src/methods/cellpose/config.vsh.yaml -- \
+viash run src/control_methods/random_voronoi/config.vsh.yaml -- \
     --input $DATASET_DIR/spatial_unlabelled.zarr \
+    --input_solution $DATASET_DIR/spatial_solution.zarr \
     --output $DATASET_DIR/prediction.zarr
 
 # run prediction processor

@@ -3501,7 +3501,7 @@ meta = [
     "engine" : "docker|native",
     "output" : "target/nextflow/data_processors/process_prediction",
     "viash_version" : "0.9.7",
-    "git_commit" : "7e61b6f9c680380e0afb2b9aaae5f11f1423ae94",
+    "git_commit" : "d3543a5503dafa823d3e854723478d18a991e0c1",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
