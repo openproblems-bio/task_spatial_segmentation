@@ -65,6 +65,7 @@ dependencies:
   - name: control_methods/empty_labels
   - name: control_methods/random_voronoi
   - name: methods/cellpose
+  - name: methods_cell_type_annotation/tacco
   - name: metrics/ari
   - name: data_processors/process_prediction
 
