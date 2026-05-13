@@ -205,8 +205,23 @@ resources:
   path: "script.py"
   is_executable: true
 label: "Cellpose"
-summary: "Cellpose-SAM: cell and nucleus segmentation with superhuman generalization."
-description: "cellpose is an anatomical segmentation algorithm written in Python 3."
+summary: "Uses predicted flow fields to group pixels into cells via a center-convergence\
+  \ mechanism."
+description: "Rather than detecting cell boundaries directly, Cellpose trains a deep\
+  \ neural network to predict, for every\npixel in an image, a vector pointing toward\
+  \ the center of the cell that pixel belongs to, along with a\nprobability map indicating\
+  \ whether each pixel is part of any cell at all. These per-pixel vectors\ncollectively\
+  \ form a \"flow field.\" At inference time, each pixel is treated as a particle\
+  \ that iteratively\nfollows the predicted flow directions, moving step by step toward\
+  \ its eventual destination. Pixels belonging\nto the same cell all converge to the\
+  \ same fixed point, and any group of pixels that lands at the same fixed\npoint\
+  \ gets assigned a shared cell mask. This center-convergence framing lets the method\
+  \ handle cells of\nhighly varied shapes and sizes without needing to explicitly\
+  \ model cell outlines. The underlying network\nuses a U-Net-style architecture with\
+  \ skip connections and was trained on a diverse dataset of over 70,000\nmanually\
+  \ segmented objects spanning many cell types and imaging modalities, giving it broad\
+  \ out-of-the-box\ngeneralization without requiring retraining or manual parameter\
+  \ tuning for new datasets.\n"
 test_resources:
 - type: "python_script"
   path: "run_and_check_output.py"
@@ -275,7 +290,7 @@ runners:
 engines:
 - type: "docker"
   id: "docker"
-  image: "openproblems/base_python:1"
+  image: "openproblems/base_pytorch_nvidia:1"
   namespace_separator: "/"
   setup:
   - type: "python"
@@ -306,7 +321,7 @@ build_info:
   output: "target/nextflow/methods/cellpose"
   executable: "target/nextflow/methods/cellpose/main.nf"
   viash_version: "0.9.7"
-  git_commit: "9696827505d913a8fd7f86c02ac1f5e9553ef041"
+  git_commit: "4e5d0169d81caa1d29bc860740f6bf1d7539e8fe"
   git_remote: "https://github.com/openproblems-bio/task_spatial_segmentation"
 package_config:
   name: "task_spatial_segmentation"

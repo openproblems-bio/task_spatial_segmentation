@@ -3739,7 +3739,7 @@ meta = [
     "engine" : "native",
     "output" : "target/nextflow/workflows/run_benchmark",
     "viash_version" : "0.9.7",
-    "git_commit" : "9696827505d913a8fd7f86c02ac1f5e9553ef041",
+    "git_commit" : "4e5d0169d81caa1d29bc860740f6bf1d7539e8fe",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
