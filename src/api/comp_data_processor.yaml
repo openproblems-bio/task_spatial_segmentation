@@ -58,7 +58,7 @@ argument_groups:
         required: true
         multiple: true
         info:
-          test_default: ["https://example.com/mouse_brain_combined_paper", "10.1234/example.doi"]
+          test_default: "10.1234/example.doi"
       - name: --dataset_summary
         type: string
         description: Short description of the dataset.

@@ -66,5 +66,6 @@ HERE
 
 # only run this if you have access to the openproblems-data bucket
 aws s3 sync --profile op \
-  "$DATASET_DIR" s3://openproblems-data/resources_test/task_spatial_segmentation/mouse_brain_combined/ \
+  resources_test/task_spatial_segmentation/mouse_brain_combined/ \
+  s3://openproblems-data/resources_test/task_spatial_segmentation/mouse_brain_combined/ \
   --delete --dryrun
