@@ -1,12 +1,16 @@
 import anndata as ad
 import numpy as np
 import os
-import pandas as pd
 import shutil
 import spatialdata as sd
 import xarray as xr
 from cellpose.models import CellposeModel
 from spatialdata.models import Labels2DModel
+import torch
+
+# Check whether a GPU is available
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print('Using device:', device, flush=True)
 
 ## VIASH START
 par = {
@@ -38,10 +42,10 @@ image = sdata['morphology_mip']['scale0'].image.compute().to_numpy()
 transformation = sdata['morphology_mip']['scale0'].image.transform.copy()
 
 print('Initializing Cellpose model', flush=True)
-model = CellposeModel()
+model = CellposeModel(gpu=torch.cuda.is_available())
 
 eval_params = {k: par[k] for k in ("diameter", "flow_threshold", "niter", "min_size", "resample") if par.get(k) is not None}
-print(f"Running Cellpose segmentation with parameters: {eval_params}")
+print('Running Cellpose segmentation with parameters:', eval_params, flush=True)
 masks, _, _ = model.eval(image[0], progress=True, **eval_params)
 
 print('Cellpose segmentation finished, post-processing results', flush=True)
