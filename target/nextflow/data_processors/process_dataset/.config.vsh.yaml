@@ -805,12 +805,10 @@ argument_groups:
     name: "--dataset_reference"
     description: "Bibtex reference of the paper in which the dataset was published."
     info:
-      test_default:
-      - "https://example.com/mouse_brain_combined_paper"
-      - "10.1234/example.doi"
+      test_default: "10.1234/example.doi"
     required: true
     direction: "input"
-    multiple: true
+    multiple: false
     multiple_sep: ";"
   - type: "string"
     name: "--dataset_summary"
@@ -936,7 +934,7 @@ engines:
   - type: "python"
     user: false
     pypi:
-    - "spatialdata>=0.7.3a1"
+    - "spatialdata>=0.7.3"
     - "anndata>=0.12.0"
     - "zarr>=3.0.0"
     upgrade: true
@@ -957,7 +955,7 @@ build_info:
   output: "target/nextflow/data_processors/process_dataset"
   executable: "target/nextflow/data_processors/process_dataset/main.nf"
   viash_version: "0.9.7"
-  git_commit: "d3543a5503dafa823d3e854723478d18a991e0c1"
+  git_commit: "9696827505d913a8fd7f86c02ac1f5e9553ef041"
   git_remote: "https://github.com/openproblems-bio/task_spatial_segmentation"
 package_config:
   name: "task_spatial_segmentation"

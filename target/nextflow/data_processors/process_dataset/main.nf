@@ -4143,14 +4143,11 @@ meta = [
           "name" : "--dataset_reference",
           "description" : "Bibtex reference of the paper in which the dataset was published.",
           "info" : {
-            "test_default" : [
-              "https://example.com/mouse_brain_combined_paper",
-              "10.1234/example.doi"
-            ]
+            "test_default" : "10.1234/example.doi"
           },
           "required" : true,
           "direction" : "input",
-          "multiple" : true,
+          "multiple" : false,
           "multiple_sep" : ";"
         },
         {
@@ -4323,7 +4320,7 @@ meta = [
           "type" : "python",
           "user" : false,
           "pypi" : [
-            "spatialdata>=0.7.3a1",
+            "spatialdata>=0.7.3",
             "anndata>=0.12.0",
             "zarr>=3.0.0"
           ],
@@ -4351,7 +4348,7 @@ meta = [
     "engine" : "docker|native",
     "output" : "target/nextflow/data_processors/process_dataset",
     "viash_version" : "0.9.7",
-    "git_commit" : "d3543a5503dafa823d3e854723478d18a991e0c1",
+    "git_commit" : "9696827505d913a8fd7f86c02ac1f5e9553ef041",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -4458,7 +4455,7 @@ par = {
   'dataset_id': $( if [ ! -z ${VIASH_PAR_DATASET_ID+x} ]; then echo "r'${VIASH_PAR_DATASET_ID//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
   'dataset_name': $( if [ ! -z ${VIASH_PAR_DATASET_NAME+x} ]; then echo "r'${VIASH_PAR_DATASET_NAME//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
   'dataset_url': $( if [ ! -z ${VIASH_PAR_DATASET_URL+x} ]; then echo "r'${VIASH_PAR_DATASET_URL//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
-  'dataset_reference': $( if [ ! -z ${VIASH_PAR_DATASET_REFERENCE+x} ]; then echo "r'${VIASH_PAR_DATASET_REFERENCE//\\'/\\'\\"\\'\\"r\\'}'.split(';')"; else echo None; fi ),
+  'dataset_reference': $( if [ ! -z ${VIASH_PAR_DATASET_REFERENCE+x} ]; then echo "r'${VIASH_PAR_DATASET_REFERENCE//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
   'dataset_summary': $( if [ ! -z ${VIASH_PAR_DATASET_SUMMARY+x} ]; then echo "r'${VIASH_PAR_DATASET_SUMMARY//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
   'dataset_description': $( if [ ! -z ${VIASH_PAR_DATASET_DESCRIPTION+x} ]; then echo "r'${VIASH_PAR_DATASET_DESCRIPTION//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),
   'dataset_organism': $( if [ ! -z ${VIASH_PAR_DATASET_ORGANISM+x} ]; then echo "r'${VIASH_PAR_DATASET_ORGANISM//\\'/\\'\\"\\'\\"r\\'}'"; else echo None; fi ),

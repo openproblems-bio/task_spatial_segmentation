@@ -3539,7 +3539,7 @@ meta = [
           "type" : "python",
           "user" : false,
           "pypi" : [
-            "spatialdata>=0.7.3a1",
+            "spatialdata>=0.7.3",
             "anndata>=0.12.0",
             "zarr>=3.0.0"
           ],
@@ -3554,7 +3554,7 @@ meta = [
     "engine" : "docker",
     "output" : "target/nextflow/control_methods/random_voronoi",
     "viash_version" : "0.9.7",
-    "git_commit" : "d3543a5503dafa823d3e854723478d18a991e0c1",
+    "git_commit" : "9696827505d913a8fd7f86c02ac1f5e9553ef041",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {

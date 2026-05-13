@@ -446,15 +446,15 @@ function ViashDockerfile {
 FROM openproblems/base_python:1
 ENTRYPOINT []
 RUN pip install --upgrade pip && \
-  pip install --upgrade --no-cache-dir "spatialdata>=0.7.3a1" "anndata>=0.12.0" "zarr>=3.0.0"
+  pip install --upgrade --no-cache-dir "spatialdata>=0.7.3" "anndata>=0.12.0" "zarr>=3.0.0"
 
 RUN pip install --upgrade pip && \
   pip install --upgrade --no-cache-dir "scikit-learn" "scikit-misc"
 
 LABEL org.opencontainers.image.description="Companion container for running component data_processors process_dataset"
-LABEL org.opencontainers.image.created="2026-05-12T12:54:32Z"
+LABEL org.opencontainers.image.created="2026-05-13T07:37:16Z"
 LABEL org.opencontainers.image.source="https://github.com/openproblems-bio/task_spatial_segmentation"
-LABEL org.opencontainers.image.revision="d3543a5503dafa823d3e854723478d18a991e0c1"
+LABEL org.opencontainers.image.revision="9696827505d913a8fd7f86c02ac1f5e9553ef041"
 LABEL org.opencontainers.image.version="build_main"
 
 VIASHDOCKER
@@ -634,7 +634,7 @@ function ViashHelp {
   echo "        Link to the original source of the dataset."
   echo ""
   echo "    --dataset_reference"
-  echo "        type: string, required parameter, multiple values allowed"
+  echo "        type: string, required parameter"
   echo "        Bibtex reference of the paper in which the dataset was published."
   echo ""
   echo "    --dataset_summary"
@@ -801,20 +801,14 @@ while [[ $# -gt 0 ]]; do
             shift 1
             ;;
         --dataset_reference)
-            if [ -z "$VIASH_PAR_DATASET_REFERENCE" ]; then
-              VIASH_PAR_DATASET_REFERENCE="$2"
-            else
-              VIASH_PAR_DATASET_REFERENCE="$VIASH_PAR_DATASET_REFERENCE;""$2"
-            fi
+            [ -n "$VIASH_PAR_DATASET_REFERENCE" ] && ViashError Bad arguments for option \'--dataset_reference\': \'$VIASH_PAR_DATASET_REFERENCE\' \& \'$2\' - you should provide exactly one argument for this option. && exit 1
+            VIASH_PAR_DATASET_REFERENCE="$2"
             [ $# -lt 2 ] && ViashError Not enough arguments passed to --dataset_reference. Use "--help" to get more information on the parameters. && exit 1
             shift 2
             ;;
         --dataset_reference=*)
-            if [ -z "$VIASH_PAR_DATASET_REFERENCE" ]; then
-              VIASH_PAR_DATASET_REFERENCE=$(ViashRemoveFlags "$1")
-            else
-              VIASH_PAR_DATASET_REFERENCE="$VIASH_PAR_DATASET_REFERENCE;"$(ViashRemoveFlags "$1")
-            fi
+            [ -n "$VIASH_PAR_DATASET_REFERENCE" ] && ViashError Bad arguments for option \'--dataset_reference=*\': \'$VIASH_PAR_DATASET_REFERENCE\' \& \'$2\' - you should provide exactly one argument for this option. && exit 1
+            VIASH_PAR_DATASET_REFERENCE=$(ViashRemoveFlags "$1")
             shift 1
             ;;
         --dataset_summary)
@@ -1352,7 +1346,7 @@ par = {
   'dataset_id': $( if [ ! -z ${VIASH_PAR_DATASET_ID+x} ]; then echo "r'${VIASH_PAR_DATASET_ID//\'/\'\"\'\"r\'}'"; else echo None; fi ),
   'dataset_name': $( if [ ! -z ${VIASH_PAR_DATASET_NAME+x} ]; then echo "r'${VIASH_PAR_DATASET_NAME//\'/\'\"\'\"r\'}'"; else echo None; fi ),
   'dataset_url': $( if [ ! -z ${VIASH_PAR_DATASET_URL+x} ]; then echo "r'${VIASH_PAR_DATASET_URL//\'/\'\"\'\"r\'}'"; else echo None; fi ),
-  'dataset_reference': $( if [ ! -z ${VIASH_PAR_DATASET_REFERENCE+x} ]; then echo "r'${VIASH_PAR_DATASET_REFERENCE//\'/\'\"\'\"r\'}'.split(';')"; else echo None; fi ),
+  'dataset_reference': $( if [ ! -z ${VIASH_PAR_DATASET_REFERENCE+x} ]; then echo "r'${VIASH_PAR_DATASET_REFERENCE//\'/\'\"\'\"r\'}'"; else echo None; fi ),
   'dataset_summary': $( if [ ! -z ${VIASH_PAR_DATASET_SUMMARY+x} ]; then echo "r'${VIASH_PAR_DATASET_SUMMARY//\'/\'\"\'\"r\'}'"; else echo None; fi ),
   'dataset_description': $( if [ ! -z ${VIASH_PAR_DATASET_DESCRIPTION+x} ]; then echo "r'${VIASH_PAR_DATASET_DESCRIPTION//\'/\'\"\'\"r\'}'"; else echo None; fi ),
   'dataset_organism': $( if [ ! -z ${VIASH_PAR_DATASET_ORGANISM+x} ]; then echo "r'${VIASH_PAR_DATASET_ORGANISM//\'/\'\"\'\"r\'}'"; else echo None; fi ),
