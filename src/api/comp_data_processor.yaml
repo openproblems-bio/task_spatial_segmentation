@@ -56,7 +56,6 @@ argument_groups:
         type: string
         description: Bibtex reference of the paper in which the dataset was published.
         required: true
-        multiple: true
         info:
           test_default: "10.1234/example.doi"
       - name: --dataset_summary

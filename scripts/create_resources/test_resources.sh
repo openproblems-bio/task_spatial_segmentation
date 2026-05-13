@@ -18,7 +18,10 @@ DATASET_ID=mouse_brain_combined
 RAW_DATA=resources_test/common
 DATASET_DIR=resources_test/task_spatial_segmentation/$DATASET_ID
 
-mkdir -p $DATASET_DIR
+if [ -d "$DATASET_DIR" ]; then
+  rm -rf "$DATASET_DIR"
+fi
+mkdir -p "$DATASET_DIR"
 
 # process dataset
 viash run src/data_processors/process_dataset/config.vsh.yaml -- \
