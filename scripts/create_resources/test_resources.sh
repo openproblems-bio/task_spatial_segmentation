@@ -18,7 +18,10 @@ DATASET_ID=mouse_brain_combined
 RAW_DATA=resources_test/common
 DATASET_DIR=resources_test/task_spatial_segmentation/$DATASET_ID
 
-mkdir -p $DATASET_DIR
+if [ -d "$DATASET_DIR" ]; then
+  rm -rf "$DATASET_DIR"
+fi
+mkdir -p "$DATASET_DIR"
 
 # process dataset
 viash run src/data_processors/process_dataset/config.vsh.yaml -- \
@@ -66,5 +69,6 @@ HERE
 
 # only run this if you have access to the openproblems-data bucket
 aws s3 sync --profile op \
-  "$DATASET_DIR" s3://openproblems-data/resources_test/task_spatial_segmentation/mouse_brain_combined/ \
+  resources_test/task_spatial_segmentation/mouse_brain_combined/ \
+  s3://openproblems-data/resources_test/task_spatial_segmentation/mouse_brain_combined/ \
   --delete --dryrun
