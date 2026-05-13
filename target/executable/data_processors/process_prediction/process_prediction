@@ -452,9 +452,9 @@ RUN pip install --upgrade pip && \
   pip install --upgrade --no-cache-dir "scikit-learn" "scikit-misc"
 
 LABEL org.opencontainers.image.description="Companion container for running component data_processors process_prediction"
-LABEL org.opencontainers.image.created="2026-05-13T10:09:41Z"
+LABEL org.opencontainers.image.created="2026-05-13T13:47:09Z"
 LABEL org.opencontainers.image.source="https://github.com/openproblems-bio/task_spatial_segmentation"
-LABEL org.opencontainers.image.revision="4e5d0169d81caa1d29bc860740f6bf1d7539e8fe"
+LABEL org.opencontainers.image.revision="a80cb3957cc3cf5cb2cf11d9e70e3896d6869832"
 LABEL org.opencontainers.image.version="build_main"
 
 VIASHDOCKER

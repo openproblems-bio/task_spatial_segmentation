@@ -367,7 +367,7 @@ build_info:
   output: "target/executable/control_methods/random_voronoi"
   executable: "target/executable/control_methods/random_voronoi/random_voronoi"
   viash_version: "0.9.7"
-  git_commit: "4e5d0169d81caa1d29bc860740f6bf1d7539e8fe"
+  git_commit: "a80cb3957cc3cf5cb2cf11d9e70e3896d6869832"
   git_remote: "https://github.com/openproblems-bio/task_spatial_segmentation"
 package_config:
   name: "task_spatial_segmentation"
