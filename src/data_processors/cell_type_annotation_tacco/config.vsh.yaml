@@ -1,5 +1,5 @@
-name: tacco
-namespace: methods_cell_type_annotation
+name: cell_type_annotation_tacco
+namespace: data_processors
 label: "TACCO"
 summary: "Assign cell types to segmented cells via optimal transport against a scRNA-seq reference."
 description: |
