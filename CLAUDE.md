@@ -15,6 +15,9 @@ scripts/sync_resources.sh
 # Build all components (Docker-cached)
 viash ns build --parallel --setup cachedbuild
 
+# Build all Docker containers (run before local benchmark)
+scripts/project/build_all_docker_containers.sh
+
 # Test a single component
 viash test src/methods/cellpose/config.vsh.yaml
 
@@ -29,6 +32,16 @@ scripts/run_benchmark/run_full_local.sh
 
 # Create a new method or metric from template
 common/scripts/create_component
+
+# Inspect the Docker image ID and Dockerfile for a built component
+target/executable/<name>/<name> ---docker_image_id
+target/executable/<name>/<name> ---dockerfile
+
+# Run a single built component directly
+target/executable/<name>/<name> --input <input> --output <output>
+
+# Run a built component as a Nextflow workflow
+nextflow run target/nextflow/<name> -profile docker --id <id> --input <input> --publish_dir out/
 ```
 
 ## Architecture
@@ -77,3 +90,4 @@ Test resources and default parameters for `viash test` are declared inside `conf
 - All components run inside Docker containers by default. Use `--platform docker` / `--engine docker` flags with Viash when needed.
 - `_viash.yaml` is the project-level Viash config (project name, organization, package registry, test resource S3 paths).
 - Don't commit to main, always create a new branch
+- Fill in the summary for a src/methods/<component>/config.vsh.yaml. Write a one sentence summary and a one paragraph summary of how this method works based on documentation and references.
