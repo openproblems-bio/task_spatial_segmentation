@@ -3671,6 +3671,12 @@ meta = [
       }
     },
     {
+      "name" : "data_processors/cell_type_annotation_tacco",
+      "repository" : {
+        "type" : "local"
+      }
+    },
+    {
       "name" : "metrics/ari",
       "repository" : {
         "type" : "local"
@@ -3739,7 +3745,7 @@ meta = [
     "engine" : "native",
     "output" : "target/nextflow/workflows/run_benchmark",
     "viash_version" : "0.9.7",
-    "git_commit" : "a80cb3957cc3cf5cb2cf11d9e70e3896d6869832",
+    "git_commit" : "4c8ae6a1edb1cc60ac4f4e0b2cf2a5b722d4d7ff",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -3826,6 +3832,7 @@ include { true_labels } from "${meta.resources_dir}/../../../nextflow/control_me
 include { empty_labels } from "${meta.resources_dir}/../../../nextflow/control_methods/empty_labels/main.nf"
 include { random_voronoi } from "${meta.resources_dir}/../../../nextflow/control_methods/random_voronoi/main.nf"
 include { cellpose } from "${meta.resources_dir}/../../../nextflow/methods/cellpose/main.nf"
+include { cell_type_annotation_tacco } from "${meta.resources_dir}/../../../nextflow/data_processors/cell_type_annotation_tacco/main.nf"
 include { ari } from "${meta.resources_dir}/../../../nextflow/metrics/ari/main.nf"
 include { process_prediction } from "${meta.resources_dir}/../../../nextflow/data_processors/process_prediction/main.nf"
 
@@ -3924,6 +3931,19 @@ workflow run_wf {
       toState: { id, output, state ->
         state + [
           input_prediction: output.output
+        ]
+      }
+    )
+
+    // annotate segmented cells with cell types
+    | cell_type_annotation_tacco.run(
+      fromState: [
+        input_processed_prediction: "input_prediction",
+        input_scrnaseq_reference: "input_scrnaseq_reference"
+      ],
+      toState: { id, output, state ->
+        state + [
+          cell_type_annotation: output.output
         ]
       }
     )

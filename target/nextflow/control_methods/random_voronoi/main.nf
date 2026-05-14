@@ -3554,7 +3554,7 @@ meta = [
     "engine" : "docker",
     "output" : "target/nextflow/control_methods/random_voronoi",
     "viash_version" : "0.9.7",
-    "git_commit" : "a80cb3957cc3cf5cb2cf11d9e70e3896d6869832",
+    "git_commit" : "4c8ae6a1edb1cc60ac4f4e0b2cf2a5b722d4d7ff",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {

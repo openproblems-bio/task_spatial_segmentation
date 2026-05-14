@@ -1,11 +1,11 @@
-name: "ari"
-namespace: "metrics"
+name: "cell_type_annotation_tacco"
+namespace: "data_processors"
 version: "build_main"
 argument_groups:
 - name: "Arguments"
   arguments:
   - type: "file"
-    name: "--input_prediction"
+    name: "--input_processed_prediction"
     label: "Processed prediction"
     summary: "A processed predicted dataset, ready to be used as input for the evaluation."
     info:
@@ -81,118 +81,107 @@ argument_groups:
     multiple: false
     multiple_sep: ";"
   - type: "file"
-    name: "--input_solution"
-    label: "Solution"
-    summary: "Ground truth segmentation labels and cell assignments for method evaluation."
-    description: "This dataset contains the ground truth cell and nucleus segmentation\
-      \ labels,\ncell boundaries, and a reference table matching each cell to its\
-      \ label region.\n"
+    name: "--input_scrnaseq_reference"
+    label: "scRNA-seq Reference"
+    summary: "A single-cell reference dataset, preprocessed for this benchmark."
+    description: "This dataset contains preprocessed counts and metadata for single-cell\
+      \ RNA-seq data.\n"
     info:
       format:
-        type: "spatialdata_zarr"
-        points:
-        - type: "dataframe"
-          name: "transcripts"
-          description: "Point cloud data of transcripts with ground truth cell assignments"
+        type: "h5ad"
+        layers:
+        - type: "integer"
+          name: "counts"
+          description: "Raw counts"
           required: true
-          columns:
-          - type: "float"
-            name: "x"
-            required: true
-            description: "x-coordinate of the point"
-          - type: "float"
-            name: "y"
-            required: true
-            description: "y-coordinate of the point"
-          - type: "float"
-            name: "z"
-            required: false
-            description: "z-coordinate of the point"
-          - type: "categorical"
-            name: "feature_name"
-            required: true
-            description: "Name of the feature"
-          - type: "integer"
-            name: "cell_id"
-            required: true
-            description: "Ground truth cell assignment (0 = background)"
-          - type: "long"
-            name: "transcript_id"
-            required: true
-            description: "Unique identifier of the transcript"
-        labels:
-        - type: "object"
-          name: "cell_labels"
-          description: "Ground truth cell segmentation labels"
+        - type: "double"
+          name: "normalized"
+          description: "Normalized expression values"
           required: true
-        - type: "object"
-          name: "nucleus_labels"
-          description: "Ground truth nucleus segmentation labels"
-          required: false
-        shapes:
-        - type: "dataframe"
-          name: "cell_boundaries"
-          description: "Ground truth cell boundary shapes"
-          required: false
-          columns:
-          - type: "object"
-            name: "geometry"
-            required: true
-            description: "Geometry of the cell boundary"
-        - type: "dataframe"
-          name: "nucleus_boundaries"
-          description: "Ground truth nucleus boundary shapes"
-          required: false
-          columns:
-          - type: "object"
-            name: "geometry"
-            required: true
-            description: "Geometry of the nucleus boundary"
-        tables:
-        - type: "anndata"
-          name: "table"
-          description: "Reference cell metadata table"
+        - type: "double"
+          name: "normalized_log"
+          description: "Log1p normalized expression values"
           required: true
-          obs:
-          - type: "integer"
-            name: "cell_id"
-            description: "Unique cell identifier, matching instance IDs in the label\
-              \ images"
-            required: true
-          - type: "string"
-            name: "region"
-            description: "Name of the label image this cell belongs to (e.g. 'cell_labels')"
-            required: true
-          - type: "double"
-            name: "cell_area"
-            description: "Area of the cell in pixels"
-            required: false
-          - type: "integer"
-            name: "transcript_counts"
-            description: "Total number of transcripts assigned to this cell"
-            required: false
-          uns:
-          - type: "string"
-            name: "dataset_id"
-            description: "A unique identifier for the dataset"
-            required: true
-          - type: "string"
-            name: "orig_dataset_id"
-            required: true
-            description: "The identifier of the original dataset from which this dataset\
-              \ was derived (if applicable)"
-          var:
-          - type: "string"
-            name: "feature_id"
-            required: false
-            description: "Unique identifier for the feature, usually a ENSEMBL gene\
-              \ id."
-          - type: "string"
-            name: "feature_name"
-            required: true
-            description: "A human-readable name for the feature, usually a gene symbol."
+        - type: "double"
+          name: "normalized_log_scaled"
+          description: "Log1p normalized expression values scaled to unit variance\
+            \ and zero mean"
+          required: true
+        obs:
+        - type: "string"
+          name: "cell_type"
+          description: "Classification of the cell type based on its characteristics\
+            \ and function within the tissue or organism."
+          required: true
+        var:
+        - type: "string"
+          name: "feature_id"
+          description: "Unique identifier for the feature, usually a ENSEMBL gene\
+            \ id."
+          required: false
+        - type: "string"
+          name: "feature_name"
+          description: "A human-readable name for the feature, usually a gene symbol."
+          required: true
+        - type: "boolean"
+          name: "hvg"
+          description: "Whether or not the feature is considered to be a 'highly variable\
+            \ gene'"
+          required: true
+        obsp:
+        - type: "double"
+          name: "knn_distances"
+          description: "K nearest neighbors distance matrix."
+          required: true
+        - type: "double"
+          name: "knn_connectivities"
+          description: "K nearest neighbors connectivities matrix."
+          required: true
+        obsm:
+        - type: "double"
+          name: "X_pca"
+          description: "The resulting PCA embedding."
+          required: true
+        varm:
+        - type: "double"
+          name: "pca_loadings"
+          description: "The PCA loadings matrix."
+          required: true
+        uns:
+        - type: "string"
+          name: "dataset_id"
+          description: "A unique identifier for the dataset. This is different from\
+            \ the `obs.dataset_id` field, which is the identifier for the dataset\
+            \ from which the cell data is derived."
+          required: true
+        - name: "dataset_name"
+          type: "string"
+          description: "A human-readable name for the dataset."
+          required: true
+        - type: "string"
+          name: "dataset_url"
+          description: "Link to the original source of the dataset."
+          required: false
+        - name: "dataset_reference"
+          type: "string"
+          description: "Bibtex reference of the paper in which the dataset was published."
+          required: false
+          multiple: true
+        - name: "dataset_summary"
+          type: "string"
+          description: "Short description of the dataset."
+          required: true
+        - name: "dataset_description"
+          type: "string"
+          description: "Long description of the dataset."
+          required: true
+        - name: "dataset_organism"
+          type: "string"
+          description: "The organism of the sample in the dataset."
+          required: false
+          multiple: true
     example:
-    - "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_solution.zarr"
+    - "resources_test/task_spatial_segmentation/mouse_brain_combined/scrnaseq_reference.h5ad"
     must_exist: true
     create_parent: true
     required: true
@@ -201,37 +190,33 @@ argument_groups:
     multiple_sep: ";"
   - type: "file"
     name: "--output"
-    label: "Score"
-    summary: "File indicating the score of a metric."
+    label: "Cell type annotation"
+    summary: "AnnData with predicted cell type labels in obs."
+    description: "An h5ad file containing obs with cell_type and cell_id columns,\
+      \ plus uns metadata (dataset_id, method_id)."
     info:
       format:
         type: "h5ad"
+        obs:
+        - type: "string"
+          name: "cell_type"
+          description: "Predicted cell type label"
+          required: true
+        - type: "string"
+          name: "cell_id"
+          description: "Cell ID matching the segmentation table"
+          required: true
         uns:
         - type: "string"
           name: "dataset_id"
-          description: "A unique identifier for the dataset"
-          required: true
-        - type: "string"
-          name: "normalization_id"
-          description: "Which normalization was used"
           required: true
         - type: "string"
           name: "method_id"
-          description: "A unique identifier for the method"
-          required: true
-        - type: "string"
-          name: "metric_ids"
-          description: "One or more unique metric identifiers"
-          multiple: true
-          required: true
-        - type: "double"
-          name: "metric_values"
-          description: "The metric values obtained for the given prediction. Must\
-            \ be of same length as 'metric_ids'."
-          multiple: true
           required: true
     example:
-    - "resources_test/task_spatial_segmentation/mouse_brain_combined/score.h5ad"
+    - "output.h5ad"
+    default:
+    - "output.h5ad"
     must_exist: true
     create_parent: true
     required: true
@@ -242,36 +227,22 @@ resources:
 - type: "python_script"
   path: "script.py"
   is_executable: true
+label: "TACCO"
+summary: "Assign cell types to segmented cells via optimal transport against a scRNA-seq\
+  \ reference."
+description: "TACCO (Transfer of Annotations to Cells and their Compartments) takes\
+  \ a\nprocessed segmentation prediction (cells with per-cell gene expression) and\n\
+  assigns a cell type to each cell by comparing its expression profile to a\nscRNA-seq\
+  \ reference via optimal transport. It runs as a post-processing step\nafter any\
+  \ segmentation method and adds a cell_type column to the cell table.\n"
 test_resources:
 - type: "python_script"
   path: "run_and_check_output.py"
   is_executable: true
-- type: "python_script"
-  path: "check_config.py"
-  is_executable: true
 - type: "file"
   path: "resources_test/task_spatial_segmentation/mouse_brain_combined"
   dest: "resources_test/task_spatial_segmentation/mouse_brain_combined"
-info:
-  metrics:
-  - name: "ari"
-    label: "Adjusted Rand Index"
-    summary: "ARI between ground truth and predicted transcript-to-cell assignments."
-    description: "For each transcript, its cell ID is looked up in both the ground\
-      \ truth\nlabel image (cell_labels) and the predicted segmentation label image.\n\
-      The Adjusted Rand Index (ARI) is then computed between the two resulting\nassignment\
-      \ vectors. ARI = 1 is perfect agreement; values near 0 are random.\nBackground\
-      \ transcripts (cell_id = 0 in both) are excluded.\n"
-    references:
-      doi: "10.1007/BF01908075"
-    min: -1
-    max: 1
-    maximize: true
-  type: "metric"
-  type_info:
-    label: "Metric"
-    summary: "A task template metric."
-    description: "A metric for evaluating method predictions.\n"
+info: null
 status: "enabled"
 scope:
   image: "public"
@@ -282,9 +253,13 @@ repositories:
   repo: "openproblems-bio/openproblems"
   tag: "build/main"
 license: "MIT"
+references:
+  doi:
+  - "10.1038/s41587-023-01657-3"
 links:
-  repository: "https://github.com/openproblems-bio/task_spatial_segmentation"
+  repository: "https://github.com/simonwm/tacco"
   docker_registry: "ghcr.io"
+  documentation: "https://simonwm.github.io/tacco/"
 runners:
 - type: "executable"
   id: "executable"
@@ -294,8 +269,8 @@ runners:
   directives:
     label:
     - "midtime"
-    - "midmem"
     - "midcpu"
+    - "highmem"
     tag: "$id"
   auto:
     simplifyInput: true
@@ -329,14 +304,21 @@ engines:
     - "anndata>=0.12.0"
     - "zarr>=3.0.0"
     upgrade: true
+  - type: "python"
+    user: false
+    pypi:
+    - "tacco"
+    upgrade: true
   entrypoint: []
   cmd: null
+- type: "native"
+  id: "native"
 build_info:
-  config: "src/metrics/ari/config.vsh.yaml"
+  config: "src/data_processors/cell_type_annotation_tacco/config.vsh.yaml"
   runner: "executable"
-  engine: "docker"
-  output: "target/executable/metrics/ari"
-  executable: "target/executable/metrics/ari/ari"
+  engine: "docker|native"
+  output: "target/executable/data_processors/cell_type_annotation_tacco"
+  executable: "target/executable/data_processors/cell_type_annotation_tacco/cell_type_annotation_tacco"
   viash_version: "0.9.7"
   git_commit: "4c8ae6a1edb1cc60ac4f4e0b2cf2a5b722d4d7ff"
   git_remote: "https://github.com/openproblems-bio/task_spatial_segmentation"
