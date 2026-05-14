@@ -95,6 +95,19 @@ workflow run_wf {
       }
     )
 
+    // annotate segmented cells with cell types
+    | cell_type_annotation_tacco.run(
+      fromState: [
+        input_processed_prediction: "input_prediction",
+        input_scrnaseq_reference: "input_scrnaseq_reference"
+      ],
+      toState: { id, output, state ->
+        state + [
+          cell_type_annotation: output.output
+        ]
+      }
+    )
+
     // run all metrics
     | runEach(
       components: metrics,
