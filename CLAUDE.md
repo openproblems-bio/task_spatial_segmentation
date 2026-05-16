@@ -91,3 +91,4 @@ Test resources and default parameters for `viash test` are declared inside `conf
 - `_viash.yaml` is the project-level Viash config (project name, organization, package registry, test resource S3 paths).
 - Don't commit to main, always create a new branch
 - Fill in the summary for a src/methods/<component>/config.vsh.yaml. Write a one sentence summary and a one paragraph summary of how this method works based on documentation and references.
+- always use viash test to test new components
