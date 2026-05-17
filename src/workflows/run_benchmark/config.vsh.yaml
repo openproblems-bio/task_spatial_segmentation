@@ -65,6 +65,8 @@ dependencies:
   - name: control_methods/empty_labels
   - name: control_methods/random_voronoi
   - name: methods/cellpose
+  - name: methods/stardist
+  - name: methods/proseg
   - name: metrics/ari
   - name: data_processors/process_prediction
 
