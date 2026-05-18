@@ -366,7 +366,7 @@ build_info:
   output: "target/nextflow/control_methods/empty_labels"
   executable: "target/nextflow/control_methods/empty_labels/main.nf"
   viash_version: "0.9.7"
-  git_commit: "4c8ae6a1edb1cc60ac4f4e0b2cf2a5b722d4d7ff"
+  git_commit: "0e3d3e8cc5d5aa04a423e23c7bc025fb8791b6c3"
   git_remote: "https://github.com/openproblems-bio/task_spatial_segmentation"
 package_config:
   name: "task_spatial_segmentation"
