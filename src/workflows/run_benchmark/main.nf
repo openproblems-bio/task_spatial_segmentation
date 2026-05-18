@@ -12,6 +12,8 @@ methods = [
   random_voronoi,
   cellpose,
   baysor
+  stardist,
+  proseg
 ]
 
 // construct list of metrics
