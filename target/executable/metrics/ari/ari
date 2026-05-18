@@ -449,9 +449,9 @@ RUN pip install --upgrade pip && \
   pip install --upgrade --no-cache-dir "spatialdata>=0.7.3" "anndata>=0.12.0" "zarr>=3.0.0"
 
 LABEL org.opencontainers.image.description="Companion container for running component metrics ari"
-LABEL org.opencontainers.image.created="2026-05-18T11:17:14Z"
+LABEL org.opencontainers.image.created="2026-05-18T12:00:16Z"
 LABEL org.opencontainers.image.source="https://github.com/openproblems-bio/task_spatial_segmentation"
-LABEL org.opencontainers.image.revision="c7ab2da73e528f0c16265696b4e60d49c526d462"
+LABEL org.opencontainers.image.revision="4f8c7e78b78b75f4daca5b70f5314498b28e4803"
 LABEL org.opencontainers.image.version="build_main"
 
 VIASHDOCKER
