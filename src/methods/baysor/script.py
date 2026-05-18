@@ -68,10 +68,10 @@ transcripts[['x', 'y', 'z', 'feature_name']].compute().to_csv(TRANSCRIPTS_CSV)
 
 # Write segmentation to tif
 print('Writing segmentation to tif', flush=True)
-if isinstance(sdata["segmentation"], xr.DataTree):
-    label_image = sdata["segmentation"]["scale0"].image.to_numpy() 
+if isinstance(sdata[par['prior_segmentation_key']], xr.DataTree):
+    label_image = sdata[par['prior_segmentation_key']]["scale0"].image.to_numpy() 
 else:
-     label_image = sdata["segmentation"].to_numpy()
+     label_image = sdata[par['prior_segmentation_key']].to_numpy()
 imwrite(SEGMENTATION_TIF, label_image)
 
 # Write config to toml
