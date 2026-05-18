@@ -3677,6 +3677,18 @@ meta = [
       }
     },
     {
+      "name" : "methods/stardist",
+      "repository" : {
+        "type" : "local"
+      }
+    },
+    {
+      "name" : "methods/proseg",
+      "repository" : {
+        "type" : "local"
+      }
+    },
+    {
       "name" : "data_processors/cell_type_annotation_tacco",
       "repository" : {
         "type" : "local"
@@ -3751,7 +3763,7 @@ meta = [
     "engine" : "native",
     "output" : "target/nextflow/workflows/run_benchmark",
     "viash_version" : "0.9.7",
-    "git_commit" : "643c1baf6ac199c54ab03b9a939b9b35f77d0d74",
+    "git_commit" : "0eea3f1239fa7dba9162ef942828b63537e6ee37",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -3856,6 +3868,8 @@ include { true_labels } from "${meta.resources_dir}/../../../nextflow/control_me
 include { empty_labels } from "${meta.resources_dir}/../../../nextflow/control_methods/empty_labels/main.nf"
 include { random_voronoi } from "${meta.resources_dir}/../../../nextflow/control_methods/random_voronoi/main.nf"
 include { cellpose } from "${meta.resources_dir}/../../../nextflow/methods/cellpose/main.nf"
+include { stardist } from "${meta.resources_dir}/../../../nextflow/methods/stardist/main.nf"
+include { proseg } from "${meta.resources_dir}/../../../nextflow/methods/proseg/main.nf"
 include { cell_type_annotation_tacco } from "${meta.resources_dir}/../../../nextflow/data_processors/cell_type_annotation_tacco/main.nf"
 include { ari } from "${meta.resources_dir}/../../../nextflow/metrics/ari/main.nf"
 include { process_prediction } from "${meta.resources_dir}/../../../nextflow/data_processors/process_prediction/main.nf"
@@ -3874,7 +3888,9 @@ methods = [
   true_labels,
   empty_labels,
   random_voronoi,
-  cellpose
+  cellpose,
+  stardist,
+  proseg
 ]
 
 // construct list of metrics

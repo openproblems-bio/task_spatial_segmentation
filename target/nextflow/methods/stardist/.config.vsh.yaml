@@ -1,5 +1,5 @@
-name: "empty_labels"
-namespace: "control_methods"
+name: "stardist"
+namespace: "methods"
 version: "build_main"
 argument_groups:
 - name: "Arguments"
@@ -125,125 +125,6 @@ argument_groups:
     multiple: false
     multiple_sep: ";"
   - type: "file"
-    name: "--input_solution"
-    label: "Solution"
-    summary: "Ground truth segmentation labels and cell assignments for method evaluation."
-    description: "This dataset contains the ground truth cell and nucleus segmentation\
-      \ labels,\ncell boundaries, and a reference table matching each cell to its\
-      \ label region.\n"
-    info:
-      format:
-        type: "spatialdata_zarr"
-        points:
-        - type: "dataframe"
-          name: "transcripts"
-          description: "Point cloud data of transcripts with ground truth cell assignments"
-          required: true
-          columns:
-          - type: "float"
-            name: "x"
-            required: true
-            description: "x-coordinate of the point"
-          - type: "float"
-            name: "y"
-            required: true
-            description: "y-coordinate of the point"
-          - type: "float"
-            name: "z"
-            required: false
-            description: "z-coordinate of the point"
-          - type: "categorical"
-            name: "feature_name"
-            required: true
-            description: "Name of the feature"
-          - type: "integer"
-            name: "cell_id"
-            required: true
-            description: "Ground truth cell assignment (0 = background)"
-          - type: "long"
-            name: "transcript_id"
-            required: true
-            description: "Unique identifier of the transcript"
-        labels:
-        - type: "object"
-          name: "cell_labels"
-          description: "Ground truth cell segmentation labels"
-          required: true
-        - type: "object"
-          name: "nucleus_labels"
-          description: "Ground truth nucleus segmentation labels"
-          required: false
-        shapes:
-        - type: "dataframe"
-          name: "cell_boundaries"
-          description: "Ground truth cell boundary shapes"
-          required: false
-          columns:
-          - type: "object"
-            name: "geometry"
-            required: true
-            description: "Geometry of the cell boundary"
-        - type: "dataframe"
-          name: "nucleus_boundaries"
-          description: "Ground truth nucleus boundary shapes"
-          required: false
-          columns:
-          - type: "object"
-            name: "geometry"
-            required: true
-            description: "Geometry of the nucleus boundary"
-        tables:
-        - type: "anndata"
-          name: "table"
-          description: "Reference cell metadata table"
-          required: true
-          obs:
-          - type: "integer"
-            name: "cell_id"
-            description: "Unique cell identifier, matching instance IDs in the label\
-              \ images"
-            required: true
-          - type: "string"
-            name: "region"
-            description: "Name of the label image this cell belongs to (e.g. 'cell_labels')"
-            required: true
-          - type: "double"
-            name: "cell_area"
-            description: "Area of the cell in pixels"
-            required: false
-          - type: "integer"
-            name: "transcript_counts"
-            description: "Total number of transcripts assigned to this cell"
-            required: false
-          uns:
-          - type: "string"
-            name: "dataset_id"
-            description: "A unique identifier for the dataset"
-            required: true
-          - type: "string"
-            name: "orig_dataset_id"
-            required: true
-            description: "The identifier of the original dataset from which this dataset\
-              \ was derived (if applicable)"
-          var:
-          - type: "string"
-            name: "feature_id"
-            required: false
-            description: "Unique identifier for the feature, usually a ENSEMBL gene\
-              \ id."
-          - type: "string"
-            name: "feature_name"
-            required: true
-            description: "A human-readable name for the feature, usually a gene symbol."
-    example:
-    - "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_solution.zarr"
-    must_exist: true
-    create_parent: true
-    required: true
-    direction: "input"
-    multiple: false
-    multiple_sep: ";"
-  - type: "file"
     name: "--output"
     label: "Predicted data"
     summary: "A predicted dataset as output by a method."
@@ -277,16 +158,35 @@ argument_groups:
     direction: "output"
     multiple: false
     multiple_sep: ";"
+  - type: "string"
+    name: "--model"
+    description: "Pretrained StarDist model name."
+    info:
+      test_default: "2D_versatile_fluo"
+    default:
+    - "2D_versatile_fluo"
+    required: false
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
 resources:
 - type: "python_script"
   path: "script.py"
   is_executable: true
-label: "Empty Labels"
-summary: "A negative control that predicts no cells (all background)."
-description: "A negative control where no cells are detected — the segmentation label\
-  \ image\nis filled with zeros (background). This represents a lower bound of performance\n\
-  for any segmentation method and is useful for verifying that metrics can\ndistinguish\
-  \ between no prediction and a perfect prediction.\n"
+label: "StarDist"
+summary: "Detects star-convex shaped cells by predicting radial distances to the object\
+  \ boundary from each pixel."
+description: "StarDist represents each cell as a star-convex polygon defined by a\
+  \ set of radial distances from the cell's\ncenter pixel to its boundary, measured\
+  \ at evenly spaced angles. A U-Net–style convolutional neural network\nis trained\
+  \ to predict, for every pixel, both the probability that the pixel lies inside any\
+  \ cell and the\nset of radial distances describing the cell polygon centered at\
+  \ that pixel. At inference time, non-maximum\nsuppression selects the most confident\
+  \ polygon proposals and suppresses overlapping detections, yielding a\nfinal instance-segmentation\
+  \ label image. Because the star-convex parameterization compactly encodes shapes\n\
+  typical of fluorescence-microscopy nuclei and cells, the method is highly data-efficient\
+  \ and generalizes\nwell across imaging modalities with pretrained models such as\
+  \ \"2D_versatile_fluo\".\n"
 test_resources:
 - type: "python_script"
   path: "run_and_check_output.py"
@@ -298,15 +198,11 @@ test_resources:
   path: "resources_test/task_spatial_segmentation/mouse_brain_combined"
   dest: "resources_test/task_spatial_segmentation/mouse_brain_combined"
 info:
-  type: "control_method"
+  type: "method"
   type_info:
-    label: "Control Method"
-    summary: "Quality control methods for verifying the pipeline."
-    description: "This folder contains control components for the task. \nThese components\
-      \ have the same interface as the regular methods\nbut also receive the solution\
-      \ object as input. It serves as a\nstarting point to test the relative accuracy\
-      \ of new methods in\nthe task, and also as a quality control for the metrics\
-      \ defined\nin the task.\n"
+    label: "Method"
+    summary: "A method."
+    description: "A method to predict the task effects.\n"
 status: "enabled"
 scope:
   image: "public"
@@ -317,9 +213,13 @@ repositories:
   repo: "openproblems-bio/openproblems"
   tag: "build/main"
 license: "MIT"
+references:
+  doi:
+  - "10.48550/arXiv.1806.03535"
 links:
-  repository: "https://github.com/openproblems-bio/task_spatial_segmentation"
+  repository: "https://github.com/stardist/stardist"
   docker_registry: "ghcr.io"
+  documentation: "https://stardist.net"
 runners:
 - type: "executable"
   id: "executable"
@@ -329,8 +229,9 @@ runners:
   directives:
     label:
     - "midtime"
-    - "lowmem"
-    - "lowcpu"
+    - "midcpu"
+    - "highmem"
+    - "gpu"
     tag: "$id"
   auto:
     simplifyInput: true
@@ -364,14 +265,27 @@ engines:
     - "anndata>=0.12.0"
     - "zarr>=3.0.0"
     upgrade: true
+  - type: "python"
+    user: false
+    pypi:
+    - "stardist"
+    upgrade: true
+  - type: "python"
+    user: false
+    pypi:
+    - "numpy<2.0.0"
+    - "tensorflow"
+    upgrade: true
   entrypoint: []
   cmd: null
+- type: "native"
+  id: "native"
 build_info:
-  config: "src/control_methods/empty_labels/config.vsh.yaml"
+  config: "src/methods/stardist/config.vsh.yaml"
   runner: "nextflow"
-  engine: "docker"
-  output: "target/nextflow/control_methods/empty_labels"
-  executable: "target/nextflow/control_methods/empty_labels/main.nf"
+  engine: "docker|native"
+  output: "target/nextflow/methods/stardist"
+  executable: "target/nextflow/methods/stardist/main.nf"
   viash_version: "0.9.7"
   git_commit: "0eea3f1239fa7dba9162ef942828b63537e6ee37"
   git_remote: "https://github.com/openproblems-bio/task_spatial_segmentation"
