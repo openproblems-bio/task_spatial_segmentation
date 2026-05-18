@@ -76,26 +76,21 @@ resources:
 
 engines:
   - type: docker
-    image: openproblems/base_pytorch_nvidia:1
+    # copied from https://github.com/openproblems-bio/core/blob/main/base_images/src/pytorch_nvidia/config.vsh.yaml
+    image: nvcr.io/nvidia/pytorch:25.04-py3
     setup:
-      # PyG extensions matching the base image's PyTorch 2.5 + CUDA 12.1 stack
-      # (per segger/environment_cuda121.yml on the integration/peerlab branch).
-      - type: docker
-        run: |
-          pip install --no-cache-dir \
-            --find-links https://data.pyg.org/whl/torch-2.5.0+cu121.html \
-            torch-scatter torch-sparse torch-geometric lightning
-      # RAPIDS 24.10 — the last release that is binary-compatible with the
-      # CUDA 12.1 runtime that the base image ships. Newer 24.12/25.x wheels
-      # require CUDA 12.5+ and segfault on this image. Optional at runtime
-      # (segger has CPU fallbacks) but required for the prediction graph
-      # KD-tree to run on GPU at realistic dataset sizes.
-      - type: docker
-        run: |
-          pip install --no-cache-dir --extra-index-url=https://pypi.nvidia.com \
-            "cuspatial-cu12==24.10.*" "cudf-cu12==24.10.*" \
-            "cuml-cu12==24.10.*" "cugraph-cu12==24.10.*" \
-            cupy-cuda12x
+      - type: apt
+        packages:
+          - procps
+          - git
+      - type: python
+        packages:
+          - anndata~=0.12.0
+          - scanpy~=1.12
+          - requests
+          - jsonschema
+        github:
+          - openproblems-bio/core#subdirectory=packages/python/openproblems
       # Cellpose (for the nucleus pre-segmentation) and the geometry stack
       # used to convert masks <-> polygons and to rasterize the final labels.
       - type: python
@@ -107,16 +102,18 @@ engines:
           - scikit-image
       # Pre-fetch the Cellpose model weights so runtime doesn't hit the
       # network inside the Nextflow worker.
-      - type: python
-        script: "from cellpose.models import CellposeModel; CellposeModel()"
+      # - type: python
+      #   script: "from cellpose.models import CellposeModel; CellposeModel()"
       # Segger trunk. The component synthesizes a Xenium-layout directory
       # (transcripts.parquet + cell/nucleus_boundaries.parquet) from the
       # SpatialData input and hands it to `segger segment`, so we do NOT
       # need the spatialdata-loader branch — segger@main is enough.
-      - type: docker
-        run: |
-          pip install --no-cache-dir \
-            "git+https://github.com/dpeerlab/segger.git@main#egg=segger"
+      - type: python
+        github: dpeerlab/segger
+      # - type: docker
+      #   run: |
+      #     pip install --no-cache-dir \
+      #       "git+https://github.com/dpeerlab/segger.git@main#egg=segger"
     __merge__: /src/base/setup_spatialdata_partial.yaml
   - type: native
 
