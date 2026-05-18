@@ -67,6 +67,7 @@ dependencies:
   - name: methods/cellpose
   - name: methods/stardist
   - name: methods/proseg
+  - name: data_processors/cell_type_annotation_tacco
   - name: metrics/ari
   - name: data_processors/process_prediction
 

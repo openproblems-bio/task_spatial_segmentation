@@ -1,0 +1,82 @@
+name: cell_type_annotation_tacco
+namespace: data_processors
+label: "TACCO"
+summary: "Assign cell types to segmented cells via optimal transport against a scRNA-seq reference."
+description: |
+  TACCO (Transfer of Annotations to Cells and their Compartments) takes a
+  processed segmentation prediction (cells with per-cell gene expression) and
+  assigns a cell type to each cell by comparing its expression profile to a
+  scRNA-seq reference via optimal transport. It runs as a post-processing step
+  after any segmentation method and adds a cell_type column to the cell table.
+links:
+  documentation: "https://simonwm.github.io/tacco/"
+  repository: "https://github.com/simonwm/tacco"
+references:
+  doi: "10.1038/s41587-023-01657-3"
+
+
+arguments:
+  - name: --input_processed_prediction
+    __merge__: /src/api/file_processed_prediction.yaml
+    direction: input
+    required: true
+
+  - name: --input_scrnaseq_reference
+    __merge__: /src/api/file_scrnaseq_reference.yaml
+    direction: input
+    required: true
+
+  - name: --output
+    type: file
+    label: "Cell type annotation"
+    summary: "AnnData with predicted cell type labels in obs."
+    description: "An h5ad file containing obs with cell_type and cell_id columns, plus uns metadata (dataset_id, method_id)."
+    direction: output
+    required: true
+    default: output.h5ad
+    example: output.h5ad
+    info:
+      format:
+        type: h5ad
+        obs:
+          - type: string
+            name: cell_type
+            description: Predicted cell type label
+            required: true
+          - type: string
+            name: cell_id
+            description: Cell ID matching the segmentation table
+            required: true
+        uns:
+          - type: string
+            name: dataset_id
+            required: true
+          - type: string
+            name: method_id
+            required: true
+
+test_resources:
+  - type: python_script
+    path: /common/component_tests/run_and_check_output.py
+  - path: /resources_test/task_spatial_segmentation/mouse_brain_combined
+    dest: resources_test/task_spatial_segmentation/mouse_brain_combined
+
+resources:
+  - type: python_script
+    path: script.py
+
+engines:
+  - type: docker
+    image: openproblems/base_python:1
+    setup:
+      - type: python
+        pypi: [tacco]
+    __merge__:
+      - /src/base/setup_spatialdata_partial.yaml
+  - type: native
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [midtime, midcpu, highmem]
