@@ -30,8 +30,8 @@ info:
         description: Vendor-provided nucleus segmentation labels
         required: true
       - type: object
-        name: "manual_cell_labels"
-        description: Manually annotated cell segmentation labels
+        name: "groundtruth_cell_labels"
+        description: Manually annotated cell segmentation labels used as ground truth for evaluation
         required: false
       # - type: datatree
       #   name: "{segm}_3D"

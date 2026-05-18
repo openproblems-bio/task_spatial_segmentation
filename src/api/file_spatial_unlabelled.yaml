@@ -13,6 +13,15 @@ info:
         name: image
         description: The raw image data
         required: true
+    labels:
+      - type: object
+        name: "cell_labels"
+        description: Vendor-provided cell segmentation labels, exposed as a segmentation prior
+        required: false
+      - type: object
+        name: "nucleus_labels"
+        description: Vendor-provided nucleus segmentation labels, exposed as a segmentation prior
+        required: false
     points:
       - type: dataframe
         name: transcripts
