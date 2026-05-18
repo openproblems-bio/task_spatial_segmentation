@@ -328,7 +328,7 @@ build_info:
   output: "target/nextflow/data_processors/process_prediction"
   executable: "target/nextflow/data_processors/process_prediction/main.nf"
   viash_version: "0.9.7"
-  git_commit: "0e00dfac79d7ec320980beffd8d371fab5642014"
+  git_commit: "643c1baf6ac199c54ab03b9a939b9b35f77d0d74"
   git_remote: "https://github.com/openproblems-bio/task_spatial_segmentation"
 package_config:
   name: "task_spatial_segmentation"
@@ -372,16 +372,26 @@ package_config:
     , midtime : \"time = 4.h\", hightime : \"time = 8.h\", veryhightime : \"time =\
     \ 24.h\" }\n"
   authors:
-  - name: "John Doe"
+  - name: "Daria Romanovskaia"
+    roles:
+    - "maintainer"
+    - "author"
+    info:
+      github: "dariarom94"
+      orcid: "0000-0003-2831-0919"
+  - name: "Florian Heyl"
+    roles:
+    - "maintainer"
+    - "author"
+    info:
+      github: "heylf"
+      orcid: "0000-0002-3651-5685"
+  - name: "Robrecht Cannoodt"
     roles:
     - "author"
-    - "maintainer"
     info:
-      github: "johndoe"
-      orcid: "0000-0000-0000-0000"
-      email: "john@doe.me"
-      twitter: "johndoe"
-      linkedin: "johndoe"
+      github: "rcannood"
+      orcid: "0000-0003-3641-729X"
   keywords:
   - "single-cell"
   - "openproblems"

@@ -3507,7 +3507,7 @@ meta = [
     "engine" : "docker|native",
     "output" : "target/nextflow/data_processors/process_prediction",
     "viash_version" : "0.9.7",
-    "git_commit" : "0e00dfac79d7ec320980beffd8d371fab5642014",
+    "git_commit" : "643c1baf6ac199c54ab03b9a939b9b35f77d0d74",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -3552,17 +3552,35 @@ meta = [
     ],
     "authors" : [
       {
-        "name" : "John Doe",
+        "name" : "Daria Romanovskaia",
         "roles" : [
-          "author",
-          "maintainer"
+          "maintainer",
+          "author"
         ],
         "info" : {
-          "github" : "johndoe",
-          "orcid" : "0000-0000-0000-0000",
-          "email" : "john@doe.me",
-          "twitter" : "johndoe",
-          "linkedin" : "johndoe"
+          "github" : "dariarom94",
+          "orcid" : "0000-0003-2831-0919"
+        }
+      },
+      {
+        "name" : "Florian Heyl",
+        "roles" : [
+          "maintainer",
+          "author"
+        ],
+        "info" : {
+          "github" : "heylf",
+          "orcid" : "0000-0002-3651-5685"
+        }
+      },
+      {
+        "name" : "Robrecht Cannoodt",
+        "roles" : [
+          "author"
+        ],
+        "info" : {
+          "github" : "rcannood",
+          "orcid" : "0000-0003-3641-729X"
         }
       }
     ],
