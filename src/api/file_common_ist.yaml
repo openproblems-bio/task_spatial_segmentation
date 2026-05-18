@@ -23,11 +23,15 @@ info:
     labels:
       - type: object
         name: "cell_labels"
-        description: Cell segmentation labels
-        required: false
+        description: Vendor-provided cell segmentation labels
+        required: true
       - type: object
         name: "nucleus_labels"
-        description: Cell segmentation labels
+        description: Vendor-provided nucleus segmentation labels
+        required: true
+      - type: object
+        name: "groundtruth_cell_labels"
+        description: Manually annotated cell segmentation labels used as ground truth for evaluation
         required: false
       # - type: datatree
       #   name: "{segm}_3D"

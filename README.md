@@ -87,7 +87,7 @@ Format:
 
     SpatialData object
      images: 'image', 'image_3D', 'he_image'
-     labels: 'cell_labels', 'nucleus_labels'
+     labels: 'cell_labels', 'nucleus_labels', 'groundtruth_cell_labels'
      points: 'transcripts'
      shapes: 'cell_boundaries', 'nucleus_boundaries'
      tables: 'metadata'
@@ -109,10 +109,11 @@ Data structure:
 
 *labels*
 
-| Name             | Description                            |
-|:-----------------|:---------------------------------------|
-| `cell_labels`    | (*Optional*) Cell segmentation labels. |
-| `nucleus_labels` | (*Optional*) Cell segmentation labels. |
+| Name | Description |
+|:---|:---|
+| `cell_labels` | Vendor-provided cell segmentation labels. |
+| `nucleus_labels` | Vendor-provided nucleus segmentation labels. |
+| `groundtruth_cell_labels` | (*Optional*) Manually annotated cell segmentation labels used as ground truth for evaluation. |
 
 *points*
 
@@ -210,6 +211,7 @@ Format:
 
     SpatialData object
      images: 'image'
+     labels: 'cell_labels', 'nucleus_labels'
      points: 'transcripts'
      tables: 'table'
      coordinate_systems: 'global'
@@ -225,6 +227,13 @@ Data structure:
 | Name    | Description         |
 |:--------|:--------------------|
 | `image` | The raw image data. |
+
+*labels*
+
+| Name | Description |
+|:---|:---|
+| `cell_labels` | (*Optional*) Vendor-provided cell segmentation labels, exposed as a segmentation prior. |
+| `nucleus_labels` | (*Optional*) Vendor-provided nucleus segmentation labels, exposed as a segmentation prior. |
 
 *points*
 
@@ -285,7 +294,7 @@ Format:
 <div class="small">
 
     SpatialData object
-     labels: 'cell_labels', 'nucleus_labels'
+     labels: 'cell_labels', 'nucleus_labels', 'groundtruth_cell_labels'
      points: 'transcripts'
      shapes: 'cell_boundaries', 'nucleus_boundaries'
      tables: 'table'
@@ -298,10 +307,11 @@ Data structure:
 
 *labels*
 
-| Name             | Description                                            |
-|:-----------------|:-------------------------------------------------------|
-| `cell_labels`    | Ground truth cell segmentation labels.                 |
-| `nucleus_labels` | (*Optional*) Ground truth nucleus segmentation labels. |
+| Name | Description |
+|:---|:---|
+| `cell_labels` | Vendor-provided cell segmentation labels. |
+| `nucleus_labels` | Vendor-provided nucleus segmentation labels. |
+| `groundtruth_cell_labels` | (*Optional*) Manually annotated cell segmentation labels used as ground truth for evaluation. |
 
 *points*
 

@@ -3064,6 +3064,20 @@ meta = [
                   "required" : true
                 }
               ],
+              "labels" : [
+                {
+                  "type" : "object",
+                  "name" : "cell_labels",
+                  "description" : "Vendor-provided cell segmentation labels, exposed as a segmentation prior",
+                  "required" : false
+                },
+                {
+                  "type" : "object",
+                  "name" : "nucleus_labels",
+                  "description" : "Vendor-provided nucleus segmentation labels, exposed as a segmentation prior",
+                  "required" : false
+                }
+              ],
               "points" : [
                 {
                   "type" : "dataframe",
@@ -3273,13 +3287,19 @@ meta = [
                 {
                   "type" : "object",
                   "name" : "cell_labels",
-                  "description" : "Ground truth cell segmentation labels",
+                  "description" : "Vendor-provided cell segmentation labels",
                   "required" : true
                 },
                 {
                   "type" : "object",
                   "name" : "nucleus_labels",
-                  "description" : "Ground truth nucleus segmentation labels",
+                  "description" : "Vendor-provided nucleus segmentation labels",
+                  "required" : true
+                },
+                {
+                  "type" : "object",
+                  "name" : "groundtruth_cell_labels",
+                  "description" : "Manually annotated cell segmentation labels used as ground truth for evaluation",
                   "required" : false
                 }
               ],
@@ -3566,7 +3586,7 @@ meta = [
     "engine" : "docker",
     "output" : "target/nextflow/control_methods/empty_labels",
     "viash_version" : "0.9.7",
-    "git_commit" : "f0f17e7b9032a06325e0a7ffe78919a2aa521d13",
+    "git_commit" : "4e8efd08f0b504a1c6592bbba3323fa6f7796056",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
