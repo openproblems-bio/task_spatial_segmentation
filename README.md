@@ -87,7 +87,7 @@ Format:
 
     SpatialData object
      images: 'image', 'image_3D', 'he_image'
-     labels: 'cell_labels', 'nucleus_labels'
+     labels: 'cell_labels', 'nucleus_labels', 'manual_cell_labels'
      points: 'transcripts'
      shapes: 'cell_boundaries', 'nucleus_boundaries'
      tables: 'metadata'
@@ -109,10 +109,11 @@ Data structure:
 
 *labels*
 
-| Name             | Description                            |
-|:-----------------|:---------------------------------------|
-| `cell_labels`    | (*Optional*) Cell segmentation labels. |
-| `nucleus_labels` | (*Optional*) Cell segmentation labels. |
+| Name | Description |
+|:---|:---|
+| `cell_labels` | Vendor-provided cell segmentation labels. |
+| `nucleus_labels` | Vendor-provided nucleus segmentation labels. |
+| `manual_cell_labels` | (*Optional*) Manually annotated cell segmentation labels. |
 
 *points*
 
