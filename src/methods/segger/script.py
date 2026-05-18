@@ -264,6 +264,7 @@ segger_out_dir = work_root / "segger_output"
 
 print(f"Reading input: {input_path}", flush=True)
 sdata = sd.read_zarr(str(input_path))
+print("Input: ", sdata, flush=True)
 image_el = sdata["image"]["scale0"].image
 image_transform = image_el.transform.copy()
 
