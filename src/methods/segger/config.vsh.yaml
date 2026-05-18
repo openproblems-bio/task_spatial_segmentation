@@ -108,9 +108,7 @@ engines:
       # Pre-fetch the Cellpose model weights so runtime doesn't hit the
       # network inside the Nextflow worker.
       - type: python
-        script: |
-          from cellpose.models import CellposeModel
-          CellposeModel()
+        script: "from cellpose.models import CellposeModel; CellposeModel()"
       # Segger trunk. The component synthesizes a Xenium-layout directory
       # (transcripts.parquet + cell/nucleus_boundaries.parquet) from the
       # SpatialData input and hands it to `segger segment`, so we do NOT
