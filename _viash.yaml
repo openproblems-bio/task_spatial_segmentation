@@ -60,21 +60,29 @@ info:
 
 # Step 6: Update the authors of the task.
 authors: 
-  # Full name of the author, usually in the name of FirstName MiddleName LastName.
-  - name: John Doe
-    # Role of the author. Possible values:
-    # 
-    # * `"author"`: Authors who have made substantial contributions to the component.
-    # * `"maintainer"`: The maintainer of the component.
-    # * `"contributor"`: Authors who have made smaller contributions (such as code patches etc.).
-    roles: [ "author", "maintainer" ]
-    # Additional information on the author
-    info: 
-      github: johndoe
-      orcid: 0000-0000-0000-0000
-      email: john@doe.me
-      twitter: johndoe
-      linkedin: johndoe
+  # - name: John Doe
+  #   roles: [ author, maintainer, contributor ]
+  #   info: 
+  #     github: johndoe
+  #     orcid: 0000-0000-0000-0000
+  #     email: john@doe.me
+  #     twitter: johndoe
+  #     linkedin: johndoe
+  - name: Daria Romanovskaia
+    roles: [ maintainer, author ]
+    info:
+      github: dariarom94
+      orcid: 0000-0003-2831-0919
+  - name: Florian Heyl
+    roles: [ maintainer, author ]
+    info:
+      github: heylf
+      orcid: 0000-0002-3651-5685
+  - name: Robrecht Cannoodt
+    roles: [ author ]
+    info:
+      github: rcannood
+      orcid: "0000-0003-3641-729X"
 
 # Step 7: Remove all of the comments of the steps you completed
 
