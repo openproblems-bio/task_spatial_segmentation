@@ -320,7 +320,7 @@ build_info:
   output: "target/executable/data_processors/cell_type_annotation_tacco"
   executable: "target/executable/data_processors/cell_type_annotation_tacco/cell_type_annotation_tacco"
   viash_version: "0.9.7"
-  git_commit: "0e3d3e8cc5d5aa04a423e23c7bc025fb8791b6c3"
+  git_commit: "9466fc39d07070d5a3fac11ba44e48459a199202"
   git_remote: "https://github.com/openproblems-bio/task_spatial_segmentation"
 package_config:
   name: "task_spatial_segmentation"
