@@ -15,7 +15,6 @@ import spatialdata as sd
 # in config.vsh.yaml and then run `viash config inject config.vsh.yaml`.
 par = {
   'input': 'resources_test/task_ist_preprocessing/mouse_brain_combined/spatial_unlabelled.zarr',
-  'input_segmentation': 'resources_test/task_ist_preprocessing/mouse_brain_combined/segmentation.zarr',
   'transcripts_key': 'transcripts',
   'coordinate_system': 'global',
   'output': 'prediction.zarr',
@@ -46,12 +45,11 @@ BAYSOR_OUTPUT = TMP_DIR / "baysor_output.csv"
 # Read input
 print('Reading input files', flush=True)
 sdata = sd.read_zarr(par['input'])
-sdata_segm = sd.read_zarr(par['input_segmentation'])
 
 # Check if coordinate system is available in input data
 transcripts_coord_systems = sd.transformations.get_transformation(sdata[par["transcripts_key"]], get_all=True).keys()
 assert par['coordinate_system'] in transcripts_coord_systems, f"Coordinate system '{par['coordinate_system']}' not found in input data."
-segmentation_coord_systems = sd.transformations.get_transformation(sdata_segm["segmentation"], get_all=True).keys()
+segmentation_coord_systems = sd.transformations.get_transformation(sdata["segmentation"], get_all=True).keys()
 assert par['coordinate_system'] in segmentation_coord_systems, f"Coordinate system '{par['coordinate_system']}' not found in input data."
 
 # Transform transcript coordinates to the coordinate system
@@ -59,7 +57,7 @@ print('Transforming transcripts coordinates', flush=True)
 transcripts = sd.transform(sdata[par['transcripts_key']], to_coordinate_system=par['coordinate_system'])
 
 # In case of a translation transformation of the segmentation (e.g. crop of the data), we need to adjust the transcript coordinates
-trans = sd.transformations.get_transformation(sdata_segm["segmentation"], get_all=True)[par['coordinate_system']].inverse()
+trans = sd.transformations.get_transformation(sdata["segmentation"], get_all=True)[par['coordinate_system']].inverse()
 transcripts = sd.transform(transcripts, trans, par['coordinate_system'])
 
 
@@ -69,10 +67,10 @@ transcripts[['x', 'y', 'z', 'feature_name']].compute().to_csv(TRANSCRIPTS_CSV)
 
 # Write segmentation to tif
 print('Writing segmentation to tif', flush=True)
-if isinstance(sdata_segm["segmentation"], xr.DataTree):
-    label_image = sdata_segm["segmentation"]["scale0"].image.to_numpy() 
+if isinstance(sdata["segmentation"], xr.DataTree):
+    label_image = sdata["segmentation"]["scale0"].image.to_numpy() 
 else:
-     label_image = sdata_segm["segmentation"].to_numpy()
+     label_image = sdata["segmentation"].to_numpy()
 imwrite(SEGMENTATION_TIF, label_image)
 
 # Write config to toml
