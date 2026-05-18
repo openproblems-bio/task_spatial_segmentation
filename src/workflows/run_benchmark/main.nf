@@ -10,7 +10,8 @@ methods = [
   true_labels,
   empty_labels,
   random_voronoi,
-  cellpose
+  cellpose,
+  baysor
 ]
 
 // construct list of metrics
