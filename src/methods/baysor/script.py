@@ -18,6 +18,7 @@ par = {
   'transcripts_key': 'transcripts',
   'coordinate_system': 'global',
   'output': 'prediction.zarr',
+  'prior_segmentation_key': 'nucleus_labels',
 
   'force_2d': 'false',
   'min_molecules_per_cell': 50,
@@ -57,7 +58,7 @@ print('Transforming transcripts coordinates', flush=True)
 transcripts = sd.transform(sdata[par['transcripts_key']], to_coordinate_system=par['coordinate_system'])
 
 # In case of a translation transformation of the segmentation (e.g. crop of the data), we need to adjust the transcript coordinates
-trans = sd.transformations.get_transformation(sdata["segmentation"], get_all=True)[par['coordinate_system']].inverse()
+trans = sd.transformations.get_transformation(sdata[par['prior_segmentation_key']], get_all=True)[par['coordinate_system']].inverse()
 transcripts = sd.transform(transcripts, trans, par['coordinate_system'])
 
 

@@ -19,6 +19,10 @@ arguments:
     type: string
     description: The key of the pixel space coordinate system within the spatial data
     default: global
+  - name: --prior_segmentation_key
+    type: string
+    description: The key for the prior segmentation stored within the spatial data
+    default: nucleus_labels
 
   - name: --force_2d
     type: boolean
