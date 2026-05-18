@@ -47,6 +47,14 @@ info:
             name: overlaps_nucleus
             required: false
             description: Whether the point overlaps with the nucleus (derived from morphology)
+          - type: integer
+            name: cell_id
+            required: false
+            description: |
+              Vendor-provided cell assignment from the raw data, exposed as a
+              segmentation prior. This is NOT the ground truth used for
+              evaluation (which is held out in spatial_solution); methods may
+              freely condition on it.
     tables:
       - type: anndata
         name: "table"

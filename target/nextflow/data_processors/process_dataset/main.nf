@@ -3676,6 +3676,12 @@ meta = [
                       "name" : "overlaps_nucleus",
                       "required" : false,
                       "description" : "Whether the point overlaps with the nucleus (derived from morphology)"
+                    },
+                    {
+                      "type" : "integer",
+                      "name" : "cell_id",
+                      "required" : false,
+                      "description" : "Vendor-provided cell assignment from the raw data, exposed as a\nsegmentation prior. This is NOT the ground truth used for\nevaluation (which is held out in spatial_solution); methods may\nfreely condition on it.\n"
                     }
                   ]
                 }
@@ -4348,7 +4354,7 @@ meta = [
     "engine" : "docker|native",
     "output" : "target/nextflow/data_processors/process_dataset",
     "viash_version" : "0.9.7",
-    "git_commit" : "9466fc39d07070d5a3fac11ba44e48459a199202",
+    "git_commit" : "c7ab2da73e528f0c16265696b4e60d49c526d462",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -4555,8 +4561,11 @@ dataset_uns = {
 # ---------------------------------------------------------------
 print(">> Building spatial dataset for methods (no ground truth)", flush=True)
 
-# Strip columns that reveal ground truth cell assignments from transcripts
-_GROUND_TRUTH_COLS = {"cell_id", "nucleus_id", "cell_type"}
+# Strip ground-truth-revealing columns, but keep the vendor \\`cell_id\\` as a
+# segmentation prior — most methods (e.g. segger) condition on the vendor's
+# morphology-based assignment without treating it as ground truth. The held-out
+# ground truth used for evaluation lives in spatial_solution, not here.
+_GROUND_TRUTH_COLS = {"nucleus_id", "cell_type"}
 transcripts = sp_data.points["transcripts"]
 clean_transcript_cols = [c for c in transcripts.columns if c not in _GROUND_TRUTH_COLS]
 clean_transcripts = transcripts[clean_transcript_cols]

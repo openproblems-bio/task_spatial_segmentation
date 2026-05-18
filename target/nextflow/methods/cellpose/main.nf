@@ -3112,6 +3112,12 @@ meta = [
                       "name" : "overlaps_nucleus",
                       "required" : false,
                       "description" : "Whether the point overlaps with the nucleus (derived from morphology)"
+                    },
+                    {
+                      "type" : "integer",
+                      "name" : "cell_id",
+                      "required" : false,
+                      "description" : "Vendor-provided cell assignment from the raw data, exposed as a\nsegmentation prior. This is NOT the ground truth used for\nevaluation (which is held out in spatial_solution); methods may\nfreely condition on it.\n"
                     }
                   ]
                 }
@@ -3468,7 +3474,7 @@ meta = [
     "engine" : "docker|native",
     "output" : "target/nextflow/methods/cellpose",
     "viash_version" : "0.9.7",
-    "git_commit" : "9466fc39d07070d5a3fac11ba44e48459a199202",
+    "git_commit" : "c7ab2da73e528f0c16265696b4e60d49c526d462",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {

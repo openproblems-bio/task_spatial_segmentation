@@ -92,8 +92,11 @@ dataset_uns = {
 # ---------------------------------------------------------------
 print(">> Building spatial dataset for methods (no ground truth)", flush=True)
 
-# Strip columns that reveal ground truth cell assignments from transcripts
-_GROUND_TRUTH_COLS = {"cell_id", "nucleus_id", "cell_type"}
+# Strip ground-truth-revealing columns, but keep the vendor `cell_id` as a
+# segmentation prior — most methods (e.g. segger) condition on the vendor's
+# morphology-based assignment without treating it as ground truth. The held-out
+# ground truth used for evaluation lives in spatial_solution, not here.
+_GROUND_TRUTH_COLS = {"nucleus_id", "cell_type"}
 transcripts = sp_data.points["transcripts"]
 clean_transcript_cols = [c for c in transcripts.columns if c not in _GROUND_TRUTH_COLS]
 clean_transcripts = transcripts[clean_transcript_cols]
