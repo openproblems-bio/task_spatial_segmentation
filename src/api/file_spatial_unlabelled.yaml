@@ -10,8 +10,8 @@ info:
     type: spatialdata_zarr
     images:
       - type: object
-        name: morphology_mip
-        description: The raw morphology image (maximum intensity projection)
+        name: image
+        description: The raw image data
         required: true
     points:
       - type: dataframe

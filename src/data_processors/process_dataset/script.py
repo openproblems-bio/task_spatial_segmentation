@@ -115,8 +115,16 @@ if "metadata" in sp_data.tables and "gene_ids" in sp_data.tables["metadata"].var
 # Minimal table: dataset metadata in uns, gene list in var
 minimal_table = ad.AnnData(var=var_df, uns=dataset_uns)
 
+if "image" in sp_data.images:
+    input_image_name = "image"
+elif "morphology_mip" in sp_data.images:
+    print("WARNING: 'morphology_mip' image found but expected 'image'. Using 'morphology_mip' as fallback.", flush=True)
+    input_image_name = "morphology_mip"
+else:
+    raise ValueError("No suitable image found in spatial data. Expected 'image' or 'morphology_mip'.")
+
 output_spatial = sd.SpatialData(
-    images={"morphology_mip": sp_data.images["morphology_mip"]},
+    images={"image": sp_data.images[input_image_name]},
     points={"transcripts": clean_transcripts},
     tables={"table": minimal_table},
 )
