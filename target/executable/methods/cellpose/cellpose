@@ -455,9 +455,9 @@ RUN pip install --upgrade pip && \
   python -c 'from cellpose.models import CellposeModel; model = CellposeModel()'
 
 LABEL org.opencontainers.image.description="Companion container for running component methods cellpose"
-LABEL org.opencontainers.image.created="2026-05-18T12:38:20Z"
+LABEL org.opencontainers.image.created="2026-05-18T12:53:54Z"
 LABEL org.opencontainers.image.source="https://github.com/mouseland/cellpose"
-LABEL org.opencontainers.image.revision="0eea3f1239fa7dba9162ef942828b63537e6ee37"
+LABEL org.opencontainers.image.revision="f0f17e7b9032a06325e0a7ffe78919a2aa521d13"
 LABEL org.opencontainers.image.version="build_main"
 
 VIASHDOCKER
@@ -1240,8 +1240,8 @@ def convert_to_lower_dtype(arr):
 
 print('Reading input', flush=True)
 sdata = sd.read_zarr(par["input"])
-image = sdata['morphology_mip']['scale0'].image.compute().to_numpy()
-transformation = sdata['morphology_mip']['scale0'].image.transform.copy()
+image = sdata['image']['scale0'].image.compute().to_numpy()
+transformation = sdata['image']['scale0'].image.transform.copy()
 
 print('Initializing Cellpose model', flush=True)
 model = CellposeModel(gpu=torch.cuda.is_available())

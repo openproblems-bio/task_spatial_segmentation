@@ -3623,8 +3623,8 @@ meta = [
               "images" : [
                 {
                   "type" : "object",
-                  "name" : "morphology_mip",
-                  "description" : "The raw morphology image (maximum intensity projection)",
+                  "name" : "image",
+                  "description" : "The raw image data",
                   "required" : true
                 }
               ],
@@ -4267,6 +4267,12 @@ meta = [
       "name" : "openproblems",
       "repo" : "openproblems-bio/openproblems",
       "tag" : "build/main"
+    },
+    {
+      "type" : "github",
+      "name" : "task_ist_preprocessing",
+      "repo" : "openproblems-bio/task_ist_preprocessing",
+      "tag" : "build/main"
     }
   ],
   "license" : "MIT",
@@ -4354,7 +4360,7 @@ meta = [
     "engine" : "docker|native",
     "output" : "target/nextflow/data_processors/process_dataset",
     "viash_version" : "0.9.7",
-    "git_commit" : "0eea3f1239fa7dba9162ef942828b63537e6ee37",
+    "git_commit" : "f0f17e7b9032a06325e0a7ffe78919a2aa521d13",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -4388,6 +4394,12 @@ meta = [
         "type" : "github",
         "name" : "openproblems",
         "repo" : "openproblems-bio/openproblems",
+        "tag" : "build/main"
+      },
+      {
+        "type" : "github",
+        "name" : "task_ist_preprocessing",
+        "repo" : "openproblems-bio/task_ist_preprocessing",
         "tag" : "build/main"
       }
     ],
@@ -4579,13 +4591,16 @@ dataset_uns = {
 # ---------------------------------------------------------------
 print(">> Building spatial dataset for methods (no ground truth)", flush=True)
 
-# Strip ground-truth-revealing columns, but keep the vendor \\`cell_id\\` as a
-# segmentation prior — most methods (e.g. segger) condition on the vendor's
-# morphology-based assignment without treating it as ground truth. The held-out
-# ground truth used for evaluation lives in spatial_solution, not here.
-_GROUND_TRUTH_COLS = {"nucleus_id", "cell_type"}
+# Keep only the columns defined in the file_spatial_unlabelled schema.
+# Any extra columns (e.g. ground-truth nucleus_id, cell_type) are dropped by
+# only selecting schema-defined columns rather than by explicit exclusion.
+_TRANSCRIPT_COLS_REQUIRED = ["x", "y", "feature_name", "transcript_id"]
+_TRANSCRIPT_COLS_OPTIONAL = ["z", "qv", "overlaps_nucleus", "cell_id"]
+_TRANSCRIPT_COLS_SCHEMA = set(_TRANSCRIPT_COLS_REQUIRED + _TRANSCRIPT_COLS_OPTIONAL)
 transcripts = sp_data.points["transcripts"]
-clean_transcript_cols = [c for c in transcripts.columns if c not in _GROUND_TRUTH_COLS]
+for col in _TRANSCRIPT_COLS_REQUIRED:
+    assert col in transcripts.columns, f"Required transcript column '{col}' is missing from the input data"
+clean_transcript_cols = [c for c in transcripts.columns if c in _TRANSCRIPT_COLS_SCHEMA]
 clean_transcripts = transcripts[clean_transcript_cols]
 
 # Build var from unique feature names in transcripts, mapping to feature_ids from metadata
@@ -4599,8 +4614,16 @@ if "metadata" in sp_data.tables and "gene_ids" in sp_data.tables["metadata"].var
 # Minimal table: dataset metadata in uns, gene list in var
 minimal_table = ad.AnnData(var=var_df, uns=dataset_uns)
 
+if "image" in sp_data.images:
+    input_image_name = "image"
+elif "morphology_mip" in sp_data.images:
+    print("WARNING: 'morphology_mip' image found but expected 'image'. Using 'morphology_mip' as fallback.", flush=True)
+    input_image_name = "morphology_mip"
+else:
+    raise ValueError("No suitable image found in spatial data. Expected 'image' or 'morphology_mip'.")
+
 output_spatial = sd.SpatialData(
-    images={"morphology_mip": sp_data.images["morphology_mip"]},
+    images={"image": sp_data.images[input_image_name]},
     points={"transcripts": clean_transcripts},
     tables={"table": minimal_table},
 )

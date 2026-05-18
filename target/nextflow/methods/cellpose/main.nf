@@ -3059,8 +3059,8 @@ meta = [
               "images" : [
                 {
                   "type" : "object",
-                  "name" : "morphology_mip",
-                  "description" : "The raw morphology image (maximum intensity projection)",
+                  "name" : "image",
+                  "description" : "The raw image data",
                   "required" : true
                 }
               ],
@@ -3373,6 +3373,12 @@ meta = [
       "name" : "openproblems",
       "repo" : "openproblems-bio/openproblems",
       "tag" : "build/main"
+    },
+    {
+      "type" : "github",
+      "name" : "task_ist_preprocessing",
+      "repo" : "openproblems-bio/task_ist_preprocessing",
+      "tag" : "build/main"
     }
   ],
   "license" : "MIT",
@@ -3474,7 +3480,7 @@ meta = [
     "engine" : "docker|native",
     "output" : "target/nextflow/methods/cellpose",
     "viash_version" : "0.9.7",
-    "git_commit" : "0eea3f1239fa7dba9162ef942828b63537e6ee37",
+    "git_commit" : "f0f17e7b9032a06325e0a7ffe78919a2aa521d13",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -3508,6 +3514,12 @@ meta = [
         "type" : "github",
         "name" : "openproblems",
         "repo" : "openproblems-bio/openproblems",
+        "tag" : "build/main"
+      },
+      {
+        "type" : "github",
+        "name" : "task_ist_preprocessing",
+        "repo" : "openproblems-bio/task_ist_preprocessing",
         "tag" : "build/main"
       }
     ],
@@ -3648,8 +3660,8 @@ def convert_to_lower_dtype(arr):
 
 print('Reading input', flush=True)
 sdata = sd.read_zarr(par["input"])
-image = sdata['morphology_mip']['scale0'].image.compute().to_numpy()
-transformation = sdata['morphology_mip']['scale0'].image.transform.copy()
+image = sdata['image']['scale0'].image.compute().to_numpy()
+transformation = sdata['image']['scale0'].image.transform.copy()
 
 print('Initializing Cellpose model', flush=True)
 model = CellposeModel(gpu=torch.cuda.is_available())

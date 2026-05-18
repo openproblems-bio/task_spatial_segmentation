@@ -28,9 +28,11 @@ should convince readers of the significance and relevance of your task.
 
 ## Authors & contributors
 
-| Name | Roles | Github | Twitter | Email | Orcid | Linkedin |
-|:---|:---|:---|:---|:---|:---|:---|
-| John Doe | author, maintainer | johndoe | johndoe | john@doe.me | 0000-0000-0000-0000 | johndoe |
+| Name               | Roles              | Orcid               | Github     |
+|:-------------------|:-------------------|:--------------------|:-----------|
+| Daria Romanovskaia | maintainer, author | 0000-0003-2831-0919 | dariarom94 |
+| Florian Heyl       | maintainer, author | 0000-0002-3651-5685 | heylf      |
+| Robrecht Cannoodt  | author             | 0000-0003-3641-729X | rcannood   |
 
 ## API
 
@@ -207,7 +209,7 @@ Format:
 <div class="small">
 
     SpatialData object
-     images: 'morphology_mip'
+     images: 'image'
      points: 'transcripts'
      tables: 'table'
      coordinate_systems: 'global'
@@ -220,9 +222,9 @@ Data structure:
 
 *images*
 
-| Name             | Description                                              |
-|:-----------------|:---------------------------------------------------------|
-| `morphology_mip` | The raw morphology image (maximum intensity projection). |
+| Name    | Description         |
+|:--------|:--------------------|
+| `image` | The raw image data. |
 
 *points*
 
@@ -237,6 +239,7 @@ Data structure:
 | `qv` | `float` | (*Optional*) Quality value of the point. |
 | `transcript_id` | `long` | Unique identifier of the transcript. |
 | `overlaps_nucleus` | `boolean` | (*Optional*) Whether the point overlaps with the nucleus (derived from morphology). |
+| `cell_id` | `integer` | (*Optional*) Vendor-provided cell assignment from the raw data, exposed as a segmentation prior. This is NOT the ground truth used for evaluation (which is held out in spatial_solution); methods may freely condition on it. |
 
 *tables*
 
