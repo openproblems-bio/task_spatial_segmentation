@@ -50,7 +50,7 @@ sdata = sd.read_zarr(par['input'])
 # Check if coordinate system is available in input data
 transcripts_coord_systems = sd.transformations.get_transformation(sdata[par["transcripts_key"]], get_all=True).keys()
 assert par['coordinate_system'] in transcripts_coord_systems, f"Coordinate system '{par['coordinate_system']}' not found in input data."
-segmentation_coord_systems = sd.transformations.get_transformation(sdata["segmentation"], get_all=True).keys()
+segmentation_coord_systems = sd.transformations.get_transformation(sdata[par['prior_segmentation_key']], get_all=True).keys()
 assert par['coordinate_system'] in segmentation_coord_systems, f"Coordinate system '{par['coordinate_system']}' not found in input data."
 
 # Transform transcript coordinates to the coordinate system
