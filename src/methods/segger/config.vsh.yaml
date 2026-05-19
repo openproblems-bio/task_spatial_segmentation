@@ -74,6 +74,7 @@ engines:
         packages:
           - procps
           - git
+          - libxcb1
       - type: python
         packages:
           - anndata~=0.12.0
