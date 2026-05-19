@@ -225,8 +225,18 @@ def _run_segger(xenium_dir: Path, output_dir: Path) -> Path:
         "--prediction-expansion-ratio", str(par["prediction_expansion_ratio"]),
         "--prediction-mode", par["prediction_mode"],
     ]
+    # cudf's `validate_setup` aborts `import cudf` on hosts without a
+    # usable NVIDIA driver (cudaErrorInsufficientDriver). segger imports
+    # cudf eagerly in tiling.py, so the subprocess dies before it can
+    # use its documented CPU fallbacks. RAPIDS_NO_INITIALIZE / *_NO_INITIALIZE
+    # skip that validation; cudf functions still attempt GPU calls if
+    # invoked, but on small test fixtures segger stays on CPU paths.
+    env = os.environ.copy()
+    env.setdefault("RAPIDS_NO_INITIALIZE", "1")
+    env.setdefault("CUDF_NO_INITIALIZE", "1")
+    env.setdefault("RMM_NO_INITIALIZE", "1")
     print("Running segger:", " ".join(cmd), flush=True)
-    subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True, env=env)
     pq = output_dir / "segger_segmentation.parquet"
     if not pq.exists():
         raise RuntimeError(f"Expected segger output not found: {pq}")
