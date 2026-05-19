@@ -455,9 +455,9 @@ RUN pip install --upgrade pip && \
   pip install --upgrade --no-cache-dir "numpy<2.0.0" "tensorflow"
 
 LABEL org.opencontainers.image.description="Companion container for running component methods stardist"
-LABEL org.opencontainers.image.created="2026-05-19T13:47:23Z"
+LABEL org.opencontainers.image.created="2026-05-19T14:15:34Z"
 LABEL org.opencontainers.image.source="https://github.com/stardist/stardist"
-LABEL org.opencontainers.image.revision="9dd0a20a40d98e25edd6acff1bafd07ee35d6b7c"
+LABEL org.opencontainers.image.revision="c22dc4b0642fe49b75231ffd87fa221eae005060"
 LABEL org.opencontainers.image.version="build_segger"
 
 VIASHDOCKER

@@ -449,9 +449,9 @@ RUN pip install --upgrade pip && \
   pip install --upgrade --no-cache-dir "spatialdata>=0.7.3" "anndata>=0.12.0" "zarr>=3.0.0"
 
 LABEL org.opencontainers.image.description="Companion container for running component control_methods empty_labels"
-LABEL org.opencontainers.image.created="2026-05-19T13:47:23Z"
+LABEL org.opencontainers.image.created="2026-05-19T14:15:34Z"
 LABEL org.opencontainers.image.source="https://github.com/openproblems-bio/task_spatial_segmentation"
-LABEL org.opencontainers.image.revision="9dd0a20a40d98e25edd6acff1bafd07ee35d6b7c"
+LABEL org.opencontainers.image.revision="c22dc4b0642fe49b75231ffd87fa221eae005060"
 LABEL org.opencontainers.image.version="build_segger"
 
 VIASHDOCKER
