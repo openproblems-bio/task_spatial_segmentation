@@ -66,6 +66,10 @@ arguments:
 resources:
   - type: python_script
     path: script.py
+  # Vendored from dpeerlab/segger @ v2-incremental — provides the canonical
+  # Delaunay-based `generate_boundaries`. Model install stays on `main`.
+  - type: file
+    path: boundary.py
 
 engines:
   - type: docker
@@ -103,6 +107,9 @@ engines:
           - geopandas
           - shapely
           - scikit-image
+          # rtree + tqdm are imported by the vendored boundary.py.
+          - rtree
+          - tqdm
       # Pre-fetch the Cellpose model weights so runtime doesn't hit the
       # network inside the Nextflow worker.
       # - type: python

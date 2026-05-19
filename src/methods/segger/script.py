@@ -1,7 +1,7 @@
 import os
 import shutil
 import subprocess
-from collections import Counter
+import sys
 from pathlib import Path
 
 import anndata as ad
@@ -13,8 +13,12 @@ import spatialdata as sd
 import torch
 import xarray as xr
 from shapely.geometry import MultiPoint, Polygon
-from spatialdata.models import Labels2DModel
-from spatialdata.transformations import get_transformation
+from spatialdata.models import Labels2DModel, ShapesModel
+from spatialdata.transformations import Identity, get_transformation
+
+# Sibling vendored module — see boundary.py header.
+sys.path.insert(0, str(Path(__file__).parent))
+from boundary import generate_boundaries, extract_largest_polygon  # noqa: E402
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using device:", device, flush=True)
@@ -249,32 +253,94 @@ def _run_segger(xenium_dir: Path, output_dir: Path) -> Path:
     return pq
 
 
-def _relabel_initial_mask(
-    initial_labels: np.ndarray,
-    tx_pixel_xy: np.ndarray,
-    tx_segger_cell: np.ndarray,
+_BOUNDARY_WORKER_LADDER = (16, 8, 4, 2)
+
+
+def _compute_cell_boundaries(assigned_tx: pd.DataFrame) -> gpd.GeoDataFrame:
+    """Build a per-cell smooth boundary polygon from the transcripts segger
+    assigned to that cell, using the vendored Delaunay-based builder. Tries
+    `n_jobs` in {16, 8, 4, 2} order and falls back on each failure so that
+    threading saturation or low-core hosts don't make the whole step fail.
+
+    `assigned_tx` must carry columns 'x', 'y', 'segger_cell_id'."""
+    last_err: Exception | None = None
+    for n_jobs in _BOUNDARY_WORKER_LADDER:
+        try:
+            return generate_boundaries(
+                assigned_tx,
+                x="x",
+                y="y",
+                cell_id="segger_cell_id",
+                n_jobs=n_jobs,
+                progress=False,
+            )
+        except Exception as err:  # noqa: BLE001 — fallback path is intentional
+            last_err = err
+            print(
+                f"generate_boundaries failed with n_jobs={n_jobs}: {err!r}; "
+                "retrying with fewer workers.",
+                flush=True,
+            )
+    assert last_err is not None
+    raise RuntimeError("generate_boundaries failed at all worker counts") from last_err
+
+
+def _rasterize_cell_boundaries(
+    boundaries: gpd.GeoDataFrame, image_element, label_col: str
 ) -> np.ndarray:
-    """For each label in `initial_labels`, replace it by the majority segger
-    cell id of the transcripts that fall on top of it. Pixels whose initial
-    label has no covering transcripts are left at 0 (background)."""
-    H, W = initial_labels.shape
-    ys = np.clip(np.round(tx_pixel_xy[:, 1]).astype(int), 0, H - 1)
-    xs = np.clip(np.round(tx_pixel_xy[:, 0]).astype(int), 0, W - 1)
-    tx_init = initial_labels[ys, xs]
-    relabel = {0: 0}
-    for init_id in np.unique(tx_init):
-        if init_id == 0:
+    """Burn cell boundaries onto the image grid as an integer label image.
+
+    Polygons are expected in global coordinates; the image element's
+    global-to-pixel affine is applied before rasterizing. MultiPolygons
+    are collapsed to their largest polygon (`extract_largest_polygon`)
+    before drawing."""
+    from skimage.draw import polygon as draw_polygon
+
+    H, W = image_element.shape[-2:]
+    M_g2p = _affine_global_to_pixel(image_element)
+    labels = np.zeros((H, W), dtype=np.uint32)
+    for cid, geom in zip(
+        boundaries[label_col].to_numpy(), boundaries.geometry.to_numpy()
+    ):
+        poly = extract_largest_polygon(geom)
+        if poly is None or poly.is_empty:
             continue
-        seg_ids = tx_segger_cell[tx_init == init_id]
-        seg_ids = seg_ids[~pd.isna(seg_ids)]
-        if seg_ids.size == 0:
-            continue
-        most = Counter(seg_ids.astype(np.int64).tolist()).most_common(1)[0][0]
-        relabel[int(init_id)] = int(most)
-    out = np.zeros_like(initial_labels, dtype=np.int64)
-    for k, v in relabel.items():
-        out[initial_labels == k] = v
-    return out
+        ring = np.asarray(poly.exterior.coords)
+        pix = _apply_affine(M_g2p, ring)
+        rr, cc = draw_polygon(pix[:, 1], pix[:, 0], shape=labels.shape)
+        labels[rr, cc] = int(cid)
+    return labels
+
+
+def _build_per_cell_table(
+    assigned_tx: pd.DataFrame, dataset_id: str, method_id: str
+) -> ad.AnnData:
+    """Build a cells x genes count AnnData from per-transcript segger
+    assignments. Mirrors what `process_prediction` will re-derive from the
+    label image, but bundling it here keeps `prediction.zarr` self-contained
+    for QC and analysis scripts that consume it directly."""
+    if assigned_tx.empty:
+        return ad.AnnData(
+            uns={"dataset_id": dataset_id, "method_id": method_id}
+        )
+    counts = (
+        assigned_tx.groupby(["segger_cell_id", "feature_name"])
+        .size()
+        .unstack(fill_value=0)
+    )
+    obs = pd.DataFrame(
+        {"cell_id": counts.index.astype(str)},
+        index=counts.index.astype(str),
+    )
+    obs["region"] = pd.Categorical(["segmentation"] * len(obs))
+    var = pd.DataFrame(index=counts.columns.astype(str))
+    var.index.name = "feature_name"
+    var["feature_name"] = var.index
+    table = ad.AnnData(X=counts.values.astype(np.float32), obs=obs, var=var)
+    table.layers["counts"] = table.X.copy()
+    table.uns["dataset_id"] = dataset_id
+    table.uns["method_id"] = method_id
+    return table
 
 
 # ----------------------------- main -------------------------------- #
@@ -328,9 +394,8 @@ seg = pl.read_parquet(seg_pq)
 print(f"segger emitted {seg.height} rows", flush=True)
 
 # Keep only confident assignments. Mirror segger's canonical
-# valid_cell_id_expr (null / "-1" / "UNASSIGNED" / "NONE") so that the
-# -1 unassigned sentinel segger emits doesn't reach _relabel_initial_mask
-# and ultimately the uint32 labels image.
+# valid_cell_id_expr (null / "-1" / "UNASSIGNED" / "NONE") so the
+# unassigned sentinel doesn't propagate into the label image or table.
 _seg_id_str = pl.col("segger_cell_id").cast(pl.Utf8).str.to_uppercase()
 seg = seg.filter(
     pl.col("keep")
@@ -340,19 +405,107 @@ seg = seg.filter(
     & (_seg_id_str != "NONE")
 )
 print(f"kept assignments: {seg.height}", flush=True)
+
+# --- Step 3: rebuild the cell footprint from segger's assignments ---
+# Replaces the older majority-vote-over-initial-mask approach with the
+# team's canonical Delaunay alpha-shape boundaries (see boundary.py),
+# rasterized as the segmentation label image. This way the label image
+# encodes segger's FULL per-cell transcript footprint — including
+# transcripts that segger rescued outside the initial nucleus — instead
+# of being clipped back to nucleus shape.
+dataset_id = sdata.tables["table"].uns["dataset_id"]
+shapes_out: dict = {}
+table: ad.AnnData
+
 if seg.height == 0:
-    print("WARNING: segger kept no transcript assignments — falling back to the initial mask.", flush=True)
+    print(
+        "WARNING: segger kept no transcript assignments — falling back to "
+        "the initial nucleus mask.",
+        flush=True,
+    )
     final_labels = initial_labels.astype(np.int64)
+    table = ad.AnnData(uns={"dataset_id": dataset_id, "method_id": meta["name"]})
 else:
     row_idx = seg["row_index"].to_numpy()
     segger_cell = seg["segger_cell_id"].to_numpy()
     xy_global = tx_pd.loc[row_idx, ["x", "y"]].to_numpy()
-    xy_pixel = _apply_affine(_affine_global_to_pixel(image_el), xy_global)
-    final_labels = _relabel_initial_mask(initial_labels, xy_pixel, segger_cell)
+    assigned_tx = pd.DataFrame({
+        "x": xy_global[:, 0],
+        "y": xy_global[:, 1],
+        "feature_name": tx_pd.loc[row_idx, "feature_name"].astype(str).to_numpy(),
+        "segger_cell_id": np.asarray(segger_cell, dtype=np.int64),
+    })
+    print(
+        f"computing boundaries for {assigned_tx['segger_cell_id'].nunique()} cells "
+        f"from {len(assigned_tx)} assigned transcripts",
+        flush=True,
+    )
+    try:
+        boundaries_gdf = _compute_cell_boundaries(assigned_tx)
+    except Exception as err:  # noqa: BLE001 — fall back to the initial mask
+        print(
+            f"WARNING: boundary computation failed ({err!r}); falling back "
+            "to the initial nucleus mask for the label image.",
+            flush=True,
+        )
+        boundaries_gdf = None
+
+    valid = (
+        boundaries_gdf.dropna(subset=["geometry"]).copy()
+        if boundaries_gdf is not None
+        else None
+    )
+    if valid is not None and not valid.empty:
+        valid = valid[
+            valid.geometry.apply(lambda g: g is not None and not g.is_empty)
+        ]
+    print(
+        "generate_boundaries: "
+        f"{0 if valid is None else len(valid)} usable polygons",
+        flush=True,
+    )
+
+    if valid is None or valid.empty:
+        print(
+            "WARNING: no smooth boundaries produced — using the initial "
+            "nucleus mask as the label image.",
+            flush=True,
+        )
+        final_labels = initial_labels.astype(np.int64)
+    else:
+        # Collapse any MultiPolygons to their largest component once and reuse
+        # the result for both the rasterized label image and the shapes export.
+        valid = valid.assign(
+            geometry=valid.geometry.apply(extract_largest_polygon),
+            cell_id=valid["cell_id"].astype(np.int64),
+        )
+        valid = valid[valid.geometry.apply(lambda g: g is not None and not g.is_empty)]
+        final_labels = _rasterize_cell_boundaries(
+            valid, image_el, label_col="cell_id"
+        )
+        # Restrict the per-cell table to cells whose boundary actually
+        # rendered so the table and label image agree on cell membership.
+        rendered = set(valid["cell_id"].tolist())
+        assigned_tx = assigned_tx[
+            assigned_tx["segger_cell_id"].isin(rendered)
+        ]
+        boundaries_global = gpd.GeoDataFrame(
+            {
+                "cell_id": valid["cell_id"].astype(str).to_numpy(),
+                "geometry": valid.geometry.to_numpy(),
+            },
+            geometry="geometry",
+        )
+        shapes_out["cell_boundaries"] = ShapesModel.parse(
+            boundaries_global,
+            transformations={"global": Identity()},
+        )
+
+    table = _build_per_cell_table(assigned_tx, dataset_id, meta["name"])
 
 final_labels = _to_lower_uint(final_labels)
 
-# --- Step 3: write the SpatialData prediction ---
+# --- Step 4: write the SpatialData prediction ---
 sd_out = sd.SpatialData(
     labels={
         "segmentation": Labels2DModel.parse(
@@ -360,14 +513,8 @@ sd_out = sd.SpatialData(
             transformations=image_transform,
         ),
     },
-    tables={
-        "table": ad.AnnData(
-            uns={
-                "dataset_id": sdata.tables["table"].uns["dataset_id"],
-                "method_id": meta["name"],
-            }
-        ),
-    },
+    shapes=shapes_out if shapes_out else None,
+    tables={"table": table},
 )
 
 print(f"Saving output: {output_path}", flush=True)
