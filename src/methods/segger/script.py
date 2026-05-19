@@ -185,16 +185,39 @@ def _build_xenium_layout(
     initial_labels: np.ndarray,
     image_element,
     out_dir: Path,
+    tx_cell_id_override: np.ndarray | None = None,
 ) -> Path:
     """Materialize a directory that segger's `10x_xenium` preprocessor can
     consume: `transcripts.parquet` + matching `cell_boundaries.parquet` /
     `nucleus_boundaries.parquet`. We don't have a real cell vs nucleus split,
     so the same polygon set is written to both — segger then drives the
-    prediction graph off whichever one `--prediction-mode` selects."""
+    prediction graph off whichever one `--prediction-mode` selects.
+
+    `tx_cell_id_override` is the per-transcript training assignment as a
+    string array ("UNASSIGNED" sentinel for unknown). When supplied (the
+    `transcript_cell_id` init mode, which carries a vendor cell_id prior
+    on the transcripts) we skip the rasterize-then-pixel-lookup roundtrip
+    and trust the prior directly — otherwise tiny convex hulls would
+    rasterize to zero pixels and silently mark every transcript as
+    UNASSIGNED, which made segger's anndata builder explode on empty input.
+    When omitted (the Cellpose path) we derive assignments by looking
+    each transcript up in the rasterized nucleus mask as before."""
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    tx_init = _initial_cell_id_per_transcript(tx_pd, initial_labels, image_element)
-    cell_id_str = np.where(tx_init > 0, tx_init.astype(str), "UNASSIGNED")
+    if tx_cell_id_override is not None:
+        cell_id_str = np.asarray(tx_cell_id_override, dtype=object)
+        cell_id_str = np.where(
+            cell_id_str == None,  # noqa: E711 — np.where needs ==, not `is`
+            "UNASSIGNED",
+            cell_id_str.astype(str),
+        )
+        overlaps_nucleus = (cell_id_str != "UNASSIGNED").astype(np.int8)
+    else:
+        tx_init = _initial_cell_id_per_transcript(
+            tx_pd, initial_labels, image_element
+        )
+        cell_id_str = np.where(tx_init > 0, tx_init.astype(str), "UNASSIGNED")
+        overlaps_nucleus = (tx_init > 0).astype(np.int8)
 
     tx_out = pd.DataFrame({
         "transcript_id": (
@@ -214,7 +237,7 @@ def _build_xenium_layout(
         # Treat the entire mask as nucleus (overlaps_nucleus=1); transcripts
         # off the mask get 0. segger only uses this when prediction_mode
         # distinguishes cell vs nucleus.
-        "overlaps_nucleus": (tx_init > 0).astype(np.int8),
+        "overlaps_nucleus": overlaps_nucleus,
     })
     if "z" in tx_pd.columns:
         tx_out.insert(3, "z_location", tx_pd["z"].to_numpy().astype(np.float32))
@@ -346,9 +369,20 @@ print(f"Init segmentation mode: {mode}", flush=True)
 
 initial_labels: np.ndarray
 shapes_gdf: gpd.GeoDataFrame
+tx_cell_id_override: np.ndarray | None = None
 if mode == "transcript_cell_id":
     shapes_gdf = _polygons_from_cell_ids(tx_pd)
     initial_labels = _rasterize_polygons(shapes_gdf, image_el, label_col="cell_id")
+    # Trust the input's per-transcript cell_id prior directly for segger's
+    # training signal — converting via rasterize-then-pixel-lookup loses
+    # transcripts whose cell's convex hull rasterizes to zero pixels (tiny
+    # hulls / off-grid centroids) and silently marks them UNASSIGNED.
+    valid = _valid_cell_id_mask(tx_pd["cell_id"])
+    tx_cell_id_override = np.where(
+        valid.to_numpy(),
+        tx_pd["cell_id"].astype(str).to_numpy(),
+        "UNASSIGNED",
+    )
 elif mode == "cellpose":
     initial_labels, shapes_gdf = _polygons_from_cellpose(image_el, par["cellpose_diameter"])
 else:
@@ -362,7 +396,35 @@ print(f"Initial segmentation: {len(shapes_gdf)} polygons", flush=True)
 # initial mask id as `cell_id` (segger's training signal), and the polygons
 # are written to both cell_boundaries.parquet and nucleus_boundaries.parquet
 # since segger expects both Xenium files to exist.
-_build_xenium_layout(tx_pd, shapes_gdf, initial_labels, image_el, xenium_dir)
+_build_xenium_layout(
+    tx_pd,
+    shapes_gdf,
+    initial_labels,
+    image_el,
+    xenium_dir,
+    tx_cell_id_override=tx_cell_id_override,
+)
+
+# Fail loudly with diagnostics if no transcript carries a valid cell
+# assignment — segger's anndata builder will crash with an opaque
+# `cannot infer dimensions from zero sized index arrays` otherwise.
+_tx_written = pd.read_parquet(xenium_dir / "transcripts.parquet", columns=["cell_id"])
+_n_assigned = (_tx_written["cell_id"].astype(str) != "UNASSIGNED").sum()
+_n_total = len(_tx_written)
+_n_cells = _tx_written.loc[
+    _tx_written["cell_id"].astype(str) != "UNASSIGNED", "cell_id"
+].nunique()
+print(
+    f"transcripts.parquet: {_n_assigned}/{_n_total} assigned across "
+    f"{_n_cells} cells",
+    flush=True,
+)
+if _n_assigned == 0 or _n_cells == 0:
+    raise RuntimeError(
+        "No transcripts carry a valid cell_id assignment — segger has no "
+        "training signal. Check that the input transcripts have a usable "
+        "cell_id prior, or rerun with --init_segmentation cellpose."
+    )
 seg_pq = _run_segger(xenium_dir, segger_out_dir)
 seg = pl.read_parquet(seg_pq)
 print(f"segger emitted {seg.height} rows", flush=True)
