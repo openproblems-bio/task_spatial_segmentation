@@ -11,6 +11,7 @@ methods = [
   empty_labels,
   random_voronoi,
   cellpose,
+  baysor,
   stardist,
   proseg,
   segger

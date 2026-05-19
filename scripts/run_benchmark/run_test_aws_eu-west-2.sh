@@ -28,5 +28,5 @@ tw launch https://github.com/openproblems-bio/task_spatial_segmentation.git \
   --workspace 8386213183400 \
   --compute-env 7Odt43ln9XureGja6Frdm7 \
   --params-file /tmp/params.yaml \
-  --config src/base/labels_tw.config \
+  --config src/base/labels_aws_eu-west-2.config \
   --labels task_spatial_segmentation,test

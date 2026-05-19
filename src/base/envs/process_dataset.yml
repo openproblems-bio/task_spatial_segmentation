@@ -1,0 +1,15 @@
+name: process_dataset
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pandas
+  - scikit-learn
+  - pip
+  - pip:
+      - "anndata>=0.12.0"
+      - "spatialdata>=0.7.3"
+      - "zarr>=3.0.0"
+      - scikit-misc
+      - scanpy
