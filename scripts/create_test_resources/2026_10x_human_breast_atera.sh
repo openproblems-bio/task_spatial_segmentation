@@ -15,6 +15,10 @@ if [ ! -f temp/datasets/10x_xenium/2026_10x_human_breast_atera/WTA_Preview_FFPE_
   wget -O temp/datasets/10x_xenium/2026_10x_human_breast_atera/WTA_Preview_FFPE_Breast_Cancer_xe_outs.zip \
     https://s3-us-west-2.amazonaws.com/10x.files/samples/atera/dev/WTA_Preview_FFPE_Breast_Cancer/WTA_Preview_FFPE_Breast_Cancer_xe_outs.zip
 fi
+if [ ! -f temp/datasets/10x_xenium/2026_10x_human_breast_atera/WTA_Preview_FFPE_Breast_Cancer_cell_groups.csv ]; then
+  wget -O temp/datasets/10x_xenium/2026_10x_human_breast_atera/WTA_Preview_FFPE_Breast_Cancer_cell_groups.csv \
+    https://cf.10xgenomics.com/samples/atera/dev/WTA_Preview_FFPE_Breast_Cancer/WTA_Preview_FFPE_Breast_Cancer_cell_groups.csv
+fi
 
 cat > /tmp/params.yaml << HERE
 param_list:
@@ -26,7 +30,7 @@ param_list:
     dataset_name: "Atera FFPE Human Breast Cancer"
     dataset_url: "https://www.10xgenomics.com/datasets/atera-wta-ffpe-human-breast-cancer"
     dataset_summary: "Preview dataset showcasing the pre-commercial Atera Whole Transcriptome Assay (WTA) applied to FFPE human breast cancer tissue, profiling 18,028 genes and detecting 170,057 cells."
-    dataset_description: "This human FFPE breast cancer data showcases results using the pre-commercial version of the Atera Whole Transcriptome Assay (WTA), which is currently under development. The assay is designed to closely match the Chromium Flex Apex assay in terms of content and sensitivity, and includes 18,028 genes. A single 5µm FFPE section of breast cancer tissue (DCIS Grade 3, T1c N0 M0) was analyzed, yielding 170,057 detected cells with a median of 2,116 transcripts per cell and 624,095,990 total high-quality decoded transcripts across 58.9 million µm² of tissue area. Output files are formatted to closely resemble Xenium Onboard Analysis v4 file formats."
+    dataset_description: "This human FFPE breast cancer data showcases results using the pre-commercial version of the Atera Whole Transcriptome Assay (WTA), which is currently under development. The assay is designed to closely match the Chromium Flex Apex assay in terms of content and sensitivity, and includes 18,028 genes. A single 5µm FFPE section of breast cancer tissue (DCIS Grade 3, T1c N0 M0) was analyzed, yielding 170,057 detected cells with a median of 2,116 transcripts per cell and 624,095,990 total high-quality decoded transcripts across 58.9 million µm² of tissue area. Output files are formatted to closely resemble Xenium Onboard Analysis v4 file formats. Differentially expressed genes from the graph-based clustering results were exported to annotate cell types. Major cell groups were annotated based on Kumar et al. (2023). Invasive versus DCIS (ductal carcinoma in situ) tumor cells were annotated based on molecular markers, myoepithelial cell number, and spatial localization. Similarly, DCIS-associated or invasive cancer-associated fibroblasts (CAFs) were annotated based on their spatial location. We relied partly on H&E to delineate amorphous DCIS and invasive regions. H&E proved insufficient for identifying structured basal-like DCIS which was staged as 'normal' by a pathologist, therefore, we exclusively utilized molecular markers. Cycling cells were validated using the CellCycleScoring function in Seurat. Apocrine cells were identified by histology and PIP expression (encodes prolactin-induced protein)."
     dataset_organism: homo_sapiens
     crop_region_min_x: 5000
     crop_region_max_x: 6000
