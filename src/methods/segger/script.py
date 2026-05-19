@@ -375,12 +375,20 @@ if mode == "transcript_cell_id":
     initial_labels = _rasterize_polygons(shapes_gdf, image_el, label_col="cell_id")
     # Trust the input's per-transcript cell_id prior directly for segger's
     # training signal — converting via rasterize-then-pixel-lookup loses
-    # transcripts whose cell's convex hull rasterizes to zero pixels (tiny
-    # hulls / off-grid centroids) and silently marks them UNASSIGNED.
+    # transcripts whose cell's convex hull rasterizes to zero pixels.
+    # Critically: a transcript's cell_id is only valid if that cell ALSO
+    # has a boundary polygon in shapes_gdf. _polygons_from_cell_ids skips
+    # cells with < 3 transcripts (can't make a hull), and segger's
+    # setup_anndata left-joins obs against boundaries by cell_id — any
+    # cell present in transcripts but absent from boundaries produces
+    # NaN obs index and trips the `assert ~obs.index.isna().any()`.
+    cell_ids_with_boundary = set(shapes_gdf["cell_id"].astype(str).to_numpy())
     valid = _valid_cell_id_mask(tx_pd["cell_id"])
+    tx_cid_str = tx_pd["cell_id"].astype(str).to_numpy()
+    has_boundary = np.array([c in cell_ids_with_boundary for c in tx_cid_str])
     tx_cell_id_override = np.where(
-        valid.to_numpy(),
-        tx_pd["cell_id"].astype(str).to_numpy(),
+        valid.to_numpy() & has_boundary,
+        tx_cid_str,
         "UNASSIGNED",
     )
 elif mode == "cellpose":
