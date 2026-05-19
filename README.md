@@ -153,6 +153,7 @@ Data structure:
 | Slot | Type | Description |
 |:---|:---|:---|
 | `obs["cell_id"]` | `string` | A unique identifier for the cell. |
+| `obs["groundtruth_cell_type"]` | `string` | (*Optional*) Manually curated cell type annotations which serves as ground truth for evaluations. |
 | `var["gene_ids"]` | `string` | Unique identifier for the gene. |
 | `var["feature_types"]` | `string` | Type of the feature. |
 | `obsm["spatial"]` | `double` | Spatial coordinates of the cell. |
@@ -351,6 +352,7 @@ assignments.
 | `obs["region"]` | `string` | Name of the label image this cell belongs to (e.g. ‘cell_labels’). |
 | `obs["cell_area"]` | `double` | (*Optional*) Area of the cell in pixels. |
 | `obs["transcript_counts"]` | `integer` | (*Optional*) Total number of transcripts assigned to this cell. |
+| `obs["groundtruth_cell_type"]` | `string` | (*Optional*) Manually curated cell type annotations which serves as ground truth for evaluations. |
 | `var["feature_id"]` | `string` | (*Optional*) Unique identifier for the feature, usually a ENSEMBL gene id. |
 | `var["feature_name"]` | `string` | A human-readable name for the feature, usually a gene symbol. |
 | `uns["dataset_id"]` | `string` | A unique identifier for the dataset. |
