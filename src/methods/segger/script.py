@@ -24,11 +24,9 @@ par = {
     "input": "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_unlabelled.zarr",
     "output": "prediction.zarr",
     "init_segmentation": "auto",
-    "n_epochs": 1,
-    "prediction_scale_factor": 2.2,
+    "n_epochs": 20,
+    "prediction_expansion_ratio": 0.5,
     "prediction_mode": "nucleus",
-    "min_similarity": 0.0,
-    "fragment_mode": False,
     "cellpose_diameter": 30.0,
 }
 meta = {"name": "segger", "temp_dir": "/tmp"}
@@ -224,13 +222,9 @@ def _run_segger(xenium_dir: Path, output_dir: Path) -> Path:
         "-i", str(xenium_dir),
         "-o", str(output_dir),
         "--n-epochs", str(par["n_epochs"]),
-        "--prediction-scale-factor", str(par["prediction_scale_factor"]),
+        "--prediction-expansion-ratio", str(par["prediction_expansion_ratio"]),
         "--prediction-mode", par["prediction_mode"],
     ]
-    if par.get("min_similarity") is not None and par["min_similarity"] > 0:
-        cmd += ["--min-similarity", str(par["min_similarity"])]
-    if par.get("fragment_mode"):
-        cmd += ["--fragment-mode"]
     print("Running segger:", " ".join(cmd), flush=True)
     subprocess.run(cmd, check=True)
     pq = output_dir / "segger_segmentation.parquet"

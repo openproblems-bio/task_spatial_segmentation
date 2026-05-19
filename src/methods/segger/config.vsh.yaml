@@ -42,28 +42,21 @@ arguments:
       test_default: auto
   - name: --n_epochs
     type: integer
+    default: 20
     description: "Number of training epochs for the GNN."
-    info:
-      test_default: 1
-  - name: --prediction_scale_factor
+  - name: --prediction_expansion_ratio
     type: double
-    description: "Multiplier applied to nucleus polygons when forming transcript-to-boundary edges at prediction time. Values >1 expand the polygon to capture peripheral transcripts."
-    info:
-      test_default: 2.2
+    default: 0.5
+    description: |
+      Fraction of each polygon's equivalent radius used to expand it
+      when building the transcript-to-boundary prediction graph (forwarded
+      as `--prediction-expansion-ratio` to `segger segment`). Larger values
+      reach more peripheral transcripts.
   - name: --prediction_mode
     type: string
     choices: [nucleus, cell, uniform]
+    default: nucleus
     description: "Which polygon set drives the prediction graph."
-    info:
-      test_default: nucleus
-  - name: --min_similarity
-    type: double
-    description: "Fixed similarity threshold in [0,1] for keeping a transcript-boundary assignment. If unset, segger uses per-gene Li+Yen thresholds."
-    info:
-      test_default: 0.0
-  - name: --fragment_mode
-    type: boolean_true
-    description: "Run fragment mode to group otherwise-unassigned transcripts into connected components."
   - name: --cellpose_diameter
     type: double
     description: "Cell diameter (pixels) for the Cellpose nucleus pre-segmentation."
