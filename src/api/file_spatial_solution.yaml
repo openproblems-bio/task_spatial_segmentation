@@ -92,6 +92,10 @@ info:
             name: transcript_counts
             description: Total number of transcripts assigned to this cell
             required: false
+          - type: string
+            name: groundtruth_cell_type
+            description: Manually curated cell type annotations which serves as ground truth for evaluations
+            required: false
         uns:
           - type: string
             name: dataset_id

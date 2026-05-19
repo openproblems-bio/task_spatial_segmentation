@@ -3363,6 +3363,12 @@ meta = [
                       "name" : "transcript_counts",
                       "description" : "Total number of transcripts assigned to this cell",
                       "required" : false
+                    },
+                    {
+                      "type" : "string",
+                      "name" : "groundtruth_cell_type",
+                      "description" : "Manually curated cell type annotations which serves as ground truth for evaluations",
+                      "required" : false
                     }
                   ],
                   "uns" : [
@@ -3586,7 +3592,7 @@ meta = [
     "engine" : "docker",
     "output" : "target/nextflow/control_methods/random_voronoi",
     "viash_version" : "0.9.7",
-    "git_commit" : "8bf04f1841a00d3a900db837746fb51de302f4cf",
+    "git_commit" : "fe43f68962148b9ce2aef003616ec13e990c463a",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {

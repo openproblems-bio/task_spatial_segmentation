@@ -154,6 +154,10 @@ info:
             name: cell_id
             required: true
             description: A unique identifier for the cell
+          - type: string
+            name: groundtruth_cell_type
+            description: Manually curated cell type annotations which serves as ground truth for evaluations
+            required: false
         var:
           - type: string
             name: gene_ids

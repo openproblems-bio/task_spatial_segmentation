@@ -449,9 +449,9 @@ RUN pip install --upgrade pip && \
   pip install --upgrade --no-cache-dir "spatialdata>=0.7.3" "anndata>=0.12.0" "zarr>=3.0.0"
 
 LABEL org.opencontainers.image.description="Companion container for running component control_methods random_voronoi"
-LABEL org.opencontainers.image.created="2026-05-19T08:01:09Z"
+LABEL org.opencontainers.image.created="2026-05-19T08:39:33Z"
 LABEL org.opencontainers.image.source="https://github.com/openproblems-bio/task_spatial_segmentation"
-LABEL org.opencontainers.image.revision="8bf04f1841a00d3a900db837746fb51de302f4cf"
+LABEL org.opencontainers.image.revision="fe43f68962148b9ce2aef003616ec13e990c463a"
 LABEL org.opencontainers.image.version="build_main"
 
 VIASHDOCKER
