@@ -13,6 +13,10 @@ argument_groups:
         type: integer
         description: Number of highly-variable genes to keep. Mandatory if flavor='seurat_v3'.
         default: 3000
+      - name: "--test_dummy"
+        type: boolean
+        description: Whether or not this dataset is used for testing. If true, more data fields will be filled in to make sure the output has as many optional output fields as possible.
+        default: false
 
 resources:
   - type: python_script

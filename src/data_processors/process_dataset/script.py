@@ -22,6 +22,7 @@ par = {
     'dataset_description': '',
     'dataset_reference': [],
     'dataset_organism': 'Mus musculus',
+    'test_dummy': True,
 }
 ## VIASH END
 
@@ -75,17 +76,6 @@ sc_data.write_h5ad(par["output_scrnaseq_reference"], compression="gzip")
 print(">> Read spatial data", flush=True)
 sp_data = sd.read_zarr(par["input_sp"])
 print(f"spatial data: {sp_data}")
-
-# TODO: make sure user provides the groundtruth instead of copying it from the vendor labels
-if "groundtruth_cell_labels" not in sp_data.labels:
-    if "cell_labels" in sp_data.labels:
-        print("=" * 80, flush=True)
-        print("WARNING: 'groundtruth_cell_labels' not found in spatial data!", flush=True)
-        print("Temporarily falling back to vendor-provided 'cell_labels' as ground truth.", flush=True)
-        print("=" * 80, flush=True)
-        sp_data["groundtruth_cell_labels"] = sp_data.labels["cell_labels"]
-    else:
-        raise ValueError("Neither 'groundtruth_cell_labels' nor 'cell_labels' found in spatial data.")
 
 dataset_uns = {
     "dataset_id": par["dataset_id"],
@@ -158,11 +148,10 @@ output_spatial_unlabelled.write(par["output_spatial_unlabelled"], overwrite=True
 # ---------------------------------------------------------------
 print(">> Building spatial solution (ground truth)", flush=True)
 
-ref_table = sp_data.tables["table"]
-solution_obs = ref_table.obs[["cell_id", "region"]].copy()
-for extra_col in ["cell_area", "transcript_counts"]:
-    if extra_col in ref_table.obs.columns:
-        solution_obs[extra_col] = ref_table.obs[extra_col]
+solution_obs = sp_data.tables["table"].obs[["cell_id", "region"]].copy()
+for extra_col in ["cell_area", "transcript_counts", "groundtruth_cell_type"]:
+    if extra_col in sp_data.tables["table"].obs.columns:
+        solution_obs[extra_col] = sp_data.tables["table"].obs[extra_col]
 
 solution_table = ad.AnnData(
     obs=solution_obs,
@@ -176,7 +165,7 @@ solution_table = ad.AnnData(
         "dataset_reference": par["dataset_reference"],
         "dataset_organism": par["dataset_organism"],
         "orig_dataset_id": sp_data.tables["table"].uns.get("dataset_id", None),
-        "spatialdata_attrs": ref_table.uns["spatialdata_attrs"],
+        "spatialdata_attrs": sp_data.tables["table"].uns["spatialdata_attrs"],
     },
 )
 
@@ -193,6 +182,14 @@ if "cell_labels" in sp_data.labels:
     solution_labels["cell_labels"] = sp_data.labels["cell_labels"]
 if "nucleus_labels" in sp_data.labels:
     solution_labels["nucleus_labels"] = sp_data.labels["nucleus_labels"]
+
+# TODO: make sure user provides the groundtruth instead of copying it from the vendor labels
+if par.get['test_dummy']:
+    if "groundtruth_cell_labels" not in sp_data.labels and "cell_labels" in sp_data.labels:
+        print("Setting 'groundtruth_cell_labels' to vendor-provided 'cell_labels'", flush=True)
+        solution_labels["groundtruth_cell_labels"] = sp_data.labels["cell_labels"]
+    if "groundtruth_cell_types" not in solution_obs.columns and "cell_type" in sp_data.tables["table"].obs.columns:
+        raise ValueError("TODO: Add dummy groundtruth_cell_types")
 
 output_solution = sd.SpatialData(
     points={"transcripts": solution_transcripts},
