@@ -75,6 +75,7 @@ engines:
           - procps
           - git
           - libxcb1
+          - libgl1
       - type: python
         packages:
           - anndata~=0.12.0
@@ -112,10 +113,6 @@ engines:
       # need the spatialdata-loader branch — segger@main is enough.
       - type: python
         github: dpeerlab/segger
-      # - type: docker
-      #   run: |
-      #     pip install --no-cache-dir \
-      #       "git+https://github.com/dpeerlab/segger.git@main#egg=segger"
     # __merge__: /src/base/setup_spatialdata_partial.yaml
   - type: native
 
