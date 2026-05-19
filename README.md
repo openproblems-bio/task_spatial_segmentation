@@ -90,7 +90,7 @@ Format:
      labels: 'cell_labels', 'nucleus_labels', 'groundtruth_cell_labels'
      points: 'transcripts'
      shapes: 'cell_boundaries', 'nucleus_boundaries'
-     tables: 'metadata'
+     tables: 'table'
      coordinate_systems: 'global'
 
 </div>
@@ -148,7 +148,7 @@ Data structure:
 
 *tables*
 
-`metadata`: Metadata of spatial dataset.
+`table`: Metadata of spatial dataset.
 
 | Slot | Type | Description |
 |:---|:---|:---|

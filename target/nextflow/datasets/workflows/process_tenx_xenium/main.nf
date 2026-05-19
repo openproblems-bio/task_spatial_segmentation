@@ -3332,7 +3332,7 @@ meta = [
               "tables" : [
                 {
                   "type" : "anndata",
-                  "name" : "metadata",
+                  "name" : "table",
                   "description" : "Metadata of spatial dataset",
                   "required" : true,
                   "uns" : [
@@ -3546,7 +3546,7 @@ meta = [
     "engine" : "native",
     "output" : "target/nextflow/datasets/workflows/process_tenx_xenium",
     "viash_version" : "0.9.7",
-    "git_commit" : "398fd9c5f56b0f19841eb4cd23b62fd0e5d02a0f",
+    "git_commit" : "ee2fc2062e5a7f4a74cc08d698589cbadd19f279",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
