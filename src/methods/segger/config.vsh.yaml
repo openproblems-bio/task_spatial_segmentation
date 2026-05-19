@@ -111,10 +111,16 @@ engines:
       # need the spatialdata-loader branch — segger@main is enough.
       - type: python
         github: dpeerlab/segger
-      # - type: docker
-      #   run: |
-      #     pip install --no-cache-dir \
-      #       "git+https://github.com/dpeerlab/segger.git@main#egg=segger"
+      # Replace segger's GUI opencv-python dependency with the headless
+      # wheel. segger.io.utils does `import cv2` which dlopens libxcb.so.1;
+      # the NGC pytorch base image ships no X11 stack and the original
+      # opencv-python wheel fails with ImportError at every CLI startup.
+      # opencv-python-headless exposes the same `cv2` module without the
+      # X11/GTK deps, so the import resolves and nothing else changes.
+      - type: docker
+        run: |
+          pip uninstall -y opencv-python opencv-contrib-python 2>/dev/null || true
+          pip install --no-cache-dir opencv-python-headless
     # __merge__: /src/base/setup_spatialdata_partial.yaml
   - type: native
 
