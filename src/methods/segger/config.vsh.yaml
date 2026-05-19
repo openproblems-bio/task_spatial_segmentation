@@ -86,6 +86,14 @@ engines:
           - zarr>=3.0.0
         github:
           - openproblems-bio/core#subdirectory=packages/python/openproblems
+      # cuspatial is required by segger.geometry.conversion at import time
+      # and is NOT shipped in the NGC PyTorch base image (only cudf is).
+      # No version pin so pip resolves against whatever cudf the image
+      # already has installed. Only used by `segger segment` on GPU hosts;
+      # CPU CI runs short-circuit to a stub before this is needed.
+      - type: docker
+        run: |
+          pip install --no-cache-dir --extra-index-url=https://pypi.nvidia.com cuspatial-cu12
       # Cellpose (for the nucleus pre-segmentation) and the geometry stack
       # used to convert masks <-> polygons and to rasterize the final labels.
       - type: python
