@@ -456,9 +456,9 @@ RUN pip install --upgrade pip && \
   pip install --upgrade --no-cache-dir "rasterio"
 
 LABEL org.opencontainers.image.description="Companion container for running component methods proseg"
-LABEL org.opencontainers.image.created="2026-05-19T09:38:19Z"
+LABEL org.opencontainers.image.created="2026-05-19T09:49:06Z"
 LABEL org.opencontainers.image.source="https://github.com/dcjones/proseg"
-LABEL org.opencontainers.image.revision="2b888be3abb829b2ca1ed08d6b3b4bb52665f779"
+LABEL org.opencontainers.image.revision="5fab6db50439a092c2025c384ad8a82d941623b2"
 LABEL org.opencontainers.image.version="build_main"
 
 VIASHDOCKER

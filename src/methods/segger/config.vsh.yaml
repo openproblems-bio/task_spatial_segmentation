@@ -1,0 +1,127 @@
+__merge__: /src/api/method_gpu.yaml
+
+name: segger
+
+label: "Segger"
+summary: Assigns transcripts to cells via a heterogeneous graph neural network with link prediction between transcripts and morphology-derived boundary nodes.
+description: |
+  Segger frames spatial transcriptomics cell segmentation as link prediction on a heterogeneous graph
+  whose nodes are individual transcripts and morphology-derived cell or nucleus boundaries, and whose
+  edges connect transcripts to each other within a small radius (capturing local co-occurrence) and
+  transcripts to boundaries when a transcript falls inside a scaled polygon. A graph neural network
+  is trained with a contrastive objective so that each transcript embedding is pulled toward the
+  embedding of its true boundary and pushed away from neighboring ones. At inference time, every
+  transcript is reassigned to the boundary it most resembles in embedding space, subject to a
+  similarity threshold that is either set globally or learned per gene. Because the model operates
+  on the transcript graph rather than on raster images, it refines the initial nucleus segmentation
+  with information about which transcripts genuinely belong to which cell, and can rescue transcripts
+  that the initial boundary segmentation missed. In this Viash component, an initial boundary
+  set is taken from the vendor `cell_id` prior on the transcripts whenever it is present and
+  falls back to a Cellpose pass on `morphology_mip` when it is not; the boundaries plus the
+  transcripts are written to a Xenium-layout directory and handed to `segger segment`. The
+  per-transcript reassignments are then projected back onto the initial nucleus masks by
+  majority vote and rasterized as the predicted label image.
+links:
+  documentation: "https://github.com/dpeerlab/segger"
+  repository: "https://github.com/dpeerlab/segger"
+references:
+  doi: "10.1101/2025.03.14.643160"
+
+arguments:
+  - name: --init_segmentation
+    type: string
+    choices: [auto, cellpose, transcript_cell_id]
+    description: |
+      Source of the initial boundary node set that segger trains against.
+      'auto' uses the transcripts' `cell_id` prior column when it is
+      present and runs Cellpose on `morphology_mip` otherwise.
+      'cellpose' always runs Cellpose. 'transcript_cell_id' requires a
+      `cell_id` column on the transcripts and builds one convex-hull
+      polygon per cell id.
+    info:
+      test_default: auto
+  - name: --n_epochs
+    type: integer
+    default: 20
+    description: "Number of training epochs for the GNN."
+  - name: --prediction_expansion_ratio
+    type: double
+    default: 0.5
+    description: |
+      Fraction of each polygon's equivalent radius used to expand it
+      when building the transcript-to-boundary prediction graph (forwarded
+      as `--prediction-expansion-ratio` to `segger segment`). Larger values
+      reach more peripheral transcripts.
+  - name: --prediction_mode
+    type: string
+    choices: [nucleus, cell, uniform]
+    default: nucleus
+    description: "Which polygon set drives the prediction graph."
+  - name: --cellpose_diameter
+    type: double
+    description: "Cell diameter (pixels) for the Cellpose nucleus pre-segmentation."
+    info:
+      test_default: 30
+
+resources:
+  - type: python_script
+    path: script.py
+
+engines:
+  - type: docker
+    # copied from https://github.com/openproblems-bio/core/blob/main/base_images/src/pytorch_nvidia/config.vsh.yaml
+    image: nvcr.io/nvidia/pytorch:25.06-py3
+    setup:
+      - type: apt
+        packages:
+          - procps
+          - git
+      - type: python
+        packages:
+          - anndata~=0.12.0
+          - scanpy~=1.12
+          - requests
+          - jsonschema
+          - spatialdata>=0.7.3
+          - zarr>=3.0.0
+        github:
+          - openproblems-bio/core#subdirectory=packages/python/openproblems
+      # cuspatial is required by segger.geometry.conversion at import time
+      # and is NOT shipped in the NGC PyTorch base image (only cudf is).
+      # No version pin so pip resolves against whatever cudf the image
+      # already has installed. Only used by `segger segment` on GPU hosts;
+      # CPU CI runs short-circuit to a stub before this is needed.
+      - type: docker
+        run: |
+          pip install --no-cache-dir --extra-index-url=https://pypi.nvidia.com cuspatial-cu12
+      # Cellpose (for the nucleus pre-segmentation) and the geometry stack
+      # used to convert masks <-> polygons and to rasterize the final labels.
+      - type: python
+        pypi:
+          - cellpose
+          - rasterio>=1.3
+          - geopandas
+          - shapely
+          - scikit-image
+      # Pre-fetch the Cellpose model weights so runtime doesn't hit the
+      # network inside the Nextflow worker.
+      # - type: python
+      #   script: "from cellpose.models import CellposeModel; CellposeModel()"
+      # Segger trunk. The component synthesizes a Xenium-layout directory
+      # (transcripts.parquet + cell/nucleus_boundaries.parquet) from the
+      # SpatialData input and hands it to `segger segment`, so we do NOT
+      # need the spatialdata-loader branch — segger@main is enough.
+      - type: python
+        github: dpeerlab/segger
+      # - type: docker
+      #   run: |
+      #     pip install --no-cache-dir \
+      #       "git+https://github.com/dpeerlab/segger.git@main#egg=segger"
+    # __merge__: /src/base/setup_spatialdata_partial.yaml
+  - type: native
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [hightime, midcpu, highmem, gpu]
