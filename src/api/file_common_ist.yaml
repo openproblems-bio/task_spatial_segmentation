@@ -112,7 +112,7 @@ info:
             description: Geometry of the nucleus boundary
     tables:
       - type: anndata
-        name: "metadata"
+        name: table
         description: Metadata of spatial dataset
         required: true
         uns:
