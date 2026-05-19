@@ -11,8 +11,10 @@ methods = [
   empty_labels,
   random_voronoi,
   cellpose,
+  baysor,
   stardist,
-  proseg
+  proseg,
+  segger
 ]
 
 // construct list of metrics
