@@ -35,6 +35,20 @@ meta = {"name": "segger", "temp_dir": "/tmp"}
 ## VIASH END
 
 
+_UNASSIGNED_CELL_ID_STRINGS = {"-1", "UNASSIGNED", "NONE", "NAN", ""}
+
+
+def _valid_cell_id_mask(cell_id: pd.Series) -> pd.Series:
+    """Pandas analog of segger.validation.quick_metrics.valid_cell_id_expr:
+    reject null, -1, "UNASSIGNED", "NONE" (case-insensitive). Keeps the
+    "is this transcript assigned?" predicate in sync with the upstream
+    segger pipeline so the same sentinels are treated identically here."""
+    if pd.api.types.is_numeric_dtype(cell_id):
+        return cell_id.notna() & (cell_id != -1)
+    s = cell_id.astype(str).str.strip().str.upper()
+    return cell_id.notna() & ~s.isin(_UNASSIGNED_CELL_ID_STRINGS)
+
+
 def _to_lower_uint(arr: np.ndarray) -> np.ndarray:
     m = int(arr.max()) if arr.size else 0
     for dtype in (np.uint8, np.uint16, np.uint32, np.uint64):
@@ -62,7 +76,7 @@ def _polygons_from_cell_ids(tx_pd: pd.DataFrame) -> gpd.GeoDataFrame:
     if "cell_id" not in tx_pd.columns:
         raise ValueError("transcripts table has no `cell_id` column")
     records = []
-    valid = tx_pd[tx_pd["cell_id"].notna() & (tx_pd["cell_id"].astype(str) != "")]
+    valid = tx_pd[_valid_cell_id_mask(tx_pd["cell_id"])]
     for cid, group in valid.groupby("cell_id"):
         if len(group) < 3:
             continue
@@ -303,8 +317,18 @@ seg_pq = _run_segger(xenium_dir, segger_out_dir)
 seg = pl.read_parquet(seg_pq)
 print(f"segger emitted {seg.height} rows", flush=True)
 
-# Keep only confident assignments
-seg = seg.filter(pl.col("keep") & pl.col("segger_cell_id").is_not_null())
+# Keep only confident assignments. Mirror segger's canonical
+# valid_cell_id_expr (null / "-1" / "UNASSIGNED" / "NONE") so that the
+# -1 unassigned sentinel segger emits doesn't reach _relabel_initial_mask
+# and ultimately the uint32 labels image.
+_seg_id_str = pl.col("segger_cell_id").cast(pl.Utf8).str.to_uppercase()
+seg = seg.filter(
+    pl.col("keep")
+    & pl.col("segger_cell_id").is_not_null()
+    & (_seg_id_str != "-1")
+    & (_seg_id_str != "UNASSIGNED")
+    & (_seg_id_str != "NONE")
+)
 print(f"kept assignments: {seg.height}", flush=True)
 if seg.height == 0:
     print("WARNING: segger kept no transcript assignments — falling back to the initial mask.", flush=True)
