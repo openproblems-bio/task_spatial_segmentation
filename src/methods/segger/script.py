@@ -248,34 +248,66 @@ def _run_segger(xenium_dir: Path, output_dir: Path) -> Path:
     return pq
 
 
-def _rasterize_assigned_transcripts(
-    assigned_tx: pd.DataFrame, image_element
+_PIXELS_PER_QUERY_CHUNK = 20_000_000  # cap per-chunk memory at ~160 MB of int64
+
+
+def _rasterize_via_transcript_voronoi(
+    assigned_tx: pd.DataFrame,
+    image_element,
+    dist_cutoff_factor: float = 5.0,
+    min_dist_cutoff_px: float = 5.0,
 ) -> np.ndarray:
-    """Paint each segger-assigned transcript's pixel with its `segger_cell_id`.
+    """Rasterize the segmentation by assigning every pixel to the cell of
+    its nearest segger-assigned transcript (transcript-Voronoi).
 
-    This is the minimum label image that satisfies the repo contract.
-    `process_prediction` derives the cells x genes table by indexing the
-    label image at `(int(t.y), int(t.x))` for every input transcript and
-    grouping; painting each assigned transcript's truncated pixel with
-    its cell id makes that lookup return the right cell. Unassigned
-    transcripts fall on un-painted background (0) and are correctly
-    excluded by `process_prediction`'s `cell_id != 0` filter.
+    Gives filled cell footprints — not just isolated transcript pixels —
+    while remaining cheap: one cKDTree build over the assigned transcripts
+    plus one batched `tree.query(pixels, workers=-1)` that parallelizes
+    across all cores in C. Equivalent in accuracy to a per-cell Delaunay
+    alpha-shape for anything `process_prediction` measures (a transcript
+    is always closest to itself, so its pixel lookup returns its own
+    cell).
 
-    O(N) in #assigned transcripts: one affine, one int cast, one fancy
-    indexed write. No tree, no grid scan, no per-cell loop.
-    """
+    Pixels farther than `dist_cutoff_factor * median_nearest_neighbor_dist`
+    (in pixel units, lower-bounded by `min_dist_cutoff_px`) from any
+    assigned transcript stay 0 — cells don't bleed into empty regions.
+
+    `assigned_tx` must carry columns 'x', 'y', 'segger_cell_id'."""
+    from scipy.spatial import cKDTree
+
     H, W = image_element.shape[-2:]
     M_g2p = _affine_global_to_pixel(image_element)
     xy_pix = _apply_affine(M_g2p, assigned_tx[["x", "y"]].to_numpy())
-    # Match process_prediction's int64() cast (truncation toward zero).
-    ys = xy_pix[:, 1].astype(np.int64)
-    xs = xy_pix[:, 0].astype(np.int64)
-    inside = (ys >= 0) & (ys < H) & (xs >= 0) & (xs < W)
-    ys = ys[inside]
-    xs = xs[inside]
-    cell_ids = assigned_tx["segger_cell_id"].to_numpy(dtype=np.int64)[inside]
+    cell_ids = assigned_tx["segger_cell_id"].to_numpy(dtype=np.int64)
+
+    tree = cKDTree(xy_pix)
+
+    sample = min(20_000, len(xy_pix))
+    if sample < 2:
+        d_cutoff = float(min_dist_cutoff_px)
+    else:
+        rng = np.random.default_rng(0)
+        idx = rng.choice(len(xy_pix), sample, replace=False)
+        nn_d, _ = tree.query(xy_pix[idx], k=2, workers=-1)
+        median_nn = float(np.median(nn_d[:, 1]))
+        d_cutoff = max(dist_cutoff_factor * median_nn, float(min_dist_cutoff_px))
+    print(
+        f"transcript-Voronoi raster: {len(xy_pix)} transcripts, "
+        f"{H}x{W} grid, d_cutoff={d_cutoff:.2f}px",
+        flush=True,
+    )
+
     labels = np.zeros((H, W), dtype=np.uint32)
-    labels[ys, xs] = cell_ids.astype(np.uint32)
+    rows_per_chunk = max(1, _PIXELS_PER_QUERY_CHUNK // max(W, 1))
+    xs_row = np.arange(W)
+    for y0 in range(0, H, rows_per_chunk):
+        y1 = min(H, y0 + rows_per_chunk)
+        ys = np.arange(y0, y1)
+        gx, gy = np.meshgrid(xs_row, ys)
+        pts = np.column_stack([gx.ravel(), gy.ravel()])
+        d, idx = tree.query(pts, k=1, workers=-1)
+        chunk = np.where(d > d_cutoff, 0, cell_ids[idx]).astype(np.uint32)
+        labels[y0:y1, :] = chunk.reshape(y1 - y0, W)
     return labels
 
 
@@ -342,13 +374,14 @@ seg = seg.filter(
 )
 print(f"kept assignments: {seg.height}", flush=True)
 
-# --- Step 3: build the minimal label image required by the repo ---
-# README spec is: labels.segmentation + tables.table with
-# uns.dataset_id and uns.method_id. process_prediction derives the
-# cells x genes table itself by `label_image[int(t.y), int(t.x)]` for
-# every input transcript. So the smallest valid label image is one
-# where each segger-assigned transcript's truncated pixel carries its
-# segger_cell_id; everything else stays background.
+# --- Step 3: rasterize segger's per-cell footprint ---
+# Build the label image as a transcript-Voronoi: every pixel is the
+# cell of the nearest segger-assigned transcript, with a density-based
+# distance cutoff so cells don't bleed into empty regions. Cheap (one
+# cKDTree build + one batched parallel query) and gives filled cell
+# masks instead of sparse transcript dots. Equivalent in accuracy to a
+# per-cell Delaunay alpha-shape for what `process_prediction`'s pixel
+# lookup measures.
 dataset_id = sdata.tables["table"].uns["dataset_id"]
 
 if seg.height == 0:
@@ -367,11 +400,11 @@ else:
         "segger_cell_id": np.asarray(segger_cell, dtype=np.int64),
     })
     print(
-        f"painting {len(assigned_tx)} assigned transcripts across "
+        f"rasterizing {len(assigned_tx)} assigned transcripts across "
         f"{assigned_tx['segger_cell_id'].nunique()} cells",
         flush=True,
     )
-    final_labels = _rasterize_assigned_transcripts(assigned_tx, image_el)
+    final_labels = _rasterize_via_transcript_voronoi(assigned_tx, image_el)
 
 final_labels = _to_lower_uint(final_labels)
 
