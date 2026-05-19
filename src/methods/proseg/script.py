@@ -54,8 +54,8 @@ proseg_dir.mkdir(parents=True, exist_ok=True)
 
 print('Reading input', flush=True)
 sdata = sd.read_zarr(par['input'])
-image = sdata['morphology_mip']['scale0'].image.compute().to_numpy()
-transformation = sdata['morphology_mip']['scale0'].image.transform.copy()
+image = sdata['image']['scale0'].image.compute().to_numpy()
+transformation = sdata['image']['scale0'].image.transform.copy()
 h, w = image.shape[-2:]
 
 print('Exporting transcripts to CSV', flush=True)
@@ -119,7 +119,7 @@ print(f'Found {len(shapes)} cell boundaries', flush=True)
 # Proseg boundaries are in global (micron) coordinates. Convert to pixel space
 # using the inverse of the morphology image's pixel-to-global transformation.
 print('Converting boundaries to pixel space and rasterizing', flush=True)
-img_transform = get_transformation(sdata['morphology_mip'], to_coordinate_system='global')
+img_transform = get_transformation(sdata['image'], to_coordinate_system='global')
 affine_mat = img_transform.to_affine_matrix(input_axes=('x', 'y'), output_axes=('x', 'y'))
 inv_affine = np.linalg.inv(affine_mat)
 
