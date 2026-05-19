@@ -1,0 +1,25 @@
+__merge__: ../../api/comp_control_method.yaml
+
+name: random_voronoi
+label: Random Voronoi
+summary: "A negative control that assigns pixels to randomly placed seed points via Voronoi tessellation."
+description: |
+  A negative control that places N seed points uniformly at random across the
+  image (where N equals the number of cells in the ground truth) and assigns
+  each pixel to the nearest seed. This produces spatially coherent, non-overlapping
+  cells with realistic count but no biological basis, resulting in poor metric scores.
+
+resources:
+  - type: python_script
+    path: script.py
+
+engines:
+  - type: docker
+    image: openproblems/base_python:1
+    __merge__: ../../base/setup_spatialdata_partial.yaml
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [midtime, lowmem, lowcpu]

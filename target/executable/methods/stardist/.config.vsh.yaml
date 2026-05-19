@@ -1,0 +1,385 @@
+name: "stardist"
+namespace: "methods"
+version: "build_segger"
+argument_groups:
+- name: "Arguments"
+  arguments:
+  - type: "file"
+    name: "--input"
+    label: "Unlabelled"
+    summary: "Preprocessed spatial transcriptomics data without segmentation labels\
+      \ for method input."
+    description: "This dataset contains preprocessed images and transcript point clouds\
+      \ for spatial transcriptomics data.\nGround truth segmentation labels are intentionally\
+      \ excluded to prevent methods from cheating.\n"
+    info:
+      format:
+        type: "spatialdata_zarr"
+        images:
+        - type: "object"
+          name: "image"
+          description: "The raw image data"
+          required: true
+        labels:
+        - type: "object"
+          name: "cell_labels"
+          description: "Vendor-provided cell segmentation labels, exposed as a segmentation\
+            \ prior"
+          required: false
+        - type: "object"
+          name: "nucleus_labels"
+          description: "Vendor-provided nucleus segmentation labels, exposed as a\
+            \ segmentation prior"
+          required: false
+        points:
+        - type: "dataframe"
+          name: "transcripts"
+          description: "Point cloud data of transcripts"
+          required: true
+          columns:
+          - type: "float"
+            name: "x"
+            required: true
+            description: "x-coordinate of the point"
+          - type: "float"
+            name: "y"
+            required: true
+            description: "y-coordinate of the point"
+          - type: "float"
+            name: "z"
+            required: false
+            description: "z-coordinate of the point"
+          - type: "categorical"
+            name: "feature_name"
+            required: true
+            description: "Name of the feature"
+          - type: "float"
+            name: "qv"
+            required: false
+            description: "Quality value of the point"
+          - type: "long"
+            name: "transcript_id"
+            required: true
+            description: "Unique identifier of the transcript"
+          - type: "boolean"
+            name: "overlaps_nucleus"
+            required: false
+            description: "Whether the point overlaps with the nucleus (derived from\
+              \ morphology)"
+          - type: "integer"
+            name: "cell_id"
+            required: false
+            description: "Vendor-provided cell assignment from the raw data, exposed\
+              \ as a\nsegmentation prior. This is NOT the ground truth used for\n\
+              evaluation (which is held out in spatial_solution); methods may\nfreely\
+              \ condition on it.\n"
+        tables:
+        - type: "anndata"
+          name: "table"
+          description: "Metadata of spatial dataset"
+          required: true
+          uns:
+          - type: "string"
+            name: "dataset_id"
+            required: true
+            description: "A unique identifier for the dataset"
+          - type: "string"
+            name: "dataset_name"
+            required: true
+            description: "A human-readable name for the dataset"
+          - type: "string"
+            name: "dataset_url"
+            required: true
+            description: "Link to the original source of the dataset"
+          - type: "string"
+            name: "dataset_reference"
+            required: true
+            description: "Bibtex reference of the paper in which the dataset was published"
+          - type: "string"
+            name: "dataset_summary"
+            required: true
+            description: "Short description of the dataset"
+          - type: "string"
+            name: "dataset_description"
+            required: true
+            description: "Long description of the dataset"
+          - type: "string"
+            name: "dataset_organism"
+            required: true
+            description: "The organism of the sample in the dataset"
+          - type: "string"
+            name: "orig_dataset_id"
+            required: true
+            description: "The identifier of the original dataset from which this dataset\
+              \ was derived (if applicable)"
+          var:
+          - type: "string"
+            name: "feature_id"
+            required: false
+            description: "Unique identifier for the feature, usually a ENSEMBL gene\
+              \ id."
+          - type: "string"
+            name: "feature_name"
+            required: true
+            description: "A human-readable name for the feature, usually a gene symbol."
+        coordinate_systems:
+        - type: "object"
+          name: "global"
+          description: "Coordinate system of the replicate"
+          required: true
+    example:
+    - "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_unlabelled.zarr"
+    must_exist: true
+    create_parent: true
+    required: true
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+  - type: "file"
+    name: "--output"
+    label: "Predicted data"
+    summary: "A predicted dataset as output by a method."
+    info:
+      format:
+        type: "spatialdata_zarr"
+        labels:
+        - type: "object"
+          name: "segmentation"
+          description: "Segmentation of the data"
+          required: true
+        tables:
+        - type: "anndata"
+          name: "table"
+          description: "AnnData table"
+          required: true
+          uns:
+          - type: "string"
+            name: "dataset_id"
+            description: "A unique identifier for the dataset"
+            required: true
+          - type: "string"
+            name: "method_id"
+            description: "A unique identifier for the method"
+            required: true
+    example:
+    - "resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.zarr"
+    must_exist: true
+    create_parent: true
+    required: true
+    direction: "output"
+    multiple: false
+    multiple_sep: ";"
+  - type: "string"
+    name: "--model"
+    description: "Pretrained StarDist model name."
+    info:
+      test_default: "2D_versatile_fluo"
+    default:
+    - "2D_versatile_fluo"
+    required: false
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+resources:
+- type: "python_script"
+  path: "script.py"
+  is_executable: true
+label: "StarDist"
+summary: "Detects star-convex shaped cells by predicting radial distances to the object\
+  \ boundary from each pixel."
+description: "StarDist represents each cell as a star-convex polygon defined by a\
+  \ set of radial distances from the cell's\ncenter pixel to its boundary, measured\
+  \ at evenly spaced angles. A U-Net–style convolutional neural network\nis trained\
+  \ to predict, for every pixel, both the probability that the pixel lies inside any\
+  \ cell and the\nset of radial distances describing the cell polygon centered at\
+  \ that pixel. At inference time, non-maximum\nsuppression selects the most confident\
+  \ polygon proposals and suppresses overlapping detections, yielding a\nfinal instance-segmentation\
+  \ label image. Because the star-convex parameterization compactly encodes shapes\n\
+  typical of fluorescence-microscopy nuclei and cells, the method is highly data-efficient\
+  \ and generalizes\nwell across imaging modalities with pretrained models such as\
+  \ \"2D_versatile_fluo\".\n"
+test_resources:
+- type: "python_script"
+  path: "run_and_check_output.py"
+  is_executable: true
+- type: "python_script"
+  path: "check_config.py"
+  is_executable: true
+- type: "file"
+  path: "resources_test/task_spatial_segmentation/mouse_brain_combined"
+  dest: "resources_test/task_spatial_segmentation/mouse_brain_combined"
+info:
+  type: "method"
+  type_info:
+    label: "Method"
+    summary: "A method."
+    description: "A method to predict the task effects.\n"
+status: "enabled"
+scope:
+  image: "public"
+  target: "public"
+repositories:
+- type: "github"
+  name: "openproblems"
+  repo: "openproblems-bio/openproblems"
+  tag: "build/main"
+- type: "github"
+  name: "task_ist_preprocessing"
+  repo: "openproblems-bio/task_ist_preprocessing"
+  tag: "build/main"
+license: "MIT"
+references:
+  doi:
+  - "10.48550/arXiv.1806.03535"
+links:
+  repository: "https://github.com/stardist/stardist"
+  docker_registry: "ghcr.io"
+  documentation: "https://stardist.net"
+runners:
+- type: "executable"
+  id: "executable"
+  docker_setup_strategy: "ifneedbepullelsecachedbuild"
+- type: "nextflow"
+  id: "nextflow"
+  directives:
+    label:
+    - "midtime"
+    - "midcpu"
+    - "highmem"
+    - "gpu"
+    tag: "$id"
+  auto:
+    simplifyInput: true
+    simplifyOutput: false
+    transcript: false
+    publish: false
+  config:
+    labels:
+      lowmem: "memory = 20.Gb"
+      midmem: "memory = 50.Gb"
+      highmem: "memory = 100.Gb"
+      lowcpu: "cpus = 5"
+      midcpu: "cpus = 15"
+      highcpu: "cpus = 30"
+      lowtime: "time = 1.h"
+      midtime: "time = 4.h"
+      hightime: "time = 8.h"
+      veryhightime: "time = 24.h"
+  debug: false
+  container: "docker"
+engines:
+- type: "docker"
+  id: "docker"
+  image: "openproblems/base_python:1"
+  namespace_separator: "/"
+  setup:
+  - type: "python"
+    user: false
+    pypi:
+    - "spatialdata>=0.7.3"
+    - "anndata>=0.12.0"
+    - "zarr>=3.0.0"
+    upgrade: true
+  - type: "python"
+    user: false
+    pypi:
+    - "stardist"
+    upgrade: true
+  - type: "python"
+    user: false
+    pypi:
+    - "numpy<2.0.0"
+    - "tensorflow"
+    upgrade: true
+  entrypoint: []
+  cmd: null
+- type: "native"
+  id: "native"
+build_info:
+  config: "src/methods/stardist/config.vsh.yaml"
+  runner: "executable"
+  engine: "docker|native"
+  output: "target/executable/methods/stardist"
+  executable: "target/executable/methods/stardist/stardist"
+  viash_version: "0.9.7"
+  git_commit: "8782a0050e2ef24211546ffe996a052ffcd64d27"
+  git_remote: "https://github.com/openproblems-bio/task_spatial_segmentation"
+package_config:
+  name: "task_spatial_segmentation"
+  version: "build_segger"
+  label: "Spatial Segmentation"
+  summary: "A one sentence summary of purpose and methodology. Used for creating an\
+    \ overview tables."
+  description: "Provide a clear and concise description of your task, detailing the\
+    \ specific problem it aims\nto solve. Outline the input data types, the expected\
+    \ output, and any assumptions or constraints.\nBe sure to explain any terminology\
+    \ or concepts that are essential for understanding the task.\n\nExplain the motivation\
+    \ behind your proposed task. Describe the biological or computational \nproblem\
+    \ you aim to address and why it's important. Discuss the current state of research\
+    \ in\nthis area and any gaps or challenges that your task could help address.\
+    \ This section \nshould convince readers of the significance and relevance of\
+    \ your task.\n"
+  info:
+    image: "The name of the image file to use for the component on the website."
+    test_resources:
+    - type: "s3"
+      path: "s3://openproblems-data/resources_test/common/2023_10x_mouse_brain_xenium_rep1/"
+      dest: "resources_test/common/2023_10x_mouse_brain_xenium_rep1/"
+    - type: "s3"
+      path: "s3://openproblems-data/resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/"
+      dest: "resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/"
+    - type: "s3"
+      path: "s3://openproblems-data/resources_test/task_spatial_segmentation/"
+      dest: "resources_test/task_spatial_segmentation"
+  repositories:
+  - type: "github"
+    name: "openproblems"
+    repo: "openproblems-bio/openproblems"
+    tag: "build/main"
+  - type: "github"
+    name: "task_ist_preprocessing"
+    repo: "openproblems-bio/task_ist_preprocessing"
+    tag: "build/main"
+  viash_version: "0.9.7"
+  source: "src"
+  target: "target"
+  config_mods:
+  - ".runners[.type == \"nextflow\"].config.labels := { lowmem : \"memory = 20.Gb\"\
+    , midmem : \"memory = 50.Gb\", highmem : \"memory = 100.Gb\", lowcpu : \"cpus\
+    \ = 5\", midcpu : \"cpus = 15\", highcpu : \"cpus = 30\", lowtime : \"time = 1.h\"\
+    , midtime : \"time = 4.h\", hightime : \"time = 8.h\", veryhightime : \"time =\
+    \ 24.h\" }\n"
+  authors:
+  - name: "Daria Romanovskaia"
+    roles:
+    - "maintainer"
+    - "author"
+    info:
+      github: "dariarom94"
+      orcid: "0000-0003-2831-0919"
+  - name: "Florian Heyl"
+    roles:
+    - "maintainer"
+    - "author"
+    info:
+      github: "heylf"
+      orcid: "0000-0002-3651-5685"
+  - name: "Robrecht Cannoodt"
+    roles:
+    - "author"
+    info:
+      github: "rcannood"
+      orcid: "0000-0003-3641-729X"
+  keywords:
+  - "single-cell"
+  - "openproblems"
+  - "benchmark"
+  license: "MIT"
+  organization: "openproblems-bio"
+  references:
+    doi:
+    - "10.21203/rs.3.rs-4181617/v1"
+  links:
+    repository: "https://github.com/openproblems-bio/task_spatial_segmentation"
+    docker_registry: "ghcr.io"
+    issue_tracker: "https://github.com/openproblems-bio/task_spatial_segmentation/issues"

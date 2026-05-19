@@ -1,0 +1,407 @@
+name: "cell_type_annotation_tacco"
+namespace: "data_processors"
+version: "build_segger"
+argument_groups:
+- name: "Arguments"
+  arguments:
+  - type: "file"
+    name: "--input_processed_prediction"
+    label: "Processed prediction"
+    summary: "A processed predicted dataset, ready to be used as input for the evaluation."
+    info:
+      format:
+        type: "spatialdata_zarr"
+        labels:
+        - type: "object"
+          name: "segmentation"
+          description: "Segmentation of the data"
+          required: true
+        tables:
+        - type: "anndata"
+          name: "table"
+          description: "AnnData table"
+          required: true
+          layers:
+          - type: "integer"
+            name: "counts"
+            description: "Raw counts"
+            required: true
+          - type: "double"
+            name: "normalized"
+            description: "Normalized expression values"
+            required: true
+          - type: "double"
+            name: "normalized_log"
+            description: "Log1p normalized expression values"
+            required: true
+          - type: "double"
+            name: "normalized_log_scaled"
+            description: "Log1p normalized expression values scaled to unit variance\
+              \ and zero mean"
+            required: true
+          obs:
+          - type: "string"
+            name: "cell_id"
+            description: "Cell ID"
+            required: true
+          - type: "string"
+            name: "region"
+            description: "Region"
+            required: true
+          var:
+          - type: "string"
+            name: "feature_id"
+            description: "Unique identifier for the feature, usually a ENSEMBL gene\
+              \ id."
+            required: false
+          - type: "string"
+            name: "feature_name"
+            description: "A human-readable name for the feature, usually a gene symbol."
+            required: true
+          - type: "boolean"
+            name: "hvg"
+            description: "Whether or not the feature is considered to be a 'highly\
+              \ variable gene'"
+            required: true
+          uns:
+          - type: "string"
+            name: "dataset_id"
+            description: "A unique identifier for the dataset"
+            required: true
+          - type: "string"
+            name: "method_id"
+            description: "A unique identifier for the method"
+            required: true
+    example:
+    - "resources_test/task_spatial_segmentation/mouse_brain_combined/processed_prediction.zarr"
+    must_exist: true
+    create_parent: true
+    required: true
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+  - type: "file"
+    name: "--input_scrnaseq_reference"
+    label: "scRNA-seq Reference"
+    summary: "A single-cell reference dataset, preprocessed for this benchmark."
+    description: "This dataset contains preprocessed counts and metadata for single-cell\
+      \ RNA-seq data.\n"
+    info:
+      format:
+        type: "h5ad"
+        layers:
+        - type: "integer"
+          name: "counts"
+          description: "Raw counts"
+          required: true
+        - type: "double"
+          name: "normalized"
+          description: "Normalized expression values"
+          required: true
+        - type: "double"
+          name: "normalized_log"
+          description: "Log1p normalized expression values"
+          required: true
+        - type: "double"
+          name: "normalized_log_scaled"
+          description: "Log1p normalized expression values scaled to unit variance\
+            \ and zero mean"
+          required: true
+        obs:
+        - type: "string"
+          name: "cell_type"
+          description: "Classification of the cell type based on its characteristics\
+            \ and function within the tissue or organism."
+          required: true
+        var:
+        - type: "string"
+          name: "feature_id"
+          description: "Unique identifier for the feature, usually a ENSEMBL gene\
+            \ id."
+          required: false
+        - type: "string"
+          name: "feature_name"
+          description: "A human-readable name for the feature, usually a gene symbol."
+          required: true
+        - type: "boolean"
+          name: "hvg"
+          description: "Whether or not the feature is considered to be a 'highly variable\
+            \ gene'"
+          required: true
+        obsp:
+        - type: "double"
+          name: "knn_distances"
+          description: "K nearest neighbors distance matrix."
+          required: true
+        - type: "double"
+          name: "knn_connectivities"
+          description: "K nearest neighbors connectivities matrix."
+          required: true
+        obsm:
+        - type: "double"
+          name: "X_pca"
+          description: "The resulting PCA embedding."
+          required: true
+        varm:
+        - type: "double"
+          name: "pca_loadings"
+          description: "The PCA loadings matrix."
+          required: true
+        uns:
+        - type: "string"
+          name: "dataset_id"
+          description: "A unique identifier for the dataset. This is different from\
+            \ the `obs.dataset_id` field, which is the identifier for the dataset\
+            \ from which the cell data is derived."
+          required: true
+        - name: "dataset_name"
+          type: "string"
+          description: "A human-readable name for the dataset."
+          required: true
+        - type: "string"
+          name: "dataset_url"
+          description: "Link to the original source of the dataset."
+          required: false
+        - name: "dataset_reference"
+          type: "string"
+          description: "Bibtex reference of the paper in which the dataset was published."
+          required: false
+          multiple: true
+        - name: "dataset_summary"
+          type: "string"
+          description: "Short description of the dataset."
+          required: true
+        - name: "dataset_description"
+          type: "string"
+          description: "Long description of the dataset."
+          required: true
+        - name: "dataset_organism"
+          type: "string"
+          description: "The organism of the sample in the dataset."
+          required: false
+          multiple: true
+    example:
+    - "resources_test/task_spatial_segmentation/mouse_brain_combined/scrnaseq_reference.h5ad"
+    must_exist: true
+    create_parent: true
+    required: true
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+  - type: "file"
+    name: "--output"
+    label: "Cell type annotation"
+    summary: "AnnData with predicted cell type labels in obs."
+    description: "An h5ad file containing obs with cell_type and cell_id columns,\
+      \ plus uns metadata (dataset_id, method_id)."
+    info:
+      format:
+        type: "h5ad"
+        obs:
+        - type: "string"
+          name: "cell_type"
+          description: "Predicted cell type label"
+          required: true
+        - type: "string"
+          name: "cell_id"
+          description: "Cell ID matching the segmentation table"
+          required: true
+        uns:
+        - type: "string"
+          name: "dataset_id"
+          required: true
+        - type: "string"
+          name: "method_id"
+          required: true
+    example:
+    - "output.h5ad"
+    default:
+    - "output.h5ad"
+    must_exist: true
+    create_parent: true
+    required: true
+    direction: "output"
+    multiple: false
+    multiple_sep: ";"
+resources:
+- type: "python_script"
+  path: "script.py"
+  is_executable: true
+label: "TACCO"
+summary: "Assign cell types to segmented cells via optimal transport against a scRNA-seq\
+  \ reference."
+description: "TACCO (Transfer of Annotations to Cells and their Compartments) takes\
+  \ a\nprocessed segmentation prediction (cells with per-cell gene expression) and\n\
+  assigns a cell type to each cell by comparing its expression profile to a\nscRNA-seq\
+  \ reference via optimal transport. It runs as a post-processing step\nafter any\
+  \ segmentation method and adds a cell_type column to the cell table.\n"
+test_resources:
+- type: "python_script"
+  path: "run_and_check_output.py"
+  is_executable: true
+- type: "file"
+  path: "resources_test/task_spatial_segmentation/mouse_brain_combined"
+  dest: "resources_test/task_spatial_segmentation/mouse_brain_combined"
+info: null
+status: "enabled"
+scope:
+  image: "public"
+  target: "public"
+repositories:
+- type: "github"
+  name: "openproblems"
+  repo: "openproblems-bio/openproblems"
+  tag: "build/main"
+- type: "github"
+  name: "task_ist_preprocessing"
+  repo: "openproblems-bio/task_ist_preprocessing"
+  tag: "build/main"
+license: "MIT"
+references:
+  doi:
+  - "10.1038/s41587-023-01657-3"
+links:
+  repository: "https://github.com/simonwm/tacco"
+  docker_registry: "ghcr.io"
+  documentation: "https://simonwm.github.io/tacco/"
+runners:
+- type: "executable"
+  id: "executable"
+  docker_setup_strategy: "ifneedbepullelsecachedbuild"
+- type: "nextflow"
+  id: "nextflow"
+  directives:
+    label:
+    - "midtime"
+    - "midcpu"
+    - "highmem"
+    tag: "$id"
+  auto:
+    simplifyInput: true
+    simplifyOutput: false
+    transcript: false
+    publish: false
+  config:
+    labels:
+      lowmem: "memory = 20.Gb"
+      midmem: "memory = 50.Gb"
+      highmem: "memory = 100.Gb"
+      lowcpu: "cpus = 5"
+      midcpu: "cpus = 15"
+      highcpu: "cpus = 30"
+      lowtime: "time = 1.h"
+      midtime: "time = 4.h"
+      hightime: "time = 8.h"
+      veryhightime: "time = 24.h"
+  debug: false
+  container: "docker"
+engines:
+- type: "docker"
+  id: "docker"
+  image: "openproblems/base_python:1"
+  namespace_separator: "/"
+  setup:
+  - type: "python"
+    user: false
+    pypi:
+    - "spatialdata>=0.7.3"
+    - "anndata>=0.12.0"
+    - "zarr>=3.0.0"
+    upgrade: true
+  - type: "python"
+    user: false
+    pypi:
+    - "tacco"
+    upgrade: true
+  entrypoint: []
+  cmd: null
+- type: "native"
+  id: "native"
+build_info:
+  config: "src/data_processors/cell_type_annotation_tacco/config.vsh.yaml"
+  runner: "executable"
+  engine: "docker|native"
+  output: "target/executable/data_processors/cell_type_annotation_tacco"
+  executable: "target/executable/data_processors/cell_type_annotation_tacco/cell_type_annotation_tacco"
+  viash_version: "0.9.7"
+  git_commit: "8782a0050e2ef24211546ffe996a052ffcd64d27"
+  git_remote: "https://github.com/openproblems-bio/task_spatial_segmentation"
+package_config:
+  name: "task_spatial_segmentation"
+  version: "build_segger"
+  label: "Spatial Segmentation"
+  summary: "A one sentence summary of purpose and methodology. Used for creating an\
+    \ overview tables."
+  description: "Provide a clear and concise description of your task, detailing the\
+    \ specific problem it aims\nto solve. Outline the input data types, the expected\
+    \ output, and any assumptions or constraints.\nBe sure to explain any terminology\
+    \ or concepts that are essential for understanding the task.\n\nExplain the motivation\
+    \ behind your proposed task. Describe the biological or computational \nproblem\
+    \ you aim to address and why it's important. Discuss the current state of research\
+    \ in\nthis area and any gaps or challenges that your task could help address.\
+    \ This section \nshould convince readers of the significance and relevance of\
+    \ your task.\n"
+  info:
+    image: "The name of the image file to use for the component on the website."
+    test_resources:
+    - type: "s3"
+      path: "s3://openproblems-data/resources_test/common/2023_10x_mouse_brain_xenium_rep1/"
+      dest: "resources_test/common/2023_10x_mouse_brain_xenium_rep1/"
+    - type: "s3"
+      path: "s3://openproblems-data/resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/"
+      dest: "resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/"
+    - type: "s3"
+      path: "s3://openproblems-data/resources_test/task_spatial_segmentation/"
+      dest: "resources_test/task_spatial_segmentation"
+  repositories:
+  - type: "github"
+    name: "openproblems"
+    repo: "openproblems-bio/openproblems"
+    tag: "build/main"
+  - type: "github"
+    name: "task_ist_preprocessing"
+    repo: "openproblems-bio/task_ist_preprocessing"
+    tag: "build/main"
+  viash_version: "0.9.7"
+  source: "src"
+  target: "target"
+  config_mods:
+  - ".runners[.type == \"nextflow\"].config.labels := { lowmem : \"memory = 20.Gb\"\
+    , midmem : \"memory = 50.Gb\", highmem : \"memory = 100.Gb\", lowcpu : \"cpus\
+    \ = 5\", midcpu : \"cpus = 15\", highcpu : \"cpus = 30\", lowtime : \"time = 1.h\"\
+    , midtime : \"time = 4.h\", hightime : \"time = 8.h\", veryhightime : \"time =\
+    \ 24.h\" }\n"
+  authors:
+  - name: "Daria Romanovskaia"
+    roles:
+    - "maintainer"
+    - "author"
+    info:
+      github: "dariarom94"
+      orcid: "0000-0003-2831-0919"
+  - name: "Florian Heyl"
+    roles:
+    - "maintainer"
+    - "author"
+    info:
+      github: "heylf"
+      orcid: "0000-0002-3651-5685"
+  - name: "Robrecht Cannoodt"
+    roles:
+    - "author"
+    info:
+      github: "rcannood"
+      orcid: "0000-0003-3641-729X"
+  keywords:
+  - "single-cell"
+  - "openproblems"
+  - "benchmark"
+  license: "MIT"
+  organization: "openproblems-bio"
+  references:
+    doi:
+    - "10.21203/rs.3.rs-4181617/v1"
+  links:
+    repository: "https://github.com/openproblems-bio/task_spatial_segmentation"
+    docker_registry: "ghcr.io"
+    issue_tracker: "https://github.com/openproblems-bio/task_spatial_segmentation/issues"

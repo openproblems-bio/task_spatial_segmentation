@@ -1,0 +1,83 @@
+viash_version: 0.9.7
+# Step 1: Change the name of the task.
+# example: task_name_of_this_task
+name: task_spatial_segmentation
+organization: openproblems-bio
+version: build_segger
+license: MIT
+# Step 2: Add keywords to describe the task.
+keywords: [single-cell, openproblems, benchmark]
+# Step 3: Update the `task_template` to the name of the task from step 1.
+links:
+  issue_tracker: https://github.com/openproblems-bio/task_spatial_segmentation/issues
+  repository: https://github.com/openproblems-bio/task_spatial_segmentation
+  docker_registry: ghcr.io
+# Step 4: Update the label, summary and description.
+# A unique, human-readable, short label. Used for creating summary tables and visualisations.
+label: Spatial Segmentation
+summary: A one sentence summary of purpose and methodology. Used for creating an overview tables.
+description: "Provide a clear and concise description of your task, detailing the specific problem it aims\nto solve. Outline the input data types, the expected output, and any assumptions or constraints.\nBe sure to explain any terminology or concepts that are essential for understanding the task.\n\nExplain the motivation behind your proposed task. Describe the biological or computational \nproblem you aim to address and why it's important. Discuss the current state of research in\nthis area and any gaps or challenges that your task could help address. This section \nshould convince readers of the significance and relevance of your task.\n"
+# A list of references to relevant literature. Each reference should be a DOI or a bibtex entry
+references:
+  doi:
+    - 10.21203/rs.3.rs-4181617/v1
+  # bibtex:
+  #   - |
+  #     @article{doe_2021_template,
+  #       doi = {10.21203/rs.3.rs-4181617/v1},
+  #       url = {https://doi.org/10.21203/rs.3.rs-4181617/v1},
+  #       author = {Doe, John},
+  #       title = {A template for creating new tasks},
+  #       publisher = {Research Square},
+  #       year = {2021},
+  #     }
+info:
+  image: The name of the image file to use for the component on the website.
+  test_resources:
+    - type: s3
+      path: s3://openproblems-data/resources_test/common/2023_10x_mouse_brain_xenium_rep1/
+      dest: resources_test/common/2023_10x_mouse_brain_xenium_rep1/
+    - type: s3
+      path: s3://openproblems-data/resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/
+      dest: resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/
+    - type: s3
+      path: s3://openproblems-data/resources_test/task_spatial_segmentation/
+      dest: resources_test/task_spatial_segmentation
+# Step 6: Update the authors of the task.
+authors:
+  # - name: John Doe
+  #   roles: [ author, maintainer, contributor ]
+  #   info: 
+  #     github: johndoe
+  #     orcid: 0000-0000-0000-0000
+  #     email: john@doe.me
+  #     twitter: johndoe
+  #     linkedin: johndoe
+  - name: Daria Romanovskaia
+    roles: [maintainer, author]
+    info:
+      github: dariarom94
+      orcid: 0000-0003-2831-0919
+  - name: Florian Heyl
+    roles: [maintainer, author]
+    info:
+      github: heylf
+      orcid: 0000-0002-3651-5685
+  - name: Robrecht Cannoodt
+    roles: [author]
+    info:
+      github: rcannood
+      orcid: "0000-0003-3641-729X"
+# Step 7: Remove all of the comments of the steps you completed
+config_mods: |
+  .runners[.type == "nextflow"].config.labels := { lowmem : "memory = 20.Gb", midmem : "memory = 50.Gb", highmem : "memory = 100.Gb", lowcpu : "cpus = 5", midcpu : "cpus = 15", highcpu : "cpus = 30", lowtime : "time = 1.h", midtime : "time = 4.h", hightime : "time = 8.h", veryhightime : "time = 24.h" }
+repositories:
+  - name: openproblems
+    type: github
+    repo: openproblems-bio/openproblems
+    tag: build/main
+  - name: task_ist_preprocessing
+    type: github
+    repo: openproblems-bio/task_ist_preprocessing
+    tag: build/main
+# Step 9: High five yourself!

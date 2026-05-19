@@ -1,0 +1,27 @@
+#TODO: Change to the required and/or optional fields of the anndata
+type: file
+example: "resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.zarr"
+label: "Predicted data"
+summary: A predicted dataset as output by a method.
+info:
+  format:
+    type: spatialdata_zarr
+    labels:
+      - type: object
+        name: "segmentation"
+        description: Segmentation of the data
+        required: true
+    tables:
+      - type: anndata
+        name: table
+        description: AnnData table
+        required: true
+        uns:
+          - type: string
+            name: dataset_id
+            description: "A unique identifier for the dataset"
+            required: true
+          - type: string
+            name: method_id
+            description: "A unique identifier for the method"
+            required: true

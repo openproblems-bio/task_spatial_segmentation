@@ -1,0 +1,24 @@
+__merge__: ../../api/comp_control_method.yaml
+
+name: true_labels
+label: True Labels
+summary: "A positive control where the ground truth cell_labels are used as the prediction."
+description: |
+  A positive control where the ground truth cell_labels segmentation is copied
+  directly as the prediction. This represents the upper bound of performance
+  for any segmentation method.
+
+resources:
+  - type: python_script
+    path: script.py
+
+engines:
+  - type: docker
+    image: openproblems/base_python:1
+    __merge__: ../../base/setup_spatialdata_partial.yaml
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [midtime, lowmem, lowcpu]

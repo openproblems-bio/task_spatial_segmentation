@@ -1,0 +1,473 @@
+name: "baysor"
+namespace: "methods"
+version: "build_segger"
+argument_groups:
+- name: "Arguments"
+  arguments:
+  - type: "file"
+    name: "--input"
+    label: "Unlabelled"
+    summary: "Preprocessed spatial transcriptomics data without segmentation labels\
+      \ for method input."
+    description: "This dataset contains preprocessed images and transcript point clouds\
+      \ for spatial transcriptomics data.\nGround truth segmentation labels are intentionally\
+      \ excluded to prevent methods from cheating.\n"
+    info:
+      format:
+        type: "spatialdata_zarr"
+        images:
+        - type: "object"
+          name: "image"
+          description: "The raw image data"
+          required: true
+        labels:
+        - type: "object"
+          name: "cell_labels"
+          description: "Vendor-provided cell segmentation labels, exposed as a segmentation\
+            \ prior"
+          required: false
+        - type: "object"
+          name: "nucleus_labels"
+          description: "Vendor-provided nucleus segmentation labels, exposed as a\
+            \ segmentation prior"
+          required: false
+        points:
+        - type: "dataframe"
+          name: "transcripts"
+          description: "Point cloud data of transcripts"
+          required: true
+          columns:
+          - type: "float"
+            name: "x"
+            required: true
+            description: "x-coordinate of the point"
+          - type: "float"
+            name: "y"
+            required: true
+            description: "y-coordinate of the point"
+          - type: "float"
+            name: "z"
+            required: false
+            description: "z-coordinate of the point"
+          - type: "categorical"
+            name: "feature_name"
+            required: true
+            description: "Name of the feature"
+          - type: "float"
+            name: "qv"
+            required: false
+            description: "Quality value of the point"
+          - type: "long"
+            name: "transcript_id"
+            required: true
+            description: "Unique identifier of the transcript"
+          - type: "boolean"
+            name: "overlaps_nucleus"
+            required: false
+            description: "Whether the point overlaps with the nucleus (derived from\
+              \ morphology)"
+          - type: "integer"
+            name: "cell_id"
+            required: false
+            description: "Vendor-provided cell assignment from the raw data, exposed\
+              \ as a\nsegmentation prior. This is NOT the ground truth used for\n\
+              evaluation (which is held out in spatial_solution); methods may\nfreely\
+              \ condition on it.\n"
+        tables:
+        - type: "anndata"
+          name: "table"
+          description: "Metadata of spatial dataset"
+          required: true
+          uns:
+          - type: "string"
+            name: "dataset_id"
+            required: true
+            description: "A unique identifier for the dataset"
+          - type: "string"
+            name: "dataset_name"
+            required: true
+            description: "A human-readable name for the dataset"
+          - type: "string"
+            name: "dataset_url"
+            required: true
+            description: "Link to the original source of the dataset"
+          - type: "string"
+            name: "dataset_reference"
+            required: true
+            description: "Bibtex reference of the paper in which the dataset was published"
+          - type: "string"
+            name: "dataset_summary"
+            required: true
+            description: "Short description of the dataset"
+          - type: "string"
+            name: "dataset_description"
+            required: true
+            description: "Long description of the dataset"
+          - type: "string"
+            name: "dataset_organism"
+            required: true
+            description: "The organism of the sample in the dataset"
+          - type: "string"
+            name: "orig_dataset_id"
+            required: true
+            description: "The identifier of the original dataset from which this dataset\
+              \ was derived (if applicable)"
+          var:
+          - type: "string"
+            name: "feature_id"
+            required: false
+            description: "Unique identifier for the feature, usually a ENSEMBL gene\
+              \ id."
+          - type: "string"
+            name: "feature_name"
+            required: true
+            description: "A human-readable name for the feature, usually a gene symbol."
+        coordinate_systems:
+        - type: "object"
+          name: "global"
+          description: "Coordinate system of the replicate"
+          required: true
+    example:
+    - "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_unlabelled.zarr"
+    must_exist: true
+    create_parent: true
+    required: true
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+  - type: "file"
+    name: "--output"
+    label: "Predicted data"
+    summary: "A predicted dataset as output by a method."
+    info:
+      format:
+        type: "spatialdata_zarr"
+        labels:
+        - type: "object"
+          name: "segmentation"
+          description: "Segmentation of the data"
+          required: true
+        tables:
+        - type: "anndata"
+          name: "table"
+          description: "AnnData table"
+          required: true
+          uns:
+          - type: "string"
+            name: "dataset_id"
+            description: "A unique identifier for the dataset"
+            required: true
+          - type: "string"
+            name: "method_id"
+            description: "A unique identifier for the method"
+            required: true
+    example:
+    - "resources_test/task_spatial_segmentation/mouse_brain_combined/prediction.zarr"
+    must_exist: true
+    create_parent: true
+    required: true
+    direction: "output"
+    multiple: false
+    multiple_sep: ";"
+  - type: "string"
+    name: "--transcripts_key"
+    description: "The key of the transcripts within the points of the spatial data"
+    info: null
+    default:
+    - "transcripts"
+    required: false
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+  - type: "string"
+    name: "--coordinate_system"
+    description: "The key of the pixel space coordinate system within the spatial\
+      \ data"
+    info: null
+    default:
+    - "global"
+    required: false
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+  - type: "string"
+    name: "--prior_segmentation_key"
+    description: "The key for the prior segmentation stored within the spatial data"
+    info: null
+    default:
+    - "nucleus_labels"
+    required: false
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+  - type: "boolean"
+    name: "--force_2d"
+    description: "Ignores z-column in the data if it is provided"
+    info: null
+    default:
+    - true
+    required: false
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+  - type: "integer"
+    name: "--min_molecules_per_cell"
+    description: "Minimal number of molecules per cell"
+    info: null
+    default:
+    - 50
+    required: false
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+  - type: "double"
+    name: "--scale"
+    description: "\"Scale parameter, which suggest approximate cell radius for the\
+      \ algorithm. Must be in the same units as \nx and y molecule coordinates. Negative\
+      \ values mean it must be estimated from `min_molecules_per_cell`.\"\n"
+    info: null
+    default:
+    - -1.0
+    required: false
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+  - type: "string"
+    name: "--scale_std"
+    description: "Standard deviation of scale across cells relative to `scale`"
+    info: null
+    default:
+    - "25%"
+    required: false
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+  - type: "integer"
+    name: "--n_clusters"
+    description: "Number of molecule clusters, i.e. major cell types."
+    info: null
+    default:
+    - 4
+    required: false
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+  - type: "double"
+    name: "--prior_segmentation_confidence"
+    description: "Confidence of the prior segmentation"
+    info: null
+    default:
+    - 0.8
+    required: false
+    direction: "input"
+    multiple: false
+    multiple_sep: ";"
+resources:
+- type: "python_script"
+  path: "script.py"
+  is_executable: true
+label: "Baysor Transcript Assignment"
+summary: "Assign transcripts to cells using the Baysor method"
+description: "Baysor is a tool for performing cell segmentation on imaging-based spatial\
+  \ transcriptomics data. It optimizes segmentation considering the likelihood of\
+  \ transcriptional composition, size and shape of the cell."
+test_resources:
+- type: "python_script"
+  path: "run_and_check_output.py"
+  is_executable: true
+- type: "python_script"
+  path: "check_config.py"
+  is_executable: true
+- type: "file"
+  path: "resources_test/task_spatial_segmentation/mouse_brain_combined"
+  dest: "resources_test/task_spatial_segmentation/mouse_brain_combined"
+info:
+  type: "method"
+  type_info:
+    label: "Method"
+    summary: "A method."
+    description: "A method to predict the task effects.\n"
+status: "enabled"
+scope:
+  image: "public"
+  target: "public"
+repositories:
+- type: "github"
+  name: "openproblems"
+  repo: "openproblems-bio/openproblems"
+  tag: "build/main"
+- type: "github"
+  name: "task_ist_preprocessing"
+  repo: "openproblems-bio/task_ist_preprocessing"
+  tag: "build/main"
+license: "MIT"
+references:
+  doi:
+  - "10.1038/s41587-021-01044-w"
+links:
+  repository: "https://github.com/kharchenkolab/Baysor"
+  docker_registry: "ghcr.io"
+  documentation: "https://kharchenkolab.github.io/Baysor/dev/"
+runners:
+- type: "executable"
+  id: "executable"
+  docker_setup_strategy: "ifneedbepullelsecachedbuild"
+- type: "nextflow"
+  id: "nextflow"
+  directives:
+    label:
+    - "hightime"
+    - "highcpu"
+    - "highmem"
+    tag: "$id"
+  auto:
+    simplifyInput: true
+    simplifyOutput: false
+    transcript: false
+    publish: false
+  config:
+    labels:
+      lowmem: "memory = 20.Gb"
+      midmem: "memory = 50.Gb"
+      highmem: "memory = 100.Gb"
+      lowcpu: "cpus = 5"
+      midcpu: "cpus = 15"
+      highcpu: "cpus = 30"
+      lowtime: "time = 1.h"
+      midtime: "time = 4.h"
+      hightime: "time = 8.h"
+      veryhightime: "time = 24.h"
+  debug: false
+  container: "docker"
+engines:
+- type: "docker"
+  id: "docker"
+  image: "openproblems/base_python:1"
+  namespace_separator: "/"
+  setup:
+  - type: "python"
+    user: false
+    pypi:
+    - "spatialdata>=0.7.3"
+    - "anndata>=0.12.0"
+    - "zarr>=3.0.0"
+    upgrade: true
+  - type: "apt"
+    packages:
+    - "cmake"
+    - "ninja-build"
+    - "build-essential"
+    - "libeigen3-dev"
+    - "libspdlog-dev"
+    - "libcgal-dev"
+    - "libhdf5-dev"
+    - "nlohmann-json3-dev"
+    - "libtiff-dev"
+    interactive: false
+  - type: "python"
+    user: false
+    github:
+    - "openproblems-bio/core#subdirectory=packages/python/openproblems"
+    upgrade: true
+  - type: "docker"
+    run:
+    - ". /etc/os-release && wget -q \"https://apache.jfrog.io/artifactory/arrow/debian/apache-arrow-apt-source-latest-${VERSION_CODENAME}.deb\"\
+      \ -O /tmp/apache-arrow.deb && apt-get install -y /tmp/apache-arrow.deb && apt-get\
+      \ update -q && apt-get install -y libarrow-dev libparquet-dev && rm /tmp/apache-arrow.deb"
+    - "git clone --depth 1 --branch cpp https://github.com/kharchenkolab/Baysor.git\
+      \ /tmp/baysor_src"
+    - "cd /tmp/baysor_src && cmake -P cmake/build_and_install.cmake"
+    - "cp /tmp/baysor_src/install/bin/baysor /usr/local/bin/baysor"
+    - "rm -rf /tmp/baysor_src"
+  entrypoint: []
+  cmd: null
+- type: "native"
+  id: "native"
+build_info:
+  config: "src/methods/baysor/config.vsh.yaml"
+  runner: "executable"
+  engine: "docker|native"
+  output: "target/executable/methods/baysor"
+  executable: "target/executable/methods/baysor/baysor"
+  viash_version: "0.9.7"
+  git_commit: "8782a0050e2ef24211546ffe996a052ffcd64d27"
+  git_remote: "https://github.com/openproblems-bio/task_spatial_segmentation"
+package_config:
+  name: "task_spatial_segmentation"
+  version: "build_segger"
+  label: "Spatial Segmentation"
+  summary: "A one sentence summary of purpose and methodology. Used for creating an\
+    \ overview tables."
+  description: "Provide a clear and concise description of your task, detailing the\
+    \ specific problem it aims\nto solve. Outline the input data types, the expected\
+    \ output, and any assumptions or constraints.\nBe sure to explain any terminology\
+    \ or concepts that are essential for understanding the task.\n\nExplain the motivation\
+    \ behind your proposed task. Describe the biological or computational \nproblem\
+    \ you aim to address and why it's important. Discuss the current state of research\
+    \ in\nthis area and any gaps or challenges that your task could help address.\
+    \ This section \nshould convince readers of the significance and relevance of\
+    \ your task.\n"
+  info:
+    image: "The name of the image file to use for the component on the website."
+    test_resources:
+    - type: "s3"
+      path: "s3://openproblems-data/resources_test/common/2023_10x_mouse_brain_xenium_rep1/"
+      dest: "resources_test/common/2023_10x_mouse_brain_xenium_rep1/"
+    - type: "s3"
+      path: "s3://openproblems-data/resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/"
+      dest: "resources_test/common/2023_yao_mouse_brain_scrnaseq_10xv2/"
+    - type: "s3"
+      path: "s3://openproblems-data/resources_test/task_spatial_segmentation/"
+      dest: "resources_test/task_spatial_segmentation"
+  repositories:
+  - type: "github"
+    name: "openproblems"
+    repo: "openproblems-bio/openproblems"
+    tag: "build/main"
+  - type: "github"
+    name: "task_ist_preprocessing"
+    repo: "openproblems-bio/task_ist_preprocessing"
+    tag: "build/main"
+  viash_version: "0.9.7"
+  source: "src"
+  target: "target"
+  config_mods:
+  - ".runners[.type == \"nextflow\"].config.labels := { lowmem : \"memory = 20.Gb\"\
+    , midmem : \"memory = 50.Gb\", highmem : \"memory = 100.Gb\", lowcpu : \"cpus\
+    \ = 5\", midcpu : \"cpus = 15\", highcpu : \"cpus = 30\", lowtime : \"time = 1.h\"\
+    , midtime : \"time = 4.h\", hightime : \"time = 8.h\", veryhightime : \"time =\
+    \ 24.h\" }\n"
+  authors:
+  - name: "Daria Romanovskaia"
+    roles:
+    - "maintainer"
+    - "author"
+    info:
+      github: "dariarom94"
+      orcid: "0000-0003-2831-0919"
+  - name: "Florian Heyl"
+    roles:
+    - "maintainer"
+    - "author"
+    info:
+      github: "heylf"
+      orcid: "0000-0002-3651-5685"
+  - name: "Robrecht Cannoodt"
+    roles:
+    - "author"
+    info:
+      github: "rcannood"
+      orcid: "0000-0003-3641-729X"
+  keywords:
+  - "single-cell"
+  - "openproblems"
+  - "benchmark"
+  license: "MIT"
+  organization: "openproblems-bio"
+  references:
+    doi:
+    - "10.21203/rs.3.rs-4181617/v1"
+  links:
+    repository: "https://github.com/openproblems-bio/task_spatial_segmentation"
+    docker_registry: "ghcr.io"
+    issue_tracker: "https://github.com/openproblems-bio/task_spatial_segmentation/issues"

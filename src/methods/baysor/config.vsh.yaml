@@ -1,0 +1,115 @@
+__merge__: /src/api/comp_method.yaml
+
+name: baysor
+label: "Baysor Transcript Assignment"
+summary: "Assign transcripts to cells using the Baysor method"
+description: "Baysor is a tool for performing cell segmentation on imaging-based spatial transcriptomics data. It optimizes segmentation considering the likelihood of transcriptional composition, size and shape of the cell."
+links:
+  documentation: "https://kharchenkolab.github.io/Baysor/dev/"
+  repository: "https://github.com/kharchenkolab/Baysor"
+references:
+  doi: "10.1038/s41587-021-01044-w"
+
+arguments:
+  - name: --transcripts_key
+    type: string
+    description: The key of the transcripts within the points of the spatial data
+    default: transcripts
+  - name: --coordinate_system
+    type: string
+    description: The key of the pixel space coordinate system within the spatial data
+    default: global
+  - name: --prior_segmentation_key
+    type: string
+    description: The key for the prior segmentation stored within the spatial data
+    default: nucleus_labels
+
+  - name: --force_2d
+    type: boolean
+    required: false
+    description: "Ignores z-column in the data if it is provided"
+    direction: input 
+    default: true
+
+  - name: --min_molecules_per_cell
+    type: integer
+    required: false
+    description: "Minimal number of molecules per cell"
+    direction: input 
+    default: 50
+  
+  - name: --scale
+    type: double
+    required: false
+    description: |
+      "Scale parameter, which suggest approximate cell radius for the algorithm. Must be in the same units as 
+      x and y molecule coordinates. Negative values mean it must be estimated from `min_molecules_per_cell`."
+    direction: input 
+    default: -1.0
+
+  - name: --scale_std
+    type: string
+    required: false
+    description: "Standard deviation of scale across cells relative to `scale`"
+    direction: input 
+    default: "25%"
+
+  - name: --n_clusters
+    type: integer
+    required: false
+    description: "Number of molecule clusters, i.e. major cell types."
+    direction: input 
+    default: 4
+
+  - name: --prior_segmentation_confidence
+    type: double
+    required: false
+    description: "Confidence of the prior segmentation"
+    direction: input 
+    default: 0.8
+
+resources:
+  - type: python_script
+    path: script.py
+
+engines:
+  #NOTE: The docker container must be build with the correct platform. On mac viash test won't work. Rebuild the container
+  #      with the correct platform separately with the following command:
+  #      docker run -it --rm --platform linux/x86_64 python:3.11.13-bookworm /bin/bash
+  #      ... and then the commands to build the next layers.
+  #      (commands can be retrieved from `viash run src/methods_transcript_assignment/baysor/config.vsh.yaml -- ---dockerfile`)
+  - type: docker
+    image: openproblems/base_python:1
+    __merge__:
+      - /src/base/setup_spatialdata_partial.yaml
+    setup:
+      - type: apt
+        packages:
+          - cmake
+          - ninja-build
+          - build-essential
+          - libeigen3-dev
+          - libspdlog-dev
+          - libcgal-dev
+          - libhdf5-dev
+          - nlohmann-json3-dev
+          - libtiff-dev
+      - type: python
+        github:
+          - openproblems-bio/core#subdirectory=packages/python/openproblems
+      - type: docker
+        run:
+          # Install Apache Arrow (with compute, CSV, Parquet support) from official repo
+          - . /etc/os-release && wget -q "https://apache.jfrog.io/artifactory/arrow/debian/apache-arrow-apt-source-latest-${VERSION_CODENAME}.deb" -O /tmp/apache-arrow.deb && apt-get install -y /tmp/apache-arrow.deb && apt-get update -q && apt-get install -y libarrow-dev libparquet-dev && rm /tmp/apache-arrow.deb
+          # Build and install Baysor C++ from source (cpp branch)
+          - git clone --depth 1 --branch cpp https://github.com/kharchenkolab/Baysor.git /tmp/baysor_src
+          - cd /tmp/baysor_src && cmake -P cmake/build_and_install.cmake
+          - cp /tmp/baysor_src/install/bin/baysor /usr/local/bin/baysor
+          - rm -rf /tmp/baysor_src
+  - type: native
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [ hightime, highcpu, highmem ]
