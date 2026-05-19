@@ -1,0 +1,37 @@
+__merge__: ../../api/comp_metric.yaml
+
+name: specificity_celltype_marker
+
+info:
+  metrics:
+    - name: specificity_celltype_marker
+      label: "Specificty based on cell type superset marker gene expression"
+      summary: "Using a curated list of marker genes, exclusive marker gene expression is checked for each cell."
+      description: |
+        We start from a list of curated marker genes for each cell type superset. The number of cell
+        type supersets can vary. For each cell, we check if we observe at least one RNA molecule from
+        at least one marker gene of each superset. Biologically, a cell is expected to express marker
+        genes from no more than one superset. This specificity metric quantifies the fraction of cells
+        that express genes from at least two supersets (lower is better). Note that this metric will
+        favor conservative segmentation algorithms (only segmenting DAPI will have high specificity),
+        hence the metric will be most useful when contrasted with a sensitivity metric.
+      references:
+        doi: NULL
+      min: 0
+      max: 1
+      maximize: false
+
+resources:
+  - type: python_script
+    path: script.py
+
+engines:
+  - type: docker
+    image: openproblems/base_python:1
+    __merge__: ../../base/setup_spatialdata_partial.yaml
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [midtime, midmem, midcpu]
