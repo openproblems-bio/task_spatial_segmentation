@@ -31,6 +31,7 @@ arguments:
   - name: --init_segmentation
     type: string
     choices: [auto, cellpose, transcript_cell_id]
+    default: auto
     description: |
       Source of the initial boundary node set that segger trains against.
       'auto' uses the transcripts' `cell_id` prior column when it is
@@ -38,8 +39,6 @@ arguments:
       'cellpose' always runs Cellpose. 'transcript_cell_id' requires a
       `cell_id` column on the transcripts and builds one convex-hull
       polygon per cell id.
-    info:
-      test_default: auto
   - name: --n_epochs
     type: integer
     default: 20
@@ -59,9 +58,8 @@ arguments:
     description: "Which polygon set drives the prediction graph."
   - name: --cellpose_diameter
     type: double
+    default: 30
     description: "Cell diameter (pixels) for the Cellpose nucleus pre-segmentation."
-    info:
-      test_default: 30
 
 resources:
   - type: python_script
