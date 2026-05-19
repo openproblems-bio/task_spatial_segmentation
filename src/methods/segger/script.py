@@ -91,7 +91,7 @@ def _polygons_from_cellpose(image_element, diameter: float) -> tuple[np.ndarray,
         arr = arr[0]
     print(f"Cellpose input image shape: {arr.shape}", flush=True)
     model = CellposeModel(gpu=torch.cuda.is_available())
-    masks, _, _ = model.eval(arr, diameter=diameter, niter=10, flow_threshold=0, min_size=-1, resample=False)
+    masks, _, _ = model.eval(arr, diameter=diameter, niter=10, flow_threshold=0, min_size=0, resample=False)
     masks = masks.astype(np.int32)
 
     # Polygonize. shapes() yields (geom_dict, label) for connected regions.
