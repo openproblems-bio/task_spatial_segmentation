@@ -38,8 +38,8 @@ def convert_to_lower_dtype(arr):
 
 print('Reading input', flush=True)
 sdata = sd.read_zarr(par["input"])
-image = sdata['morphology_mip']['scale0'].image.compute().to_numpy()
-transformation = sdata['morphology_mip']['scale0'].image.transform.copy()
+image = sdata['image']['scale0'].image.compute().to_numpy()
+transformation = sdata['image']['scale0'].image.transform.copy()
 
 print('Initializing Cellpose model', flush=True)
 model = CellposeModel(gpu=torch.cuda.is_available())
