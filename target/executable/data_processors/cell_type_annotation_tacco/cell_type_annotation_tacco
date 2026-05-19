@@ -452,9 +452,9 @@ RUN pip install --upgrade pip && \
   pip install --upgrade --no-cache-dir "tacco"
 
 LABEL org.opencontainers.image.description="Companion container for running component data_processors cell_type_annotation_tacco"
-LABEL org.opencontainers.image.created="2026-05-19T09:27:42Z"
+LABEL org.opencontainers.image.created="2026-05-19T09:38:19Z"
 LABEL org.opencontainers.image.source="https://github.com/simonwm/tacco"
-LABEL org.opencontainers.image.revision="bc85c8fbfa577137276c6d5d277de34a1165c4fb"
+LABEL org.opencontainers.image.revision="2b888be3abb829b2ca1ed08d6b3b4bb52665f779"
 LABEL org.opencontainers.image.version="build_main"
 
 VIASHDOCKER

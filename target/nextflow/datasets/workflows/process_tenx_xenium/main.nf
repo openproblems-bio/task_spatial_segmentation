@@ -3546,7 +3546,7 @@ meta = [
     "engine" : "native",
     "output" : "target/nextflow/datasets/workflows/process_tenx_xenium",
     "viash_version" : "0.9.7",
-    "git_commit" : "bc85c8fbfa577137276c6d5d277de34a1165c4fb",
+    "git_commit" : "2b888be3abb829b2ca1ed08d6b3b4bb52665f779",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
