@@ -72,8 +72,8 @@ class PercentileNormalizer(Normalizer):
 
 print("Reading input", flush=True)
 sdata = sd.read_zarr(par["input"])
-image = sdata["morphology_mip"]["scale0"].image.compute().to_numpy()
-transformation = sdata["morphology_mip"]["scale0"].image.transform.copy()
+image = sdata["image"]["scale0"].image.compute().to_numpy()
+transformation = sdata["image"]["scale0"].image.transform.copy()
 
 print(f"Loading pretrained StarDist model: {par['model']}", flush=True)
 model = StarDist2D.from_pretrained(par["model"])

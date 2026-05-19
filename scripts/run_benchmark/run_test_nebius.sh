@@ -9,7 +9,7 @@ cd "$REPO_ROOT"
 set -e
 
 resources_test_s3=s3://openproblems-data/resources_test/task_spatial_segmentation
-publish_dir_s3="s3://hca-op-spatial/temp/results/$(date +%Y-%m-%d_%H-%M-%S)"
+publish_dir_s3="/scratch/results/runs/$(date +%Y-%m-%d_%H-%M-%S)"
 
 # write the parameters to file
 cat > /tmp/params.yaml << HERE
@@ -18,15 +18,15 @@ input_spatial_unlabelled: $resources_test_s3/mouse_brain_combined/spatial_unlabe
 input_spatial_solution: $resources_test_s3/mouse_brain_combined/spatial_solution.zarr
 input_scrnaseq_reference: $resources_test_s3/mouse_brain_combined/scrnaseq_reference.h5ad
 output_state: "state.yaml"
-publish_dir: $publish_dir_s3
+publish_dir: "$publish_dir_s3"
 HERE
 
 tw launch https://github.com/openproblems-bio/task_spatial_segmentation.git \
   --revision build/main \
   --pull-latest \
   --main-script target/nextflow/workflows/run_benchmark/main.nf \
-  --workspace 8386213183400 \
-  --compute-env 7Odt43ln9XureGja6Frdm7 \
+  --workspace 167877437119966 \
+  --compute-env 5hfmdCBxMRd4nHZaJKYEQZ \
   --params-file /tmp/params.yaml \
-  --config src/base/labels_tw.config \
+  --config src/base/labels_nebius.config \
   --labels task_spatial_segmentation,test

@@ -93,6 +93,10 @@ repositories:
   - name: openproblems
     type: github
     repo: openproblems-bio/openproblems
-    tag: build/main # Step 8: Set this to the latest release
+    tag: build/main
+  - name: task_ist_preprocessing
+    type: github
+    repo: openproblems-bio/task_ist_preprocessing
+    tag: build/main
 
 # Step 9: High five yourself!

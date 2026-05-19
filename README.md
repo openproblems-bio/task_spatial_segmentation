@@ -28,9 +28,11 @@ should convince readers of the significance and relevance of your task.
 
 ## Authors & contributors
 
-| Name | Roles | Github | Twitter | Email | Orcid | Linkedin |
-|:---|:---|:---|:---|:---|:---|:---|
-| John Doe | author, maintainer | johndoe | johndoe | john@doe.me | 0000-0000-0000-0000 | johndoe |
+| Name               | Roles              | Orcid               | Github     |
+|:-------------------|:-------------------|:--------------------|:-----------|
+| Daria Romanovskaia | maintainer, author | 0000-0003-2831-0919 | dariarom94 |
+| Florian Heyl       | maintainer, author | 0000-0002-3651-5685 | heylf      |
+| Robrecht Cannoodt  | author             | 0000-0003-3641-729X | rcannood   |
 
 ## API
 
@@ -85,7 +87,7 @@ Format:
 
     SpatialData object
      images: 'image', 'image_3D', 'he_image'
-     labels: 'cell_labels', 'nucleus_labels'
+     labels: 'cell_labels', 'nucleus_labels', 'groundtruth_cell_labels'
      points: 'transcripts'
      shapes: 'cell_boundaries', 'nucleus_boundaries'
      tables: 'metadata'
@@ -107,10 +109,11 @@ Data structure:
 
 *labels*
 
-| Name             | Description                            |
-|:-----------------|:---------------------------------------|
-| `cell_labels`    | (*Optional*) Cell segmentation labels. |
-| `nucleus_labels` | (*Optional*) Cell segmentation labels. |
+| Name | Description |
+|:---|:---|
+| `cell_labels` | Vendor-provided cell segmentation labels. |
+| `nucleus_labels` | Vendor-provided nucleus segmentation labels. |
+| `groundtruth_cell_labels` | (*Optional*) Manually annotated cell segmentation labels used as ground truth for evaluation. |
 
 *points*
 
@@ -150,6 +153,7 @@ Data structure:
 | Slot | Type | Description |
 |:---|:---|:---|
 | `obs["cell_id"]` | `string` | A unique identifier for the cell. |
+| `obs["groundtruth_cell_type"]` | `string` | (*Optional*) Manually curated cell type annotations which serves as ground truth for evaluations. |
 | `var["gene_ids"]` | `string` | Unique identifier for the gene. |
 | `var["feature_types"]` | `string` | Type of the feature. |
 | `obsm["spatial"]` | `double` | Spatial coordinates of the cell. |
@@ -207,7 +211,8 @@ Format:
 <div class="small">
 
     SpatialData object
-     images: 'morphology_mip'
+     images: 'image'
+     labels: 'cell_labels', 'nucleus_labels'
      points: 'transcripts'
      tables: 'table'
      coordinate_systems: 'global'
@@ -220,9 +225,16 @@ Data structure:
 
 *images*
 
-| Name             | Description                                              |
-|:-----------------|:---------------------------------------------------------|
-| `morphology_mip` | The raw morphology image (maximum intensity projection). |
+| Name    | Description         |
+|:--------|:--------------------|
+| `image` | The raw image data. |
+
+*labels*
+
+| Name | Description |
+|:---|:---|
+| `cell_labels` | (*Optional*) Vendor-provided cell segmentation labels, exposed as a segmentation prior. |
+| `nucleus_labels` | (*Optional*) Vendor-provided nucleus segmentation labels, exposed as a segmentation prior. |
 
 *points*
 
@@ -237,6 +249,7 @@ Data structure:
 | `qv` | `float` | (*Optional*) Quality value of the point. |
 | `transcript_id` | `long` | Unique identifier of the transcript. |
 | `overlaps_nucleus` | `boolean` | (*Optional*) Whether the point overlaps with the nucleus (derived from morphology). |
+| `cell_id` | `integer` | (*Optional*) Vendor-provided cell assignment from the raw data, exposed as a segmentation prior. This is NOT the ground truth used for evaluation (which is held out in spatial_solution); methods may freely condition on it. |
 
 *tables*
 
@@ -282,7 +295,7 @@ Format:
 <div class="small">
 
     SpatialData object
-     labels: 'cell_labels', 'nucleus_labels'
+     labels: 'cell_labels', 'nucleus_labels', 'groundtruth_cell_labels'
      points: 'transcripts'
      shapes: 'cell_boundaries', 'nucleus_boundaries'
      tables: 'table'
@@ -295,10 +308,11 @@ Data structure:
 
 *labels*
 
-| Name             | Description                                            |
-|:-----------------|:-------------------------------------------------------|
-| `cell_labels`    | Ground truth cell segmentation labels.                 |
-| `nucleus_labels` | (*Optional*) Ground truth nucleus segmentation labels. |
+| Name | Description |
+|:---|:---|
+| `cell_labels` | Vendor-provided cell segmentation labels. |
+| `nucleus_labels` | Vendor-provided nucleus segmentation labels. |
+| `groundtruth_cell_labels` | (*Optional*) Manually annotated cell segmentation labels used as ground truth for evaluation. |
 
 *points*
 
@@ -338,6 +352,7 @@ assignments.
 | `obs["region"]` | `string` | Name of the label image this cell belongs to (e.g. ‘cell_labels’). |
 | `obs["cell_area"]` | `double` | (*Optional*) Area of the cell in pixels. |
 | `obs["transcript_counts"]` | `integer` | (*Optional*) Total number of transcripts assigned to this cell. |
+| `obs["groundtruth_cell_type"]` | `string` | (*Optional*) Manually curated cell type annotations which serves as ground truth for evaluations. |
 | `var["feature_id"]` | `string` | (*Optional*) Unique identifier for the feature, usually a ENSEMBL gene id. |
 | `var["feature_name"]` | `string` | A human-readable name for the feature, usually a gene symbol. |
 | `uns["dataset_id"]` | `string` | A unique identifier for the dataset. |

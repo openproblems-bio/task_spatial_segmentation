@@ -76,6 +76,17 @@ print(">> Read spatial data", flush=True)
 sp_data = sd.read_zarr(par["input_sp"])
 print(f"spatial data: {sp_data}")
 
+# TODO: make sure user provides the groundtruth instead of copying it from the vendor labels
+if "groundtruth_cell_labels" not in sp_data.labels:
+    if "cell_labels" in sp_data.labels:
+        print("=" * 80, flush=True)
+        print("WARNING: 'groundtruth_cell_labels' not found in spatial data!", flush=True)
+        print("Temporarily falling back to vendor-provided 'cell_labels' as ground truth.", flush=True)
+        print("=" * 80, flush=True)
+        sp_data["groundtruth_cell_labels"] = sp_data.labels["cell_labels"]
+    else:
+        raise ValueError("Neither 'groundtruth_cell_labels' nor 'cell_labels' found in spatial data.")
+
 dataset_uns = {
     "dataset_id": par["dataset_id"],
     "dataset_name": par["dataset_name"],
@@ -92,13 +103,16 @@ dataset_uns = {
 # ---------------------------------------------------------------
 print(">> Building spatial dataset for methods (no ground truth)", flush=True)
 
-# Strip ground-truth-revealing columns, but keep the vendor `cell_id` as a
-# segmentation prior — most methods (e.g. segger) condition on the vendor's
-# morphology-based assignment without treating it as ground truth. The held-out
-# ground truth used for evaluation lives in spatial_solution, not here.
-_GROUND_TRUTH_COLS = {"nucleus_id", "cell_type"}
+# Keep only the columns defined in the file_spatial_unlabelled schema.
+# Any extra columns (e.g. ground-truth nucleus_id, cell_type) are dropped by
+# only selecting schema-defined columns rather than by explicit exclusion.
+_TRANSCRIPT_COLS_REQUIRED = ["x", "y", "feature_name", "transcript_id"]
+_TRANSCRIPT_COLS_OPTIONAL = ["z", "qv", "overlaps_nucleus", "cell_id"]
+_TRANSCRIPT_COLS_SCHEMA = set(_TRANSCRIPT_COLS_REQUIRED + _TRANSCRIPT_COLS_OPTIONAL)
 transcripts = sp_data.points["transcripts"]
-clean_transcript_cols = [c for c in transcripts.columns if c not in _GROUND_TRUTH_COLS]
+for col in _TRANSCRIPT_COLS_REQUIRED:
+    assert col in transcripts.columns, f"Required transcript column '{col}' is missing from the input data"
+clean_transcript_cols = [c for c in transcripts.columns if c in _TRANSCRIPT_COLS_SCHEMA]
 clean_transcripts = transcripts[clean_transcript_cols]
 
 # Build var from unique feature names in transcripts, mapping to feature_ids from metadata
@@ -112,20 +126,32 @@ if "metadata" in sp_data.tables and "gene_ids" in sp_data.tables["metadata"].var
 # Minimal table: dataset metadata in uns, gene list in var
 minimal_table = ad.AnnData(var=var_df, uns=dataset_uns)
 
-output_spatial = sd.SpatialData(
-    images={"morphology_mip": sp_data.images["morphology_mip"]},
+if "image" in sp_data.images:
+    input_image_name = "image"
+elif "morphology_mip" in sp_data.images:
+    print("WARNING: 'morphology_mip' image found but expected 'image'. Using 'morphology_mip' as fallback.", flush=True)
+    input_image_name = "morphology_mip"
+else:
+    raise ValueError("No suitable image found in spatial data. Expected 'image' or 'morphology_mip'.")
+
+unlabelled_labels = {k: sp_data.labels[k] for k in ["cell_labels", "nucleus_labels"] if k in sp_data.labels}
+
+output_spatial_unlabelled = sd.SpatialData(
+    images={"image": sp_data.images[input_image_name]},
+    labels=unlabelled_labels,
     points={"transcripts": clean_transcripts},
     tables={"table": minimal_table},
 )
 
 print(">> Writing spatial unlabelled dataset", flush=True)
+print("Format: ", output_spatial_unlabelled, flush=True)
 # remove if output exists
 if os.path.exists(par["output_spatial_unlabelled"]):
     if os.path.isdir(par["output_spatial_unlabelled"]):
         shutil.rmtree(par["output_spatial_unlabelled"])
     else:
         os.remove(par["output_spatial_unlabelled"])
-output_spatial.write(par["output_spatial_unlabelled"], overwrite=True)
+output_spatial_unlabelled.write(par["output_spatial_unlabelled"], overwrite=True)
 
 # ---------------------------------------------------------------
 # output_spatial_solution: ground truth labels, shapes, reference table
@@ -160,9 +186,17 @@ if "z" in transcripts.columns:
     _SOLUTION_TRANSCRIPT_COLS = ["x", "y", "z"] + _SOLUTION_TRANSCRIPT_COLS[2:]
 solution_transcripts = transcripts[[c for c in _SOLUTION_TRANSCRIPT_COLS if c in transcripts.columns]]
 
+solution_labels = {
+    "groundtruth_cell_labels": sp_data.labels["groundtruth_cell_labels"],
+}
+if "cell_labels" in sp_data.labels:
+    solution_labels["cell_labels"] = sp_data.labels["cell_labels"]
+if "nucleus_labels" in sp_data.labels:
+    solution_labels["nucleus_labels"] = sp_data.labels["nucleus_labels"]
+
 output_solution = sd.SpatialData(
     points={"transcripts": solution_transcripts},
-    labels={k: v for k, v in sp_data.labels.items()},
+    labels=solution_labels,
     shapes={k: v for k, v in sp_data.shapes.items()},
     tables={"table": solution_table},
 )
