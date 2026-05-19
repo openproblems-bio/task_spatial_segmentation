@@ -9,7 +9,7 @@ cd "$REPO_ROOT"
 set -e
 
 resources_test_s3=s3://openproblems-data/resources_test/task_spatial_segmentation
-publish_dir_s3="/scratch/results/runs/$(date +%Y-%m-%d_%H-%M-%S)"
+publish_dir_s3="/mnt/data/results/runs/$(date +%Y-%m-%d_%H-%M-%S)"
 
 # write the parameters to file
 cat > /tmp/params.yaml << HERE
