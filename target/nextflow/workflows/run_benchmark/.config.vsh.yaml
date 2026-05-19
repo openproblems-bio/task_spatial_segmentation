@@ -468,6 +468,9 @@ dependencies:
 - name: "control_methods/random_voronoi"
   repository:
     type: "local"
+- name: "methods/baysor"
+  repository:
+    type: "local"
 - name: "methods/cellpose"
   repository:
     type: "local"
@@ -533,13 +536,14 @@ build_info:
   output: "target/nextflow/workflows/run_benchmark"
   executable: "target/nextflow/workflows/run_benchmark/main.nf"
   viash_version: "0.9.7"
-  git_commit: "5fab6db50439a092c2025c384ad8a82d941623b2"
+  git_commit: "006e6b071e1ea99a2d73676fb63ae6792e1ab512"
   git_remote: "https://github.com/openproblems-bio/task_spatial_segmentation"
   dependencies:
   - "target/dependencies/github/openproblems-bio/openproblems/build/main/nextflow/utils/extract_uns_metadata"
   - "target/nextflow/control_methods/true_labels"
   - "target/nextflow/control_methods/empty_labels"
   - "target/nextflow/control_methods/random_voronoi"
+  - "target/nextflow/methods/baysor"
   - "target/nextflow/methods/cellpose"
   - "target/nextflow/methods/stardist"
   - "target/nextflow/methods/proseg"
