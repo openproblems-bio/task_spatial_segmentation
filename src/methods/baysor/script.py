@@ -166,7 +166,7 @@ if len(zero_idx[0]): unique_cells=np.delete(unique_cells, zero_idx[0][0])
 
 #transform into pandas series and check
 cell_id_col = pd.Series(unique_cells, name='cell_id', index=unique_cells)
-assert 0 not in cell_id_col, "Found '0' in cell_id column of assingment output cell matrix"
+assert 0 not in cell_id_col, "Found '0' in cell_id column of assignment output cell matrix"
 
 # Create transcripts only sdata
 print('Subsetting to transcripts cell id data', flush=True)
