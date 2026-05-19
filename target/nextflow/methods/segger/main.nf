@@ -3459,7 +3459,8 @@ meta = [
           "type" : "apt",
           "packages" : [
             "procps",
-            "git"
+            "git",
+            "libxcb1"
           ],
           "interactive" : false
         },
@@ -3518,7 +3519,7 @@ meta = [
     "engine" : "docker|native",
     "output" : "target/nextflow/methods/segger",
     "viash_version" : "0.9.7",
-    "git_commit" : "ee2fc2062e5a7f4a74cc08d698589cbadd19f279",
+    "git_commit" : "f85f908d9c395c7819ef29d9f9ebc52da4698cf5",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {

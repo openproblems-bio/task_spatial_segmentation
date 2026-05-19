@@ -446,7 +446,7 @@ function ViashDockerfile {
 FROM nvcr.io/nvidia/pytorch:25.06-py3
 ENTRYPOINT []
 RUN apt-get update && \
-  DEBIAN_FRONTEND=noninteractive apt-get install -y procps git && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y procps git libxcb1 && \
   rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip && \
@@ -462,9 +462,9 @@ RUN pip install --upgrade pip && \
   pip install --upgrade --no-cache-dir "git+https://github.com/dpeerlab/segger"
 
 LABEL org.opencontainers.image.description="Companion container for running component methods segger"
-LABEL org.opencontainers.image.created="2026-05-19T11:22:08Z"
+LABEL org.opencontainers.image.created="2026-05-19T11:34:27Z"
 LABEL org.opencontainers.image.source="https://github.com/dpeerlab/segger"
-LABEL org.opencontainers.image.revision="ee2fc2062e5a7f4a74cc08d698589cbadd19f279"
+LABEL org.opencontainers.image.revision="f85f908d9c395c7819ef29d9f9ebc52da4698cf5"
 LABEL org.opencontainers.image.version="build_main"
 
 VIASHDOCKER
