@@ -64,6 +64,7 @@ dependencies:
   - name: control_methods/true_labels
   - name: control_methods/empty_labels
   - name: control_methods/random_voronoi
+  - name: methods/baysor
   - name: methods/cellpose
   - name: methods/stardist
   - name: methods/proseg
