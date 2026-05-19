@@ -150,13 +150,19 @@ def _rasterize_polygons(
 
 def _shapes_to_xenium_vertices(shapes_gdf: gpd.GeoDataFrame) -> pl.DataFrame:
     """Xenium boundary parquet schema: one row per polygon vertex with
-    columns (cell_id, vertex_x, vertex_y)."""
+    columns (cell_id, vertex_x, vertex_y).
+
+    `cell_id` is written as a string to match the native Xenium schema —
+    segger's preprocessor composes a per-row index like
+    `cell_id + '_' + boundary_type` and crashes with a numpy `add` ufunc
+    error if `cell_id` arrives as int64."""
     rows = []
     for cid, geom in zip(shapes_gdf["cell_id"].to_numpy(), shapes_gdf.geometry.to_numpy()):
         if geom is None or geom.is_empty or geom.geom_type != "Polygon":
             continue
+        cid_str = str(cid)
         for vx, vy in np.asarray(geom.exterior.coords):
-            rows.append((int(cid), float(vx), float(vy)))
+            rows.append((cid_str, float(vx), float(vy)))
     return pl.DataFrame(rows, schema=["cell_id", "vertex_x", "vertex_y"], orient="row")
 
 
