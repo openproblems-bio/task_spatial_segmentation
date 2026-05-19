@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import sys
+import warnings
 from collections import Counter
 from pathlib import Path
 
@@ -19,6 +20,15 @@ from spatialdata.transformations import get_transformation
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using device:", device, flush=True)
+if device.type != "cuda":
+    warnings.warn(
+        "No CUDA GPU detected. segger requires a GPU end-to-end (cudf, "
+        "cuspatial, GPU kernels); the component will write an empty "
+        "segmentation stub and exit. Real benchmark runs must use a "
+        "GPU-equipped host.",
+        UserWarning,
+        stacklevel=2,
+    )
 
 ## VIASH START
 par = {
