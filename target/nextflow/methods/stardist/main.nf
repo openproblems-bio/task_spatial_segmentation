@@ -3450,7 +3450,7 @@ meta = [
     "engine" : "docker|native",
     "output" : "target/nextflow/methods/stardist",
     "viash_version" : "0.9.7",
-    "git_commit" : "85598081da5f2fd304934b2488daf718e56a4502",
+    "git_commit" : "8bf04f1841a00d3a900db837746fb51de302f4cf",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
@@ -3637,8 +3637,8 @@ class PercentileNormalizer(Normalizer):
 
 print("Reading input", flush=True)
 sdata = sd.read_zarr(par["input"])
-image = sdata["morphology_mip"]["scale0"].image.compute().to_numpy()
-transformation = sdata["morphology_mip"]["scale0"].image.transform.copy()
+image = sdata["image"]["scale0"].image.compute().to_numpy()
+transformation = sdata["image"]["scale0"].image.transform.copy()
 
 print(f"Loading pretrained StarDist model: {par['model']}", flush=True)
 model = StarDist2D.from_pretrained(par["model"])

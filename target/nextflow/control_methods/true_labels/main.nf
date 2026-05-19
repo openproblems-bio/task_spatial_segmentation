@@ -3586,7 +3586,7 @@ meta = [
     "engine" : "docker",
     "output" : "target/nextflow/control_methods/true_labels",
     "viash_version" : "0.9.7",
-    "git_commit" : "85598081da5f2fd304934b2488daf718e56a4502",
+    "git_commit" : "8bf04f1841a00d3a900db837746fb51de302f4cf",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {

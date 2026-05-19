@@ -455,9 +455,9 @@ RUN pip install --upgrade pip && \
   pip install --upgrade --no-cache-dir "numpy<2.0.0" "tensorflow"
 
 LABEL org.opencontainers.image.description="Companion container for running component methods stardist"
-LABEL org.opencontainers.image.created="2026-05-18T16:30:39Z"
+LABEL org.opencontainers.image.created="2026-05-19T08:01:09Z"
 LABEL org.opencontainers.image.source="https://github.com/stardist/stardist"
-LABEL org.opencontainers.image.revision="85598081da5f2fd304934b2488daf718e56a4502"
+LABEL org.opencontainers.image.revision="8bf04f1841a00d3a900db837746fb51de302f4cf"
 LABEL org.opencontainers.image.version="build_main"
 
 VIASHDOCKER
@@ -1154,8 +1154,8 @@ class PercentileNormalizer(Normalizer):
 
 print("Reading input", flush=True)
 sdata = sd.read_zarr(par["input"])
-image = sdata["morphology_mip"]["scale0"].image.compute().to_numpy()
-transformation = sdata["morphology_mip"]["scale0"].image.transform.copy()
+image = sdata["image"]["scale0"].image.compute().to_numpy()
+transformation = sdata["image"]["scale0"].image.transform.copy()
 
 print(f"Loading pretrained StarDist model: {par['model']}", flush=True)
 model = StarDist2D.from_pretrained(par["model"])
