@@ -461,9 +461,9 @@ RUN cd /tmp/baysor_src && cmake -P cmake/build_and_install.cmake
 RUN cp /tmp/baysor_src/install/bin/baysor /usr/local/bin/baysor
 RUN rm -rf /tmp/baysor_src
 LABEL org.opencontainers.image.description="Companion container for running component methods baysor"
-LABEL org.opencontainers.image.created="2026-05-19T11:34:27Z"
+LABEL org.opencontainers.image.created="2026-05-19T12:35:17Z"
 LABEL org.opencontainers.image.source="https://github.com/kharchenkolab/Baysor"
-LABEL org.opencontainers.image.revision="f85f908d9c395c7819ef29d9f9ebc52da4698cf5"
+LABEL org.opencontainers.image.revision="bdf3d5d917d12ccefda43b25cb64bb4082424900"
 LABEL org.opencontainers.image.version="build_main"
 
 VIASHDOCKER

@@ -3505,7 +3505,7 @@ meta = [
     "engine" : "docker|native",
     "output" : "target/nextflow/datasets/loaders/tenx_xenium_groundtruth",
     "viash_version" : "0.9.7",
-    "git_commit" : "f85f908d9c395c7819ef29d9f9ebc52da4698cf5",
+    "git_commit" : "bdf3d5d917d12ccefda43b25cb64bb4082424900",
     "git_remote" : "https://github.com/openproblems-bio/task_spatial_segmentation"
   },
   "package_config" : {
