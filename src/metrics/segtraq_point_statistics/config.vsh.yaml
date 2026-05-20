@@ -1,0 +1,102 @@
+__merge__: ../../api/comp_metric.yaml
+
+name: segtraq_point_statistics
+label: SegTraQ point statistics
+summary: Transcript-level spatial statistics from SegTraQ.
+description: |
+  Runs the SegTraQ point-statistics module on a processed segmentation
+  prediction. The module summarizes transcript compartment localization,
+  distances to cell geometry, and membrane-distance skewness.
+
+references: &segtraq_reference
+  bibtex: |
+    @software{segtraq,
+      title = {SegTraQ: quality control metrics for spatial segmentation and transcript assignment},
+      author = {Lazic, Daria and Meyer-Bender, Matthias and Emons, Martin},
+      url = {https://github.com/LazDaria/SegTraQ},
+      version = {0.0.4},
+      year = {2026}
+    }
+
+info:
+  metrics:
+    - name: segtraq_median_perc_outside_cell
+      label: "SegTraQ median percent outside cell"
+      summary: "Median percentage of assigned transcripts outside their assigned cell polygon."
+      description: "Percentage of transcripts assigned to each cell that do not fall inside the assigned cell boundary, summarized by the median across cells."
+      min: 0
+      max: 100
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_perc_nucleus
+      label: "SegTraQ median percent nucleus"
+      summary: "Median percentage of assigned transcripts in the matched nucleus-overlap region."
+      description: "Percentage of transcripts assigned to each cell that fall in the overlap between the cell and its matched nucleus, summarized by the median across cells."
+      min: 0
+      max: 100
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_perc_cytoplasm
+      label: "SegTraQ median percent cytoplasm"
+      summary: "Median percentage of assigned transcripts in the cytoplasm region."
+      description: "Percentage of transcripts assigned to each cell that fall inside the cell but outside the matched nucleus-overlap region, summarized by the median across cells."
+      min: 0
+      max: 100
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_distance_to_cell_centroid_norm
+      label: "SegTraQ median centroid distance"
+      summary: "Median normalized distance from transcript center of mass to the cell centroid."
+      description: "Distance between mean transcript coordinates and the cell-boundary centroid, normalized by the square root of cell area and summarized by the median across cells."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_distance_to_cell_membrane_norm
+      label: "SegTraQ median membrane distance"
+      summary: "Median normalized transcript distance to the cell membrane."
+      description: "Mean distance from transcripts to the cell membrane, normalized by the square root of cell area and summarized by the median across cells."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_membrane_distance_skewness
+      label: "SegTraQ median membrane skewness"
+      summary: "Median skewness of transcript distances to the cell membrane."
+      description: "Fisher-Pearson sample skewness of per-transcript distances to the cell membrane, summarized by the median across cells."
+      min: -.inf
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+resources:
+  - type: python_script
+    path: script.py
+  - type: file
+    path: ../segtraq_common/adapter.py
+
+engines:
+  - type: docker
+    image: openproblems/base_python:1
+    setup:
+      - type: python
+        pypi:
+          - spatialdata>=0.7.3
+          - anndata>=0.12.0
+          - zarr>=3.0.0
+          - geopandas
+          - rasterio
+          - shapely
+          - dask[dataframe]
+          - git+https://github.com/LazDaria/SegTraQ.git
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [midtime, midmem, midcpu]

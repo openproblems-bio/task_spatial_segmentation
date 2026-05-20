@@ -1,0 +1,112 @@
+__merge__: ../../api/comp_metric.yaml
+
+name: segtraq_region_similarity
+label: SegTraQ region similarity
+summary: Region expression similarity metrics from SegTraQ.
+description: |
+  Runs the SegTraQ region-similarity module on a processed segmentation
+  prediction. The module matches cells to nuclei and compares expression
+  profiles across nucleus, cytoplasm, center, border, and local neighborhood
+  regions.
+
+references: &segtraq_reference
+  bibtex: |
+    @software{segtraq,
+      title = {SegTraQ: quality control metrics for spatial segmentation and transcript assignment},
+      author = {Lazic, Daria and Meyer-Bender, Matthias and Emons, Martin},
+      url = {https://github.com/LazDaria/SegTraQ},
+      version = {0.0.4},
+      year = {2026}
+    }
+
+info:
+  metrics:
+    - name: segtraq_median_nucleus_cell_iou
+      label: "SegTraQ median nucleus-cell IoU"
+      summary: "Median intersection-over-union between each cell and its matched nucleus."
+      description: "Best-matched nucleus overlap with each predicted cell, summarized by the median IoU across cells."
+      min: 0
+      max: 1
+      maximize: true
+      references: *segtraq_reference
+
+    - name: segtraq_median_nucleus_fraction
+      label: "SegTraQ median nucleus fraction"
+      summary: "Median fraction of matched nucleus area contained in the cell."
+      description: "Area of the intersection between cell and matched nucleus divided by nucleus area, summarized by the median across cells."
+      min: 0
+      max: 1
+      maximize: true
+      references: *segtraq_reference
+
+    - name: segtraq_median_similarity_nucleus_cell
+      label: "SegTraQ median nucleus-cell similarity"
+      summary: "Median cosine similarity between whole-cell and matched-nucleus expression."
+      description: "Cosine similarity between whole-cell and matched-nucleus expression profiles after library-size normalization and log1p transformation, summarized by the median across cells."
+      min: -1
+      max: 1
+      maximize: true
+      references: *segtraq_reference
+
+    - name: segtraq_median_similarity_nucleus_cytoplasm
+      label: "SegTraQ median nucleus-cytoplasm similarity"
+      summary: "Median cosine similarity between nuclear and cytoplasmic expression."
+      description: "Cosine similarity between expression in the cell-nucleus overlap and remaining cytoplasm, summarized by the median across cells."
+      min: -1
+      max: 1
+      maximize: true
+      references: *segtraq_reference
+
+    - name: segtraq_median_similarity_center_border
+      label: "SegTraQ median center-border similarity"
+      summary: "Median cosine similarity between cell-center and border expression."
+      description: "Cosine similarity between expression profiles in the center and border regions of each cell, summarized by the median across cells."
+      min: -1
+      max: 1
+      maximize: true
+      references: *segtraq_reference
+
+    - name: segtraq_median_similarity_border_neighborhood
+      label: "SegTraQ median border-neighborhood similarity"
+      summary: "Median cosine similarity between cell-border and neighborhood expression."
+      description: "Cosine similarity between expression profiles in a cell border and its local neighborhood, summarized by the median across cells."
+      min: -1
+      max: 1
+      maximize: true
+      references: *segtraq_reference
+
+    - name: segtraq_median_border_admixture_score
+      label: "SegTraQ median border admixture"
+      summary: "Median border admixture score across cells."
+      description: "Bootstrap mixture score estimating how much border expression resembles neighboring-cell expression, summarized by the median across cells."
+      min: 0
+      max: 1
+      maximize: false
+      references: *segtraq_reference
+
+resources:
+  - type: python_script
+    path: script.py
+  - type: file
+    path: ../segtraq_common/adapter.py
+
+engines:
+  - type: docker
+    image: openproblems/base_python:1
+    setup:
+      - type: python
+        pypi:
+          - spatialdata>=0.7.3
+          - anndata>=0.12.0
+          - zarr>=3.0.0
+          - geopandas
+          - rasterio
+          - shapely
+          - dask[dataframe]
+          - git+https://github.com/LazDaria/SegTraQ.git
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [midtime, midmem, midcpu]

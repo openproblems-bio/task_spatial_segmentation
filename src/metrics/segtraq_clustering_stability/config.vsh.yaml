@@ -1,0 +1,87 @@
+__merge__: ../../api/comp_metric.yaml
+
+name: segtraq_clustering_stability
+label: SegTraQ clustering stability
+summary: Clustering stability metrics from SegTraQ.
+description: |
+  Runs the SegTraQ clustering-stability module on a processed segmentation
+  prediction. The module computes PCA and a nearest-neighbor graph, then scores
+  Leiden cluster connectedness, silhouette score, subset purity, and adjusted
+  Rand index.
+
+references: &segtraq_reference
+  bibtex: |
+    @software{segtraq,
+      title = {SegTraQ: quality control metrics for spatial segmentation and transcript assignment},
+      author = {Lazic, Daria and Meyer-Bender, Matthias and Emons, Martin},
+      url = {https://github.com/LazDaria/SegTraQ},
+      version = {0.0.4},
+      year = {2026}
+    }
+
+info:
+  metrics:
+    - name: segtraq_cluster_connectedness
+      label: "SegTraQ cluster connectedness"
+      summary: "Best cluster connectedness across Leiden resolutions."
+      description: "Cluster connectedness evaluates whether cells assigned to the same Leiden cluster are connected in the nearest-neighbor graph."
+      min: 0
+      max: 1
+      maximize: true
+      references: *segtraq_reference
+
+    - name: segtraq_silhouette_score
+      label: "SegTraQ silhouette score"
+      summary: "Best silhouette score across Leiden resolutions."
+      description: "Silhouette score measures how well cells separate in PCA space according to Leiden cluster labels."
+      min: -1
+      max: 1
+      maximize: true
+      references: *segtraq_reference
+
+    - name: segtraq_mean_purity
+      label: "SegTraQ mean purity"
+      summary: "Mean pairwise purity across random cell subsets."
+      description: "Purity measures clustering stability by comparing Leiden labels from repeated random subsets of cells."
+      min: 0
+      max: 1
+      maximize: true
+      references: *segtraq_reference
+
+    - name: segtraq_mean_ari
+      label: "SegTraQ mean ARI"
+      summary: "Mean pairwise adjusted Rand index across random cell subsets."
+      description: "Adjusted Rand index measures agreement between Leiden clusterings obtained from repeated random cell subsets."
+      min: -1
+      max: 1
+      maximize: true
+      references: *segtraq_reference
+
+resources:
+  - type: python_script
+    path: script.py
+  - type: file
+    path: ../segtraq_common/adapter.py
+
+engines:
+  - type: docker
+    image: openproblems/base_python:1
+    setup:
+      - type: python
+        pypi:
+          - spatialdata>=0.7.3
+          - anndata>=0.12.0
+          - zarr>=3.0.0
+          - geopandas
+          - rasterio
+          - shapely
+          - dask[dataframe]
+          - igraph
+          - leidenalg
+          - git+https://github.com/LazDaria/SegTraQ.git
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [midtime, midmem, midcpu]

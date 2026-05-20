@@ -1,0 +1,152 @@
+namespace: "metrics"
+
+name: segtraq_supervised
+label: SegTraQ supervised
+summary: Supervised marker-based QC metrics from SegTraQ.
+description: |
+  Runs label transfer from the Open Problems scRNA-seq reference, derives
+  positive and negative cell-type markers from that reference, and then runs
+  the SegTraQ supervised module on a processed segmentation prediction.
+
+references: &segtraq_reference
+  bibtex: |
+    @software{segtraq,
+      title = {SegTraQ: quality control metrics for spatial segmentation and transcript assignment},
+      author = {Lazic, Daria and Meyer-Bender, Matthias and Emons, Martin},
+      url = {https://github.com/LazDaria/SegTraQ},
+      version = {0.0.4},
+      year = {2026}
+    }
+
+info:
+  type: metric
+  type_info:
+    label: Metric
+    summary: A task template metric.
+    description: |
+      A metric for evaluating method predictions.
+  metrics:
+    - name: segtraq_median_positive_marker_recall
+      label: "SegTraQ median positive marker recall"
+      summary: "Median recall of positive marker expression."
+      description: "Fraction of expected positive marker genes expressed in each transferred cell type, summarized by the median across cells."
+      min: 0
+      max: 1
+      maximize: true
+      references: *segtraq_reference
+
+    - name: segtraq_median_negative_marker_avoidance
+      label: "SegTraQ median negative marker avoidance"
+      summary: "Median avoidance of neighborhood-relevant negative markers."
+      description: "Fraction of relevant negative marker genes not expressed in a cell, summarized by the median across cells."
+      min: 0
+      max: 1
+      maximize: true
+      references: *segtraq_reference
+
+    - name: segtraq_median_marker_balanced_accuracy
+      label: "SegTraQ median marker balanced accuracy"
+      summary: "Median balanced accuracy of marker expression patterns."
+      description: "Mean of positive marker recall and negative marker avoidance for each cell, summarized by the median across cells."
+      min: 0
+      max: 1
+      maximize: true
+      references: *segtraq_reference
+
+    - name: segtraq_median_negative_marker_contamination_counts
+      label: "SegTraQ median contamination counts"
+      summary: "Median negative-marker contamination count."
+      description: "Total transcripts in a focal cell that belong to marker genes expected in neighboring source cell types but negative for the focal transferred cell type."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_negative_marker_contamination_fraction
+      label: "SegTraQ median contamination fraction"
+      summary: "Median negative-marker contamination fraction."
+      description: "Per-cell fraction of neighborhood-relevant negative marker expression relative to local source expression, summarized by the median across cells."
+      min: 0
+      max: 1
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_mean_negative_marker_contamination
+      label: "SegTraQ mean contamination matrix"
+      summary: "Mean directed source-to-target contamination matrix value."
+      description: "Average finite value of the directed cell-type contamination matrix written by the SegTraQ neighbor contamination metric."
+      min: 0
+      max: 1
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_mean_negative_marker_contamination_binary
+      label: "SegTraQ mean binary contamination"
+      summary: "Mean directed binary contamination matrix value."
+      description: "Average finite value of the directed binary source-to-target contamination matrix written by the SegTraQ neighbor contamination metric."
+      min: 0
+      max: 1
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_significant_mecr_odds_ratio
+      label: "SegTraQ median significant MECR odds ratio"
+      summary: "Median odds ratio for significant MECR gene pairs."
+      description: "Median Haldane-Anscombe-corrected odds ratio across valid marker-gene pairs with Fisher exact-test p-value below 0.05."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+arguments:
+  - name: "--input_prediction"
+    __merge__: ../../api/file_processed_prediction.yaml
+    direction: input
+    required: true
+  - name: "--input_solution"
+    __merge__: ../../api/file_spatial_solution.yaml
+    direction: input
+    required: true
+  - name: "--input_scrnaseq_reference"
+    __merge__: ../../api/file_scrnaseq_reference.yaml
+    direction: input
+    required: true
+  - name: "--output"
+    __merge__: ../../api/file_score.yaml
+    direction: output
+    required: true
+
+test_resources:
+  - type: python_script
+    path: /common/component_tests/run_and_check_output.py
+  - type: python_script
+    path: /common/component_tests/check_config.py
+  - path: /resources_test/task_spatial_segmentation/mouse_brain_combined
+    dest: resources_test/task_spatial_segmentation/mouse_brain_combined
+
+resources:
+  - type: python_script
+    path: script.py
+  - type: file
+    path: ../segtraq_common/adapter.py
+
+engines:
+  - type: docker
+    image: openproblems/base_python:1
+    setup:
+      - type: python
+        pypi:
+          - spatialdata>=0.7.3
+          - anndata>=0.12.0
+          - zarr>=3.0.0
+          - geopandas
+          - rasterio
+          - shapely
+          - dask[dataframe]
+          - git+https://github.com/LazDaria/SegTraQ.git
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [midtime, highmem, midcpu]

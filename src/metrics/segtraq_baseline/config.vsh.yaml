@@ -1,0 +1,229 @@
+__merge__: ../../api/comp_metric.yaml
+
+name: segtraq_baseline
+label: SegTraQ baseline
+summary: Baseline segmentation quality-control metrics from SegTraQ.
+description: |
+  Runs the SegTraQ baseline module on a processed segmentation prediction.
+  The component derives predicted cell boundaries and transcript-to-cell
+  assignments from the Open Problems inputs, then returns scalar summary
+  metrics in the standard Open Problems score format.
+
+references: &segtraq_reference
+  bibtex: |
+    @software{segtraq,
+      title = {SegTraQ: quality control metrics for spatial segmentation and transcript assignment},
+      author = {Lazic, Daria and Meyer-Bender, Matthias and Emons, Martin},
+      url = {https://github.com/LazDaria/SegTraQ},
+      version = {0.0.4},
+      year = {2026}
+    }
+
+info:
+  metrics:
+    - name: segtraq_num_cells
+      label: "SegTraQ number of cells"
+      summary: "Number of predicted cells."
+      description: "Number of predicted cells evaluated by the SegTraQ baseline module."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_num_transcripts
+      label: "SegTraQ number of transcripts"
+      summary: "Number of transcripts used by SegTraQ."
+      description: "Total number of transcript points used by the SegTraQ baseline module."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_num_genes
+      label: "SegTraQ number of genes"
+      summary: "Number of genes detected in transcripts."
+      description: "Number of unique gene names detected in the transcript point data."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_perc_unassigned_transcripts
+      label: "SegTraQ percent unassigned transcripts"
+      summary: "Percentage of transcripts not assigned to predicted cells."
+      description: "Percentage of transcripts whose predicted cell assignment matches the configured background or unassigned value."
+      min: 0
+      max: 100
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_transcripts_per_cell
+      label: "SegTraQ median transcripts per cell"
+      summary: "Median transcript count per predicted cell."
+      description: "Median number of non-background transcripts assigned to each predicted cell."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_genes_per_cell
+      label: "SegTraQ median genes per cell"
+      summary: "Median detected gene count per predicted cell."
+      description: "Median number of unique genes detected per predicted cell, excluding unassigned transcripts."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_mean_transcripts_per_gene
+      label: "SegTraQ median transcripts per gene"
+      summary: "Median mean transcript count per detected gene per cell."
+      description: "Median of each cell's mean transcript count per detected gene."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_cell_area
+      label: "SegTraQ median cell area"
+      summary: "Median predicted cell area."
+      description: "Median area of predicted cell boundary geometries computed by the SegTraQ morphological features baseline metric."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_transcript_density
+      label: "SegTraQ median transcript density"
+      summary: "Median transcript density per predicted cell."
+      description: "Median transcript density across predicted cells, defined as transcripts per cell divided by cell area."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_perimeter
+      label: "SegTraQ median perimeter"
+      summary: "Median predicted cell perimeter."
+      description: "Median perimeter of predicted cell boundary geometries."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_circularity
+      label: "SegTraQ median circularity"
+      summary: "Median predicted cell circularity."
+      description: "Median circularity of predicted cell boundaries, computed as 4*pi*area divided by perimeter squared."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_bbox_width
+      label: "SegTraQ median bounding-box width"
+      summary: "Median width of predicted cell bounding boxes."
+      description: "Median width of the bounding box enclosing each predicted cell boundary."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_bbox_height
+      label: "SegTraQ median bounding-box height"
+      summary: "Median height of predicted cell bounding boxes."
+      description: "Median height of the bounding box enclosing each predicted cell boundary."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_extent
+      label: "SegTraQ median extent"
+      summary: "Median predicted cell extent."
+      description: "Median fraction of the bounding box occupied by each predicted cell boundary."
+      min: 0
+      max: 1
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_solidity
+      label: "SegTraQ median solidity"
+      summary: "Median predicted cell solidity."
+      description: "Median ratio of predicted cell area to convex-hull area."
+      min: 0
+      max: 1
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_convexity
+      label: "SegTraQ median convexity"
+      summary: "Median predicted cell convexity."
+      description: "Median ratio of convex-hull perimeter to predicted cell perimeter."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_elongation
+      label: "SegTraQ median elongation"
+      summary: "Median predicted cell elongation."
+      description: "Median long-axis to short-axis ratio of the minimum rotated rectangle around each predicted cell."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_eccentricity
+      label: "SegTraQ median eccentricity"
+      summary: "Median predicted cell eccentricity."
+      description: "Median eccentricity estimated from the minimum rotated rectangle around each predicted cell."
+      min: 0
+      max: 1
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_compactness
+      label: "SegTraQ median compactness"
+      summary: "Median predicted cell compactness."
+      description: "Median perimeter squared divided by area for predicted cell boundaries."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_num_polygons
+      label: "SegTraQ median polygon count"
+      summary: "Median number of polygons per predicted cell."
+      description: "Median number of polygon parts per predicted cell boundary geometry."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+resources:
+  - type: python_script
+    path: script.py
+  - type: file
+    path: ../segtraq_common/adapter.py
+
+engines:
+  - type: docker
+    image: openproblems/base_python:1
+    setup:
+      - type: python
+        pypi:
+          - spatialdata>=0.7.3
+          - anndata>=0.12.0
+          - zarr>=3.0.0
+          - geopandas
+          - rasterio
+          - shapely
+          - dask[dataframe]
+          - git+https://github.com/LazDaria/SegTraQ.git
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [midtime, midmem, midcpu]

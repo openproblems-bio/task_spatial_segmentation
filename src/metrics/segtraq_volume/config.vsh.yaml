@@ -1,0 +1,86 @@
+__merge__: ../../api/comp_metric.yaml
+
+name: segtraq_volume
+label: SegTraQ volume
+summary: Volume-layer metrics from SegTraQ.
+description: |
+  Runs applicable SegTraQ volume-layer metrics on a processed segmentation
+  prediction. For data with multiple z layers, the component computes top-bottom
+  expression similarity and vertical signal integrity; heterotypic overlap is
+  added when per-z cell-boundary layers and cell-type labels are available.
+
+references: &segtraq_reference
+  bibtex: |
+    @software{segtraq,
+      title = {SegTraQ: quality control metrics for spatial segmentation and transcript assignment},
+      author = {Lazic, Daria and Meyer-Bender, Matthias and Emons, Martin},
+      url = {https://github.com/LazDaria/SegTraQ},
+      version = {0.0.4},
+      year = {2026}
+    }
+
+info:
+  metrics:
+    - name: segtraq_median_similarity_top_bottom_z
+      label: "SegTraQ median top-bottom z similarity"
+      summary: "Median cosine similarity between top and bottom z-quantile expression."
+      description: "Cosine similarity between expression profiles of bottom and top transcript z-quantiles within each cell, summarized by the median across cells."
+      min: -1
+      max: 1
+      maximize: true
+      references: *segtraq_reference
+
+    - name: segtraq_median_vertical_signal_integrity
+      label: "SegTraQ median vertical signal integrity"
+      summary: "Median per-cell vertical signal integrity."
+      description: "Mean vertical signal integrity sampled at transcript coordinates for each cell, summarized by the median across cells."
+      min: 0
+      max: .inf
+      maximize: true
+      references: *segtraq_reference
+
+    - name: segtraq_median_heterotypic_overlap_area
+      label: "SegTraQ median heterotypic overlap area"
+      summary: "Median cross-depth heterotypic overlap area."
+      description: "Area of overlap between a representative cell polygon and different cell types in other z shape layers, summarized by the median across cells."
+      min: 0
+      max: .inf
+      maximize: false
+      references: *segtraq_reference
+
+    - name: segtraq_median_heterotypic_overlap_fraction
+      label: "SegTraQ median heterotypic overlap"
+      summary: "Median cross-depth heterotypic overlap fraction."
+      description: "Fraction of a representative cell polygon overlapping different cell types in other z layers, summarized by the median across cells."
+      min: 0
+      max: 1
+      maximize: false
+      references: *segtraq_reference
+
+resources:
+  - type: python_script
+    path: script.py
+  - type: file
+    path: ../segtraq_common/adapter.py
+
+engines:
+  - type: docker
+    image: openproblems/base_python:1
+    setup:
+      - type: python
+        pypi:
+          - spatialdata>=0.7.3
+          - anndata>=0.12.0
+          - zarr>=3.0.0
+          - geopandas
+          - rasterio
+          - shapely
+          - dask[dataframe]
+          - ovrlpy==1.1.0
+          - git+https://github.com/LazDaria/SegTraQ.git
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [midtime, highmem, midcpu]

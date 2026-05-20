@@ -19,7 +19,13 @@ methods = [
 
 // construct list of metrics
 metrics = [
-  ari
+  ari,
+  segtraq_baseline,
+  segtraq_clustering_stability,
+  segtraq_point_statistics,
+  segtraq_region_similarity,
+  segtraq_supervised,
+  segtraq_volume
 ]
 
 workflow run_wf {
@@ -119,10 +125,19 @@ workflow run_wf {
         id + "." + comp.config.name
       },
       // use 'fromState' to fetch the arguments the component requires from the overall state
-      fromState: [
-        input_solution: "input_spatial_solution",
-        input_prediction: "input_prediction"
-      ],
+      fromState: { id, state, comp ->
+        def new_args = [
+          input_solution: state.input_spatial_solution,
+          input_prediction: state.input_prediction
+        ]
+        def argument_names = comp.config.arguments
+          ? comp.config.arguments.collect { it.name }
+          : comp.config.argument_groups.collectMany { it.arguments }.collect { it.name }
+        if (argument_names.contains("--input_scrnaseq_reference")) {
+          new_args.input_scrnaseq_reference = state.input_scrnaseq_reference
+        }
+        new_args
+      },
       // use 'toState' to publish that component's outputs to the overall state
       toState: { id, output, state, comp ->
         state + [

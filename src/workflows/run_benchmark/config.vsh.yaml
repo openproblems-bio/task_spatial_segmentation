@@ -71,6 +71,12 @@ dependencies:
   - name: methods/segger
   - name: data_processors/cell_type_annotation_tacco
   - name: metrics/ari
+  - name: metrics/segtraq_baseline
+  - name: metrics/segtraq_clustering_stability
+  - name: metrics/segtraq_point_statistics
+  - name: metrics/segtraq_region_similarity
+  - name: metrics/segtraq_supervised
+  - name: metrics/segtraq_volume
   - name: data_processors/process_prediction
 
 runners:
