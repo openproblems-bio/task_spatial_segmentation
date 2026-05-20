@@ -1,0 +1,14 @@
+base_dir: "data/HumanBrain/202503211645_HuBrain-FF-22676A1-D2M1769-RC_VMSC16710"
+output_dir: "output/HumanBrain"
+regions:
+  - region_R1
+z_layer: 3
+
+dataset:
+  dataset_name: "HuBrain-FF-22676A1-D2M1769-RC"
+  dataset_url: "https://info.vizgen.com/access-to-merfish-2.0-data-release"
+  dataset_reference: ""
+  dataset_summary: "MERSCOPE V2 Human Brain fresh frozen sample."
+  dataset_description: "MERSCOPE V2 Human Brain fresh frozen, sample 22676A1, panel DM1769, Cellpose segmentation."
+  dataset_organism: "Homo sapiens"
+  segmentation_id: "cellpose"
