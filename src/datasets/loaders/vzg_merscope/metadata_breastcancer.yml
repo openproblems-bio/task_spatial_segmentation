@@ -1,0 +1,18 @@
+base_dir: "data/BreastCancerTMA/202409242358_240916JHHUBC0005XQ-V2V-HubcTMA-V2-BY_VMSC02511"
+output_dir: "output/BreastCancerTMA"
+regions:
+  - region_R1
+  - region_R2
+  - region_R3
+  - region_R4
+  - region_R5
+z_layer: 3
+
+dataset:
+  dataset_name: "240916JHHUBC0005XQ-V2V-HubcTMA-V2-BY"
+  dataset_url: "https://info.vizgen.com/merfish-2.0-data-release-form"
+  dataset_reference: ""
+  dataset_summary: "MERSCOPE V2 data release."
+  dataset_description: "MERSCOPE V2 data release. Human Breast Cancer TMA FFPE, D2M1774, V2 SOP, cell bond stain"
+  dataset_organism: "Homo sapiens"
+  segmentation_id: "cellpose"
