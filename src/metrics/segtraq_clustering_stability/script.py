@@ -45,5 +45,5 @@ metrics = {
 }
 
 print(">> Writing scalar metric output", flush=True)
-
+print(metrics)
 write_metric_output(par["output"], sdata_solution, sdata_prediction, metrics)

@@ -53,7 +53,7 @@ info:
       maximize: true
       references: *segtraq_reference
 
-    - name: segtraq_median_negative_marker_contamination_counts
+    - name: segtraq_median_negative_marker_counts
       label: "SegTraQ median contamination counts"
       summary: "Median negative-marker contamination count."
       description: "Total transcripts in a focal cell that belong to marker genes expected in neighboring source cell types but negative for the focal transferred cell type."
@@ -62,7 +62,7 @@ info:
       maximize: false
       references: *segtraq_reference
 
-    - name: segtraq_median_negative_marker_contamination_fraction
+    - name: segtraq_median_negative_marker_fraction
       label: "SegTraQ median contamination fraction"
       summary: "Median negative-marker contamination fraction."
       description: "Per-cell fraction of neighborhood-relevant negative marker expression relative to local source expression, summarized by the median across cells."
@@ -71,7 +71,7 @@ info:
       maximize: false
       references: *segtraq_reference
 
-    - name: segtraq_mean_negative_marker_contamination
+    - name: segtraq_mean_negative_marker_fraction_matrix
       label: "SegTraQ mean contamination matrix"
       summary: "Mean directed source-to-target contamination matrix value."
       description: "Average finite value of the directed cell-type contamination matrix written by the SegTraQ neighbor contamination metric."
@@ -80,7 +80,7 @@ info:
       maximize: false
       references: *segtraq_reference
 
-    - name: segtraq_mean_negative_marker_contamination_binary
+    - name: segtraq_mean_negative_marker_counts_matrix
       label: "SegTraQ mean binary contamination"
       summary: "Mean directed binary contamination matrix value."
       description: "Average finite value of the directed binary source-to-target contamination matrix written by the SegTraQ neighbor contamination metric."

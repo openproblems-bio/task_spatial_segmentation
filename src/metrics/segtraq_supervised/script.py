@@ -59,24 +59,24 @@ metrics = median_obs_metrics(
         "positive_marker_recall": "segtraq_median_positive_marker_recall",
         "negative_marker_avoidance": "segtraq_median_negative_marker_avoidance",
         "marker_balanced_accuracy": "segtraq_median_marker_balanced_accuracy",
-        "negative_marker_contamination_counts": "segtraq_median_negative_marker_contamination_counts",
-        "negative_marker_contamination_fraction": "segtraq_median_negative_marker_contamination_fraction",
+        "negative_marker_contamination_counts": "segtraq_median_negative_marker_counts",
+        "negative_marker_contamination_fraction": "segtraq_median_negative_marker_fraction",
     },
 )
 
 if "negative_marker_contamination" in table.uns:
-    metrics["segtraq_mean_negative_marker_contamination"] = finite_matrix_mean(
+    metrics["segtraq_mean_negative_marker_fraction_matrix"] = finite_matrix_mean(
         table.uns["negative_marker_contamination"]
     )
 else:
-    metrics["segtraq_mean_negative_marker_contamination"] = float("nan")
+    metrics["segtraq_mean_negative_marker_fraction_matrix"] = float("nan")
 
 if "negative_marker_contamination_binary" in table.uns:
-    metrics["segtraq_mean_negative_marker_contamination_binary"] = finite_matrix_mean(
+    metrics["segtraq_mean_negative_marker_counts_matrix"] = finite_matrix_mean(
         table.uns["negative_marker_contamination_binary"]
     )
 else:
-    metrics["segtraq_mean_negative_marker_contamination_binary"] = float("nan")
+    metrics["segtraq_mean_negative_marker_counts_matrix"] = float("nan")
 
 if "mutually_exclusive_coexpression_rate" in table.uns:
     mecr = table.uns["mutually_exclusive_coexpression_rate"]
@@ -92,5 +92,5 @@ else:
     metrics["segtraq_median_significant_mecr_odds_ratio"] = float("nan")
 
 print(">> Writing scalar metric output", flush=True)
-st.sdata.write("sdata.zarr", overwrite=True)
+
 write_metric_output(par["output"], sdata_solution, sdata_prediction, metrics)

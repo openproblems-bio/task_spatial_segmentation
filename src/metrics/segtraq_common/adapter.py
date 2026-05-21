@@ -13,15 +13,29 @@ from rasterio.features import shapes
 from shapely.affinity import scale, translate
 from shapely.geometry import shape
 
+IMAGES_KEY = None
 
 TABLES_KEY = "table"
+TABLES_CELL_ID_KEY = "cell_id"
+TABLES_AREA_KEY = None
+TABLES_CENTROID_X_KEY = None
+TABLES_CENTROID_Y_KEY = None
+
 POINTS_KEY = "transcripts"
 POINTS_CELL_ID_KEY = "cell_id"
+POINTS_BACKGROUND_ID = 0
+POINTS_X_KEY = "x"
+POINTS_Y_KEY = "y"
+POINTS_Z_KEY = "z"
 POINTS_GENE_KEY = "feature_name"
+
 SHAPES_KEY = "cell_boundaries"
+SHAPES_CELL_ID_KEY = "cell_id"
+
 NUCLEUS_SHAPES_KEY = "nucleus_boundaries"
 NUCLEUS_SHAPES_CELL_ID_KEY = "nucleus_ID"
-POINTS_BACKGROUND_ID = 0
+
+REF_CELL_TYPE_KEY = "cell_type"
 
 
 # -------------------------------------------------------------------------
@@ -132,16 +146,16 @@ def prepare_sdata_for_segtraq(
     sdata_solution: sd.SpatialData,
     sdata_prediction: sd.SpatialData,
     tables_key: str = TABLES_KEY,
-    tables_cell_id_key: str = "cell_id",
+    tables_cell_id_key: str = TABLES_CELL_ID_KEY,
     points_key: str = POINTS_KEY,
     points_cell_id_key: str = POINTS_CELL_ID_KEY,
-    points_x_key: str = "x",
-    points_y_key: str = "y",
-    points_z_key: str = "z",
+    points_x_key: str = POINTS_X_KEY,
+    points_y_key: str = POINTS_Y_KEY,
+    points_z_key: str = POINTS_Z_KEY,
     shapes_key: str = SHAPES_KEY,
     labels_key: str = "cell_labels",
     nucleus_labels_key: str = "nucleus_labels",
-    shapes_cell_id_key: str = "cell_id",
+    shapes_cell_id_key: str = SHAPES_CELL_ID_KEY,
     nucleus_shapes_key: str = NUCLEUS_SHAPES_KEY,
     nucleus_shapes_cell_id_key: str = NUCLEUS_SHAPES_CELL_ID_KEY,
     segmentation_key: str = "segmentation",
@@ -246,17 +260,30 @@ def load_prepared_sdata(input_prediction: str, input_solution: str):
 # -------------------------------------------------------------------------
 # END TEMPORARY OPEN PROBLEMS ADAPTER
 # -------------------------------------------------------------------------
+
+
 def initialize_segtraq(sdata_segtraq: sd.SpatialData):
     import segtraq
 
     st = segtraq.SegTraQ(
         sdata_segtraq,
-        images_key=None,
-        tables_centroid_x_key=None,
-        tables_centroid_y_key=None,
-        tables_area_key=None,
-        nucleus_shapes_cell_id_key=NUCLEUS_SHAPES_CELL_ID_KEY,
+        images_key=IMAGES_KEY,
+        tables_key=TABLES_KEY,
+        tables_cell_id_key=TABLES_CELL_ID_KEY,
+        tables_area_key=TABLES_AREA_KEY,
+        tables_centroid_x_key=TABLES_CENTROID_X_KEY,
+        tables_centroid_y_key=TABLES_CENTROID_Y_KEY,
+        points_key=POINTS_KEY,
+        points_cell_id_key=POINTS_CELL_ID_KEY,
         points_background_id=POINTS_BACKGROUND_ID,
+        points_x_key=POINTS_X_KEY,
+        points_y_key=POINTS_Y_KEY,
+        points_z_key=POINTS_Z_KEY,
+        points_gene_key=POINTS_GENE_KEY,
+        shapes_key=SHAPES_KEY,
+        shapes_cell_id_key=SHAPES_CELL_ID_KEY,
+        nucleus_shapes_key=NUCLEUS_SHAPES_KEY,
+        nucleus_shapes_cell_id_key=NUCLEUS_SHAPES_CELL_ID_KEY,
     )
     #st.filter_control_and_low_quality_transcripts() #qv not in transcripts, so delete for now
     return st
@@ -337,17 +364,33 @@ def add_script_dir_to_path(script_file: str, globals_dict: dict) -> None:
 def prepare_clustering_table(adata: ad.AnnData) -> ad.AnnData:
     import scanpy as sc
 
-    adata.layers["counts"] = adata.X.copy()
-    sc.pp.normalize_total(adata, inplace=True)
-    sc.pp.log1p(adata)
-    sc.pp.pca(adata)
-    sc.pp.neighbors(adata)
+    if "normalized_log" in adata.layers:
+        adata.X = adata.layers["normalized_log"].copy()
+        sc.pp.pca(adata)
+        sc.pp.neighbors(adata)
+
+    elif "counts" in adata.layers:
+        sc.pp.normalize_total(adata, layer="counts")
+        sc.pp.log1p(adata, layer="counts")
+
+        adata.X = adata.layers["counts"].copy()
+
+        sc.pp.pca(adata)
+        sc.pp.neighbors(adata)
+
+    else:
+        raise ValueError(
+            "Neither 'normalized_log' nor 'counts' found in adata.layers."
+        )
+
     return adata
 
 
-def prepare_reference_adata(input_scrnaseq_reference: str) -> ad.AnnData:
-    adata_ref = ad.read_h5ad(input_scrnaseq_reference)
-    adata_ref = adata_ref.copy()
+def prepare_reference_adata(
+    input_scrnaseq_reference: str
+) -> ad.AnnData:
+
+    adata_ref = ad.read_h5ad(input_scrnaseq_reference).copy()
 
     if "feature_name" in adata_ref.var.columns:
         adata_ref.var_names = adata_ref.var["feature_name"].astype(str).values
@@ -372,21 +415,27 @@ def run_label_transfer_and_markers(
     segtraq.run_label_transfer(
         sdata=st.sdata,
         adata_ref=adata_ref,
-        ref_cell_type=ref_cell_type,
+        ref_cell_type=REF_CELL_TYPE_KEY,
+        tables_key=TABLES_KEY,
+        tables_cell_id_key=TABLES_CELL_ID_KEY,
+        points_key=POINTS_KEY,
+        points_cell_id_key=POINTS_CELL_ID_KEY,
+        points_gene_key=POINTS_GENE_KEY,
         ref_ensemble_key=None,
         query_ensemble_key=None,
+        use_hvg=False,
         inplace=True,
     )
 
     return segtraq.markers_from_reference(
         adata_ref,
-        cell_type_key=ref_cell_type,
+        cell_type_key=REF_CELL_TYPE_KEY,
         n_jobs=1,
     )
 
 
 def n_components_from_cell_types(table: ad.AnnData) -> int | None:
-    for column in ("transferred_cell_type", "cell_type", "celltype"):
+    for column in ("transferred_cell_type", REF_CELL_TYPE_KEY):
         if column in table.obs:
             n_celltypes = table.obs[column].nunique(dropna=True)
             if n_celltypes > 0:
@@ -394,23 +443,31 @@ def n_components_from_cell_types(table: ad.AnnData) -> int | None:
     return None
 
 
-def run_ovrlpy(sdata: sd.SpatialData, n_comp: int, points_gene_key: str = POINTS_GENE_KEY, n_workers: int = 8):
+def run_ovrlpy(
+    sdata: sd.SpatialData, 
+    n_comp: int, 
+    points_cell_id_key: str = POINTS_CELL_ID_KEY,
+    points_gene_key: str = POINTS_GENE_KEY, 
+    points_x_key: str = POINTS_X_KEY,
+    points_y_key: str = POINTS_Y_KEY,
+    points_z_key: str = POINTS_Z_KEY,
+    n_workers: int = 1
+):
     import ovrlpy
+    print(f">> ovrlpy version: {ovrlpy.__version__}", flush=True)
 
-    coordinate_df = sdata[POINTS_KEY].compute()
-    coordinate_df = coordinate_df.rename(columns={points_gene_key: "gene"})
-    coordinate_df = coordinate_df[["gene", "x", "y", "z"]]
-    coordinate_df["z"] = coordinate_df["z"] - coordinate_df["z"].min()
+    coordinate_df = sdata.points[POINTS_KEY].rename(columns={points_gene_key: "gene"})
+    coordinate_df = coordinate_df.loc[:, ["gene", points_x_key, points_y_key, points_z_key, points_cell_id_key]].compute()
+    coordinate_df[points_z_key] = coordinate_df[points_z_key] - coordinate_df[points_z_key].min()
 
-    ovrlpy_sdata = ovrlpy.Ovrlp(
+    ovrlpy_sdata = ovrlpy.Ovrlp( #this part causes "43 Segmentation fault"
         coordinate_df,
         n_components=n_comp,
         n_workers=n_workers,
-        random_state=42,
     )
+
     ovrlpy_sdata.analyse()
     return ovrlpy_sdata.integrity_map
-
 
 def all_nan_metrics(metric_ids: list[str]) -> dict[str, float]:
     return {metric_id: float("nan") for metric_id in metric_ids}

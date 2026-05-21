@@ -1,4 +1,4 @@
-__merge__: ../../api/comp_metric.yaml
+namespace: "metrics"
 
 name: segtraq_volume
 label: SegTraQ volume
@@ -20,6 +20,12 @@ references: &segtraq_reference
     }
 
 info:
+  type: metric
+  type_info:
+    label: Metric
+    summary: A task template metric.
+    description: |
+      A metric for evaluating method predictions.
   metrics:
     - name: segtraq_median_similarity_top_bottom_z
       label: "SegTraQ median top-bottom z similarity"
@@ -57,6 +63,32 @@ info:
       maximize: false
       references: *segtraq_reference
 
+arguments:
+  - name: "--input_prediction"
+    __merge__: ../../api/file_processed_prediction.yaml
+    direction: input
+    required: true
+  - name: "--input_solution"
+    __merge__: ../../api/file_spatial_solution.yaml
+    direction: input
+    required: true
+  - name: "--input_scrnaseq_reference"
+    __merge__: ../../api/file_scrnaseq_reference.yaml
+    direction: input
+    required: true
+  - name: "--output"
+    __merge__: ../../api/file_score.yaml
+    direction: output
+    required: true
+
+test_resources:
+  - type: python_script
+    path: /common/component_tests/run_and_check_output.py
+  - type: python_script
+    path: /common/component_tests/check_config.py
+  - path: /resources_test/task_spatial_segmentation/mouse_brain_combined
+    dest: resources_test/task_spatial_segmentation/mouse_brain_combined
+
 resources:
   - type: python_script
     path: script.py
@@ -76,7 +108,7 @@ engines:
           - rasterio
           - shapely
           - dask[dataframe]
-          - ovrlpy==1.1.0
+          - ovrlpy>=1.1.0
           - git+https://github.com/LazDaria/SegTraQ.git
 
 runners:

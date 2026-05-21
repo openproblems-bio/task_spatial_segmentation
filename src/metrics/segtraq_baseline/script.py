@@ -69,4 +69,6 @@ st.run_baseline(inplace=True)
 
 print(">> Writing scalar metric output", flush=True)
 metrics = get_scalar_metrics(st.sdata)
+
+print(metrics)
 write_metric_output(par["output"], sdata_solution, sdata_prediction, metrics)

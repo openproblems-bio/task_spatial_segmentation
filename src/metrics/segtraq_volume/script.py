@@ -5,6 +5,7 @@ import sys
 par = {
     "input_prediction": "resources_test/task_spatial_segmentation/mouse_brain_combined/processed_prediction.zarr",
     "input_solution": "resources_test/task_spatial_segmentation/mouse_brain_combined/spatial_solution.zarr",
+    "input_scrnaseq_reference": "resources_test/task_spatial_segmentation/mouse_brain_combined/scrnaseq_reference.h5ad",
     "output": "output.h5ad",
 }
 meta = {
@@ -24,6 +25,7 @@ from adapter import (
     n_components_from_cell_types,
     run_ovrlpy,
     write_metric_output,
+    run_label_transfer_and_markers
 )
 
 
@@ -34,7 +36,6 @@ METRIC_IDS = [
     "segtraq_median_heterotypic_overlap_fraction",
 ]
 
-
 print(">> Reading and preparing input files", flush=True)
 sdata_solution, sdata_prediction, sdata_segtraq = load_prepared_sdata(
     par["input_prediction"],
@@ -43,24 +44,36 @@ sdata_solution, sdata_prediction, sdata_segtraq = load_prepared_sdata(
 
 print(">> Initializing SegTraQ and filtering transcripts", flush=True)
 st = initialize_segtraq(sdata_segtraq)
-table = st.sdata.tables["table"]
 metrics = all_nan_metrics(METRIC_IDS)
+
+
+print(">> Running label transfer and marker detection", flush=True)
+cell_type_key = "transferred_cell_type"
+markers = run_label_transfer_and_markers(
+    st,
+    par["input_scrnaseq_reference"],
+    ref_cell_type="cell_type",
+)
+table = st.sdata.tables["table"]
 
 print(">> Running SegTraQ volume metrics", flush=True)
 st.vl.similarity_top_bottom(inplace=True)
 
 n_comp = n_components_from_cell_types(table) #requires cell type labels, do later
 
-if n_comp is not None:
-    vsi_map = run_ovrlpy(st.sdata, n_comp=n_comp)
-    st.vl.vertical_signal_integrity_per_cell(vsi_map=vsi_map, inplace=True)
-else:
-    print(">> Skipping vertical signal integrity because no cell-type labels are available", flush=True)
+# # Currently Ovrlpy causes "43 Segmentation fault"
+# if n_comp is not None:
+#     vsi_map = run_ovrlpy(st.sdata, n_comp=n_comp)
+#     print(vsi_map)
+#     st.vl.vertical_signal_integrity_per_cell(vsi_map=vsi_map, inplace=True)
+#     print("Test")
+# else:
+#     print(">> Skipping vertical signal integrity because no cell-type labels are available", flush=True)
 
 z_shape_keys = sorted(key for key in st.sdata.shapes if key.startswith("cell_boundaries_z"))
 if len(z_shape_keys) > 1:
     cell_type_key = next(
-        (key for key in ("transferred_cell_type", "cell_type", "celltype") if key in table.obs),
+        (key for key in ("transferred_cell_type", "cell_type") if key in table.obs),
         None,
     )
     if cell_type_key is not None:
