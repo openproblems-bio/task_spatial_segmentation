@@ -61,7 +61,7 @@ st.vl.similarity_top_bottom(inplace=True)
 
 n_comp = n_components_from_cell_types(table) #requires cell type labels, do later
 
-# # Currently Ovrlpy causes "43 Segmentation fault"
+# ovrlpy triggers a segmentation fault
 # if n_comp is not None:
 #     vsi_map = run_ovrlpy(st.sdata, n_comp=n_comp)
 #     print(vsi_map)

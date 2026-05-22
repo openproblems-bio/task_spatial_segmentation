@@ -460,7 +460,7 @@ def run_ovrlpy(
     coordinate_df = coordinate_df.loc[:, ["gene", points_x_key, points_y_key, points_z_key, points_cell_id_key]].compute()
     coordinate_df[points_z_key] = coordinate_df[points_z_key] - coordinate_df[points_z_key].min()
 
-    ovrlpy_sdata = ovrlpy.Ovrlp( #this part causes "43 Segmentation fault"
+    ovrlpy_sdata = ovrlpy.Ovrlp( #this part triggers a segmentation fault
         coordinate_df,
         n_components=n_comp,
         n_workers=n_workers,
