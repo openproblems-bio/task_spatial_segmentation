@@ -4,10 +4,10 @@ namespace: datasets/loaders
 argument_groups:
   - name: Inputs
     arguments:
-      - type: string
-        name: --input
+      - name: "--input"
+        __merge__: /src/api/file_tenx_xenium.yaml
         required: true
-        description: A 10x xenium directory or zip file or download url
+        direction: input
       - type: string
         name: --segmentation_id
         required: true
