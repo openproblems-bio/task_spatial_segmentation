@@ -1,5 +1,6 @@
+__merge__: /src/api/comp_dataset_loader_tenx_xenium.yaml
+
 name: tenx_xenium
-namespace: datasets/loaders
 
 argument_groups:
   - name: Inputs
