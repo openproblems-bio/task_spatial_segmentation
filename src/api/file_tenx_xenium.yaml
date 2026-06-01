@@ -1,0 +1,30 @@
+type: file
+example: "https://cf.10xgenomics.com/samples/xenium/1.9.0/Xenium_V1_hLiver_cancer_section_FFPE/Xenium_V1_hLiver_cancer_section_FFPE_outs.zip"
+label: "10x Xenium Raw Dataset"
+summary: A 10x Xenium output zip archive or download URL.
+description: |
+  Raw output from the 10x Genomics Xenium platform provided as a zip archive
+  or a URL pointing to one. The archive is expected to contain the standard
+  Xenium Onboard Analysis output files.
+info:
+  format:
+    type: zip
+    files:
+      - name: transcripts.csv.gz
+        description: Per-transcript coordinates and feature assignments.
+        required: true
+      - name: cell_boundaries.parquet
+        description: Cell boundary polygon geometries.
+        required: false
+      - name: nucleus_boundaries.parquet
+        description: Nucleus boundary polygon geometries.
+        required: false
+      - name: cells.csv.gz
+        description: Per-cell summary metadata.
+        required: false
+      - name: morphology_focus.ome.tif
+        description: Morphology focus image (multi-channel).
+        required: false
+      - name: experiment.xenium
+        description: Experiment metadata JSON.
+        required: false

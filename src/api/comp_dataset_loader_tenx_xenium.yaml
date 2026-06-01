@@ -1,0 +1,58 @@
+namespace: "datasets/loaders"
+info:
+  type: dataset_loader
+  type_info:
+    label: 10x Xenium Dataset Loader
+    summary: Loads a raw 10x Xenium dataset and converts it to a Common iST Dataset.
+    description: |
+      Downloads and extracts a 10x Xenium zip archive, then converts it into
+      a task-compatible SpatialData zarr using spatialdata-io.
+argument_groups:
+  - name: Inputs
+    arguments:
+      - name: "--input"
+        __merge__: file_tenx_xenium.yaml
+        required: true
+        direction: input
+      - type: string
+        name: --segmentation_id
+        description: The segmentation identifier(s) to include (e.g. cell, nucleus).
+        required: true
+        multiple: true
+  - name: Outputs
+    arguments:
+      - name: "--output"
+        __merge__: file_common_ist.yaml
+        direction: output
+        required: true
+  - name: Dataset Metadata
+    description: Metadata that will be stored in the output dataset.
+    arguments:
+      - type: string
+        name: --dataset_id
+        description: A unique identifier for the dataset.
+        required: true
+      - name: --dataset_name
+        type: string
+        description: Nicely formatted name.
+        required: true
+      - type: string
+        name: --dataset_url
+        description: Link to the original source of the dataset.
+        required: false
+      - name: --dataset_reference
+        type: string
+        description: Bibtex reference of the paper in which the dataset was published.
+        required: false
+      - name: --dataset_summary
+        type: string
+        description: Short description of the dataset.
+        required: true
+      - name: --dataset_description
+        type: string
+        description: Long description of the dataset.
+        required: true
+      - name: --dataset_organism
+        type: string
+        description: The organism of the sample in the dataset.
+        required: false
