@@ -20,6 +20,8 @@ TABLES_CELL_ID_KEY = "cell_id"
 TABLES_AREA_KEY = None
 TABLES_CENTROID_X_KEY = None
 TABLES_CENTROID_Y_KEY = None
+TABLES_RAW_COUNTS_LAYER = "counts"
+TABLES_GENE_KEY = None
 
 POINTS_KEY = "transcripts"
 POINTS_CELL_ID_KEY = "cell_id"
@@ -34,9 +36,6 @@ SHAPES_CELL_ID_KEY = "cell_id"
 
 NUCLEUS_SHAPES_KEY = "nucleus_boundaries"
 NUCLEUS_SHAPES_CELL_ID_KEY = "nucleus_ID"
-
-REF_CELL_TYPE_KEY = "cell_type"
-
 
 # -------------------------------------------------------------------------
 # TEMPORARY OPEN PROBLEMS ADAPTER
@@ -273,6 +272,8 @@ def initialize_segtraq(sdata_segtraq: sd.SpatialData):
         tables_area_key=TABLES_AREA_KEY,
         tables_centroid_x_key=TABLES_CENTROID_X_KEY,
         tables_centroid_y_key=TABLES_CENTROID_Y_KEY,
+        tables_raw_counts_layer=TABLES_RAW_COUNTS_LAYER,
+        tables_gene_key=TABLES_GENE_KEY,
         points_key=POINTS_KEY,
         points_cell_id_key=POINTS_CELL_ID_KEY,
         points_background_id=POINTS_BACKGROUND_ID,
@@ -284,9 +285,16 @@ def initialize_segtraq(sdata_segtraq: sd.SpatialData):
         shapes_cell_id_key=SHAPES_CELL_ID_KEY,
         nucleus_shapes_key=NUCLEUS_SHAPES_KEY,
         nucleus_shapes_cell_id_key=NUCLEUS_SHAPES_CELL_ID_KEY,
+        filter_kwargs={"min_qv": None}, #qv not in transcripts, so set to None temporarily
     )
-    #st.filter_control_and_low_quality_transcripts() #qv not in transcripts, so delete for now
+
     return st
+
+def prepare_reference_adata(
+    input_scrnaseq_reference: str
+) -> ad.AnnData:
+    adata_ref = ad.read_h5ad(input_scrnaseq_reference)
+    return adata_ref
 
 
 def safe_float(value) -> float:
@@ -359,115 +367,6 @@ def add_script_dir_to_path(script_file: str, globals_dict: dict) -> None:
     for path in (source_common_dir, resources_dir):
         if path.exists():
             sys.path.insert(0, str(path))
-
-
-def prepare_clustering_table(adata: ad.AnnData) -> ad.AnnData:
-    import scanpy as sc
-
-    if "normalized_log" in adata.layers:
-        adata.X = adata.layers["normalized_log"].copy()
-        sc.pp.pca(adata)
-        sc.pp.neighbors(adata)
-
-    elif "counts" in adata.layers:
-        sc.pp.normalize_total(adata, layer="counts")
-        sc.pp.log1p(adata, layer="counts")
-
-        adata.X = adata.layers["counts"].copy()
-
-        sc.pp.pca(adata)
-        sc.pp.neighbors(adata)
-
-    else:
-        raise ValueError(
-            "Neither 'normalized_log' nor 'counts' found in adata.layers."
-        )
-
-    return adata
-
-
-def prepare_reference_adata(
-    input_scrnaseq_reference: str
-) -> ad.AnnData:
-
-    adata_ref = ad.read_h5ad(input_scrnaseq_reference).copy()
-
-    if "feature_name" in adata_ref.var.columns:
-        adata_ref.var_names = adata_ref.var["feature_name"].astype(str).values
-        adata_ref = adata_ref[:, ~adata_ref.var_names.duplicated()].copy()
-
-    if "normalized_log" in adata_ref.layers:
-        adata_ref.X = adata_ref.layers["normalized_log"].copy()
-
-    adata_ref.var_names_make_unique()
-    return adata_ref
-
-
-def run_label_transfer_and_markers(
-    st,
-    input_scrnaseq_reference: str,
-    ref_cell_type: str = "cell_type",
-) -> dict[str, dict[str, list[str]]]:
-    import segtraq
-
-    adata_ref = prepare_reference_adata(input_scrnaseq_reference)
-
-    segtraq.run_label_transfer(
-        sdata=st.sdata,
-        adata_ref=adata_ref,
-        ref_cell_type=REF_CELL_TYPE_KEY,
-        tables_key=TABLES_KEY,
-        tables_cell_id_key=TABLES_CELL_ID_KEY,
-        points_key=POINTS_KEY,
-        points_cell_id_key=POINTS_CELL_ID_KEY,
-        points_gene_key=POINTS_GENE_KEY,
-        ref_ensemble_key=None,
-        query_ensemble_key=None,
-        use_hvg=False,
-        inplace=True,
-    )
-
-    return segtraq.markers_from_reference(
-        adata_ref,
-        cell_type_key=REF_CELL_TYPE_KEY,
-        n_jobs=1,
-    )
-
-
-def n_components_from_cell_types(table: ad.AnnData) -> int | None:
-    for column in ("transferred_cell_type", REF_CELL_TYPE_KEY):
-        if column in table.obs:
-            n_celltypes = table.obs[column].nunique(dropna=True)
-            if n_celltypes > 0:
-                return int(n_celltypes)
-    return None
-
-
-def run_ovrlpy(
-    sdata: sd.SpatialData, 
-    n_comp: int, 
-    points_cell_id_key: str = POINTS_CELL_ID_KEY,
-    points_gene_key: str = POINTS_GENE_KEY, 
-    points_x_key: str = POINTS_X_KEY,
-    points_y_key: str = POINTS_Y_KEY,
-    points_z_key: str = POINTS_Z_KEY,
-    n_workers: int = 1
-):
-    import ovrlpy
-    print(f">> ovrlpy version: {ovrlpy.__version__}", flush=True)
-
-    coordinate_df = sdata.points[POINTS_KEY].rename(columns={points_gene_key: "gene"})
-    coordinate_df = coordinate_df.loc[:, ["gene", points_x_key, points_y_key, points_z_key, points_cell_id_key]].compute()
-    coordinate_df[points_z_key] = coordinate_df[points_z_key] - coordinate_df[points_z_key].min()
-
-    ovrlpy_sdata = ovrlpy.Ovrlp( #this part triggers a segmentation fault
-        coordinate_df,
-        n_components=n_comp,
-        n_workers=n_workers,
-    )
-
-    ovrlpy_sdata.analyse()
-    return ovrlpy_sdata.integrity_map
 
 def all_nan_metrics(metric_ids: list[str]) -> dict[str, float]:
     return {metric_id: float("nan") for metric_id in metric_ids}

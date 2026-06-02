@@ -27,7 +27,7 @@ info:
     description: |
       A metric for evaluating method predictions.
   metrics:
-    - name: segtraq_median_similarity_top_bottom_z
+    - name: segtraq_median_similarity_top_bottom
       label: "SegTraQ median top-bottom z similarity"
       summary: "Median cosine similarity between top and bottom z-quantile expression."
       description: "Cosine similarity between expression profiles of bottom and top transcript z-quantiles within each cell, summarized by the median across cells."

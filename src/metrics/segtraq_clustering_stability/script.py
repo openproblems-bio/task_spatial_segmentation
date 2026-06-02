@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "segtraq_common"))
 if "resources_dir" in meta:
     sys.path.insert(0, meta["resources_dir"])
 
-from adapter import initialize_segtraq, load_prepared_sdata, prepare_clustering_table, safe_float, write_metric_output
+from adapter import initialize_segtraq, load_prepared_sdata, safe_float, write_metric_output
 
 
 print(">> Reading and preparing input files", flush=True)
@@ -28,13 +28,8 @@ sdata_solution, sdata_prediction, sdata_segtraq = load_prepared_sdata(
 print(">> Initializing SegTraQ and filtering transcripts", flush=True)
 st = initialize_segtraq(sdata_segtraq)
 
-print(">> Preparing PCA/neighbors for clustering stability", flush=True)
-st.sdata.tables["table"] = prepare_clustering_table(st.sdata.tables["table"])
-
 print(">> Running SegTraQ clustering stability", flush=True)
-st.run_clustering_stability(
-    inplace=True
-)
+st.run_clustering_stability()
 
 table = st.sdata.tables["table"]
 metrics = {
@@ -45,5 +40,5 @@ metrics = {
 }
 
 print(">> Writing scalar metric output", flush=True)
-print(metrics)
+
 write_metric_output(par["output"], sdata_solution, sdata_prediction, metrics)

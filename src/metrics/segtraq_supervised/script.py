@@ -3,6 +3,10 @@ import sys
 
 import numpy as np
 
+REF_CELL_TYPE_KEY = "cell_type"
+REF_GENE_KEY = "feature_name"
+REF_RAW_COUNTS_LAYER = "counts"
+
 ## VIASH START
 par = {
     "input_prediction": "resources_test/task_spatial_segmentation/mouse_brain_combined/processed_prediction.zarr",
@@ -23,9 +27,9 @@ from adapter import (
     finite_matrix_mean,
     initialize_segtraq,
     load_prepared_sdata,
+    prepare_reference_adata,
     median_obs_metrics,
     nanmedian,
-    run_label_transfer_and_markers,
     write_metric_output,
 )
 
@@ -39,17 +43,12 @@ sdata_solution, sdata_prediction, sdata_segtraq = load_prepared_sdata(
 print(">> Initializing SegTraQ and filtering transcripts", flush=True)
 st = initialize_segtraq(sdata_segtraq)
 
-print(">> Running label transfer and marker detection", flush=True)
-cell_type_key = "transferred_cell_type"
-markers = run_label_transfer_and_markers(
-    st,
-    par["input_scrnaseq_reference"],
-    ref_cell_type="cell_type",
-)
-
 print(">> Running SegTraQ supervised metrics", flush=True)
 st.run_supervised(
-    markers=markers,
+    adata_ref=prepare_reference_adata(par["input_scrnaseq_reference"]),
+    ref_cell_type=REF_CELL_TYPE_KEY,
+    ref_gene_key=REF_GENE_KEY,
+    ref_raw_counts_layer=REF_RAW_COUNTS_LAYER
 )
 
 table = st.sdata.tables["table"]
@@ -59,24 +58,24 @@ metrics = median_obs_metrics(
         "positive_marker_recall": "segtraq_median_positive_marker_recall",
         "negative_marker_avoidance": "segtraq_median_negative_marker_avoidance",
         "marker_balanced_accuracy": "segtraq_median_marker_balanced_accuracy",
-        "negative_marker_contamination_counts": "segtraq_median_negative_marker_counts",
-        "negative_marker_contamination_fraction": "segtraq_median_negative_marker_fraction",
+        "contamination_counts": "segtraq_median_contamination_counts",
+        "contamination_fraction": "segtraq_median_contamination_fraction",
     },
 )
 
-if "negative_marker_contamination" in table.uns:
-    metrics["segtraq_mean_negative_marker_fraction_matrix"] = finite_matrix_mean(
-        table.uns["negative_marker_contamination"]
+if "contamination_fraction_matrix" in table.uns:
+    metrics["segtraq_mean_contamination_fraction_matrix"] = finite_matrix_mean(
+        table.uns["contamination_fraction_matrix"]
     )
 else:
-    metrics["segtraq_mean_negative_marker_fraction_matrix"] = float("nan")
+    metrics["segtraq_mean_contamination_fraction_matrix"] = float("nan")
 
-if "negative_marker_contamination_binary" in table.uns:
-    metrics["segtraq_mean_negative_marker_counts_matrix"] = finite_matrix_mean(
-        table.uns["negative_marker_contamination_binary"]
+if "contamination_counts_matrix" in table.uns:
+    metrics["segtraq_mean_contamination_counts_matrix"] = finite_matrix_mean(
+        table.uns["contamination_counts_matrix"]
     )
 else:
-    metrics["segtraq_mean_negative_marker_counts_matrix"] = float("nan")
+    metrics["segtraq_mean_contamination_counts_matrix"] = float("nan")
 
 if "mutually_exclusive_coexpression_rate" in table.uns:
     mecr = table.uns["mutually_exclusive_coexpression_rate"]

@@ -65,10 +65,9 @@ print(">> Initializing SegTraQ and filtering transcripts", flush=True)
 st = initialize_segtraq(sdata_segtraq)
 
 print(">> Running SegTraQ baseline", flush=True)
-st.run_baseline(inplace=True)
+st.run_baseline()
 
 print(">> Writing scalar metric output", flush=True)
 metrics = get_scalar_metrics(st.sdata)
 
-print(metrics)
 write_metric_output(par["output"], sdata_solution, sdata_prediction, metrics)

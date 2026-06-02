@@ -29,7 +29,7 @@ print(">> Initializing SegTraQ and filtering transcripts", flush=True)
 st = initialize_segtraq(sdata_segtraq)
 
 print(">> Running SegTraQ region similarity", flush=True)
-st.run_region_similarity(n_jobs=1, parallel_backend="threading", inplace=True)
+st.run_region_similarity(n_jobs=1, parallel_backend="threading")
 
 table = st.sdata.tables["table"]
 metrics = median_obs_metrics(
