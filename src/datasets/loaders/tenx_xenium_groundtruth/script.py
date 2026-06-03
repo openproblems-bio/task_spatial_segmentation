@@ -47,7 +47,7 @@ for key, value in new_uns.items():
 
 # add ground truth cell labels
 ## these annotations were derived by Caner Ercan
-sdata.tables["table"].obs["groundtruth_celltype"] = sdata.tables["table"].obs.pop("histoplus_cell_class")
+sdata.tables["table"].obs["groundtruth_cell_type"] = sdata.tables["table"].obs.pop("histoplus_cell_class")
 
 # rename Images
 ## rename raw images to accomodate format

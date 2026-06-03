@@ -72,6 +72,8 @@ dependencies:
   - name: data_processors/cell_type_annotation_tacco
   - name: metrics/ari
   - name: metrics/asr
+  - name: metrics/marker_specificity
+  - name: metrics/mitotic_specificity
   - name: data_processors/process_prediction
 
 runners:

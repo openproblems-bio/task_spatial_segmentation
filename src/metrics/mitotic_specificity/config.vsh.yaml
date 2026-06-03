@@ -1,0 +1,60 @@
+__merge__: ../../api/comp_metric.yaml
+
+name: mitotic_specificity
+
+label: "Mitotic Cell Marker Specificity"
+summary: >
+  Evaluates transcriptome assignment accuracy for mitotic cells by measuring
+  how specifically mitotic-marker transcripts are confined to mitotic GT cells.
+description: |
+  Using ground-truth cell assignments from spatial_solution transcripts, builds
+  a per-GT-cell count matrix for cells annotated as "Mitotic Figures" or
+  "Cancer cell". Three complementary metrics are computed:
+
+  - mitotic_sensitivity: fraction of mitotic GT cells expressing ≥1 mitosis-
+    specific gene. Normalised by total mitotic cell count.
+  - mitotic_specificity: fraction of non-mitotic GT cells expressing zero
+    mitosis-specific genes. Tests that mitotic signal does not leak into
+    cancer cells.
+  - nonmitotic_purity: fraction of mitotic GT cells expressing zero
+    non-mitosis-specific genes (negative metric — non-mitotic signal in
+    mitotic cells indicates mis-assignment contamination).
+
+  Returns NaN when groundtruth_cell_type is absent from spatial_solution.
+
+info:
+  metrics:
+    - name: mitotic_sensitivity
+      label: "Mitotic Sensitivity"
+      summary: "Fraction of mitotic GT cells with ≥1 mitosis-specific gene detected."
+      min: 0
+      max: 1
+      maximize: true
+    - name: mitotic_specificity
+      label: "Mitotic Specificity"
+      summary: "Fraction of non-mitotic GT cells with zero mitosis-specific genes."
+      min: 0
+      max: 1
+      maximize: true
+    - name: nonmitotic_purity
+      label: "Non-mitotic Purity"
+      summary: "Fraction of mitotic GT cells free of non-mitosis-specific genes."
+      min: 0
+      max: 1
+      maximize: true
+
+resources:
+  - type: python_script
+    path: script.py
+
+engines:
+  - type: docker
+    image: openproblems/base_python:1
+    __merge__: ../../base/setup_spatialdata_partial.yaml
+  - type: native
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      label: [midtime, midmem, midcpu]

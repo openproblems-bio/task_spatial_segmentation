@@ -26,7 +26,9 @@ methods = [
 // and src/api/file_common_ist.yaml.
 metrics = [
   ari,
-  asr
+  asr,
+  marker_specificity,
+  mitotic_specificity
 ]
 
 workflow run_wf {
