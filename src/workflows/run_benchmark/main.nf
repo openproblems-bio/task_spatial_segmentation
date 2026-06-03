@@ -18,8 +18,17 @@ methods = [
 ]
 
 // construct list of metrics
+// NOTE: asr (Assignment Specificity Ratio) requires pa_boundaries / cv_boundaries
+// shapes in spatial_solution.zarr.  These are present only for liver datasets
+// prepared with liver_zonation/migrate_annotations.py.  On non-liver datasets
+// (including the mouse-brain test data) asr will write NaN metric values and
+// exit cleanly without crashing the pipeline.  See src/metrics/asr/script.py
+// and src/api/file_common_ist.yaml.
 metrics = [
-  ari
+  ari,
+  asr,
+  marker_specificity,
+  mitotic_specificity
 ]
 
 workflow run_wf {

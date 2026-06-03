@@ -160,7 +160,7 @@ print(">> Building spatial solution (ground truth)", flush=True)
 
 ref_table = sp_data.tables["table"]
 solution_obs = ref_table.obs[["cell_id", "region"]].copy()
-for extra_col in ["cell_area", "transcript_counts"]:
+for extra_col in ["cell_area", "transcript_counts", "groundtruth_cell_type"]:
     if extra_col in ref_table.obs.columns:
         solution_obs[extra_col] = ref_table.obs[extra_col]
 
