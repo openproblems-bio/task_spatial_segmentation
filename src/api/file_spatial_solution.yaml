@@ -70,6 +70,29 @@ info:
             name: "geometry"
             required: true
             description: Geometry of the nucleus boundary
+      - type: dataframe
+        name: "pa_boundaries"
+        description: >
+          Optional — Portal Area (PA) polygon annotations propagated from the
+          raw common iST dataset.  Present only for liver datasets.  Used by
+          the ASR metric to measure zonal expression gradients.
+        required: false
+        columns:
+          - type: object
+            name: "geometry"
+            required: true
+            description: Geometry of the PA boundary polygon (µm intrinsic coordinates)
+      - type: dataframe
+        name: "cv_boundaries"
+        description: >
+          Optional — Central Vein (CV) polygon annotations propagated from the
+          raw common iST dataset.  Present only for liver datasets.
+        required: false
+        columns:
+          - type: object
+            name: "geometry"
+            required: true
+            description: Geometry of the CV boundary polygon (µm intrinsic coordinates)
     tables:
       - type: anndata
         name: "table"

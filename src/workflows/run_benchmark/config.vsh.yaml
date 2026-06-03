@@ -71,6 +71,7 @@ dependencies:
   - name: methods/segger
   - name: data_processors/cell_type_annotation_tacco
   - name: metrics/ari
+  - name: metrics/asr
   - name: data_processors/process_prediction
 
 runners:

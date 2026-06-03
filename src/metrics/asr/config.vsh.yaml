@@ -1,0 +1,149 @@
+__merge__: ../../api/comp_metric.yaml
+
+name: asr
+
+label: "Assignment Specificity Ratio"
+
+# One-sentence summary used in benchmark overview tables.
+summary: >
+  Measures transcript mis-assignment in liver segmentation by comparing
+  zonal expression gradients between hepatocytes and sinusoidal endothelial
+  cells relative to Portal Area distance.
+
+# Full description used in documentation and the OpenProblems website.
+description: |
+  The Assignment Specificity Ratio (ASR) evaluates whether a cell-segmentation
+  method correctly assigns hepatocyte transcripts to hepatocytes — rather than
+  letting them "leak" into neighbouring sinusoidal endothelial cells — by
+  exploiting the known periportal-to-centrilobular gene-expression gradient of
+  the liver lobule.
+
+  For each target gene the metric proceeds as follows:
+
+  1. **Distance to PA boundary**: Every predicted cell is assigned a distance
+     to the nearest Portal Area (PA) polygon boundary (in pixel / global
+     coordinate space).  Cells farther than LANDMARK_DIST_THRESHOLD pixels
+     from any landmark are excluded from the regression to avoid fitting noise
+     in the deep parenchyma.
+
+  2. **Cell-type assignment**: Hepatocytes and sinusoidal endothelial cells are
+     identified by mean log-normalised expression of curated marker gene sets
+     (no clustering required).
+
+  3. **OLS gradient regression**: For each cell type, a first-order polynomial
+     (OLS slope β) is fitted to  expression ~ dist_to_PA.
+
+  4. **ASR calculation**:
+
+         ASR = β_hep / (β_sin + ε)
+
+     where β_hep and β_sin are the fitted slopes for hepatocytes and sinusoidal
+     cells respectively, and ε is a small stabilising constant.
+
+     Interpretation:
+       ASR ≫ 1  → gradient is hepatocyte-specific; transcripts are correctly
+                   assigned.
+       ASR ≈ 1  → sinusoidal cells show a gradient of equal strength; the
+                   hepatocyte signal has been mis-assigned.
+       ASR < 1  → the segmentation is catastrophically wrong; sinusoidal cells
+                   carry more signal than hepatocytes.
+
+  One ASR value is returned per gene (metric_ids: ["asr_MET", "asr_CAV1"] by
+  default).
+
+  **IMPORTANT NOTE — dataset specificity (maintainers):**
+  The metric requires pa_boundaries shapes in spatial_solution.zarr, which are
+  present ONLY for liver datasets.  The standard mouse-brain test dataset
+  (resources_test/…/mouse_brain_combined) does NOT have these shapes.  The
+  metric handles this gracefully by writing NaN metric values and exiting
+  cleanly.
+
+references:
+  # Liver zonation biology background
+  doi:
+    - 10.1016/j.cell.2017.02.001     # Halpern et al., 2017 — single-cell zonation atlas
+
+info:
+  metrics:
+    - name: asr_MET
+      label: "ASR — MET"
+      summary: "Assignment Specificity Ratio for MET (hepatocyte/sinusoidal gene)."
+      description: |
+        OLS-based gradient slope ratio (hepatocyte vs sinusoidal) for the gene
+        MET, which encodes a receptor tyrosine kinase expressed in hepatocytes
+        with a mild periportal gradient.  NaN if MET is absent from the gene
+        panel or if too few cells are available for regression.
+      min: -100
+      max: 100
+      maximize: true
+    - name: asr_CAV1
+      label: "ASR — CAV1"
+      summary: "Assignment Specificity Ratio for CAV1 (caveolin-1)."
+      description: |
+        OLS-based gradient slope ratio for CAV1, which is expressed in both
+        hepatocytes and sinusoidal endothelial cells.  A well-calibrated
+        segmentation should show a stronger or equal hepatocyte gradient
+        compared to sinusoidal cells.  NaN if CAV1 is absent or insufficient
+        cells.
+      min: -100
+      max: 100
+      maximize: true
+
+arguments:
+  - name: --genes
+    type: string
+    multiple: true
+    description: |
+      Genes to compute ASR for.  One metric value (metric_id = "asr_{gene}")
+      is emitted per gene.  Genes absent from the prediction gene panel produce
+      NaN metric values.
+    default: ["MET", "CAV1"]
+    info:
+      test_default: ["MET", "CAV1"]
+
+  - name: --epsilon
+    type: double
+    description: |
+      Small constant ε added to β_sin in the denominator of the ASR formula
+      to prevent division by zero when the sinusoidal slope is exactly zero.
+      Default: 1e-6.
+    default: 1.0e-6
+
+  - name: --min_cells
+    type: integer
+    description: |
+      Minimum number of cells of a given type required to fit the OLS
+      regression.  If either hepatocytes or sinusoidal cells fall below this
+      threshold for a gene, that gene's ASR is returned as NaN.
+    default: 10
+
+  - name: --landmark_dist_threshold
+    type: double
+    description: |
+      Maximum distance (in global / pixel coordinate units) from any landmark
+      (PA or CV boundary) for a cell to be included in the gradient regression.
+      Cells farther than this threshold are excluded to avoid fitting expression
+      noise in the deep parenchyma far from both landmarks.
+      Default: 4706 px ≈ 1000 µm at 0.2125 µm/px.
+    default: 4706.0
+
+resources:
+  - type: python_script
+    path: script.py
+
+engines:
+  - type: docker
+    image: openproblems/base_python:1
+    # spatialdata (installed via setup_spatialdata_partial) already brings in
+    # all runtime dependencies:  geopandas, shapely, xarray, dask, anndata.
+    # No additional packages are required beyond the partial merge.
+    __merge__: ../../base/setup_spatialdata_partial.yaml
+  - type: native
+
+runners:
+  - type: executable
+  - type: nextflow
+    directives:
+      # High time and memory because the metric loads the full-resolution
+      # segmentation label image (up to ~8 GB for full-slide Xenium data).
+      label: [hightime, highmem, midcpu]

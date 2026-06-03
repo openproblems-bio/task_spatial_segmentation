@@ -110,6 +110,40 @@ info:
             name: "geometry"
             required: true
             description: Geometry of the nucleus boundary
+      - type: dataframe
+        name: "pa_boundaries"
+        description: >
+          Optional — Portal Area (PA) polygon annotations in µm intrinsic
+          coordinates, derived from manual pathologist annotation of the
+          morphology image.  Present only for liver datasets processed with
+          liver_zonation/migrate_annotations.py.  Used by the ASR metric to
+          compute per-cell distances to the nearest periportal zone boundary.
+        required: false
+        columns:
+          - type: object
+            name: "geometry"
+            required: true
+            description: >
+              Shapely Polygon in µm intrinsic coordinates.  The associated
+              zarr group stores a scale transform (1/pixel_size) so that
+              sd.transform(..., to_coordinate_system="global") returns
+              coordinates in pixel space, consistent with the morphology image.
+      - type: dataframe
+        name: "cv_boundaries"
+        description: >
+          Optional — Central Vein (CV) polygon annotations in µm intrinsic
+          coordinates, derived from manual pathologist annotation.  Present
+          only for liver datasets processed with
+          liver_zonation/migrate_annotations.py.  Used together with
+          pa_boundaries by the ASR metric for landmark-proximity filtering.
+        required: false
+        columns:
+          - type: object
+            name: "geometry"
+            required: true
+            description: >
+              Shapely Polygon in µm intrinsic coordinates, same coordinate
+              convention as pa_boundaries.
     tables:
       - type: anndata
         name: table

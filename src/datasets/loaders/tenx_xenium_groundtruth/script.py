@@ -64,6 +64,35 @@ _ = sdata.images.pop("hne_aligned")
 ## these annotations were derived by Caner Ercan
 sdata.Labels['groundtruth_cell_labels'] = sdata.tables['table'].obs.pop('histoplus_cell_class')
 
+# ── PA / CV Anatomical Landmark Boundaries ────────────────────────────────────
+#
+# Portal Area (PA) and Central Vein (CV) boundaries are optional Polygon shapes
+# manually annotated by a pathologist on the morphology image using QuPath.
+# They encode the two anatomical landmarks of the hepatic lobule:
+#
+#   PA (Portal Area)   — periportal zone; surrounds the portal triad
+#
+#   CV (Central Vein)  — centrilobular zone.
+
+_LANDMARK_SHAPES = (
+    ("pa_boundaries", "Portal Area (PA)"),
+    ("cv_boundaries", "Central Vein (CV)"),
+)
+for _shape_key, _shape_label in _LANDMARK_SHAPES:
+    if _shape_key in sdata.shapes:
+        _n = len(sdata.shapes[_shape_key])
+        print(
+            f"Found {_shape_label} boundaries ({_shape_key}): "
+            f"{_n} polygon(s) — will be propagated to output zarr.",
+            flush=True,
+        )
+    else:
+        print(
+            f"{_shape_label} boundaries ({_shape_key}) NOT present in input zarr.  "
+            f"This is expected for non-liver datasets.  ",
+            flush=True,
+        )
+
 print(f"Output: {sdata}", flush=True)
 
 print(f"Writing to '{par['output']}'", flush=True)
